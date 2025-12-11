@@ -29,11 +29,9 @@ export const settings = new Gio.Settings({ schema_id: 'org.example.ScreenRecorde
 
 export const ScreenrecorderWindow = GObject.registerClass({
     GTypeName: 'ScreenrecorderWindow',
-    Template: 'resource:///org/example/ScreenRecorder/window.ui',
-    InternalChildren: ['main_box'],
 }, class ScreenrecorderWindow extends Gtk.ApplicationWindow {
     constructor(application) {
-        super({ application });
+        super({ application, title: "ScreenRecorder", default_width: 800, default_height: 600 });
 
 
         //GTK Header
@@ -44,6 +42,13 @@ export const ScreenrecorderWindow = GObject.registerClass({
         });
 
         this.set_titlebar(headerBar);
+
+        // Main Box
+        this.main_box = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            visible: true
+        });
+        this.add(this.main_box);
 
         // Stack Switcher
         let stack = new Gtk.Stack({
@@ -68,8 +73,8 @@ export const ScreenrecorderWindow = GObject.registerClass({
         let toolItem = new Gtk.ToolItem({ visible: true });
         toolItem.add(switcher);
         toolbar.insert(toolItem, 0);
-        this._main_box.pack_start(toolbar, false, false, 0);
-        this._main_box.pack_start(stack, true, true, 0);
+        this.main_box.pack_start(toolbar, false, false, 0);
+        this.main_box.pack_start(stack, true, true, 0);
 
         // --- Page 1: Screenshot ---
         let screenshotPage = new ScreenshotPage();
