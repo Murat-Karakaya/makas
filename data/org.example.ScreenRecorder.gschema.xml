@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="screenrecorder">
 	<schema id="org.example.ScreenRecorder" path="/org/example/ScreenRecorder/">
+		<key name="default-recorder-folder" type="s">
+			<default>'/home/murat/Videos'</default>
+			<summary>Default folder for recorder</summary>
+			<description>Default folder for recorder</description>
+		</key>
+        <key name="default-screenshot-folder" type="s">
+			<default>'/home/murat/Pictures'</default>
+			<summary>Default folder for screenshot</summary>
+			<description>Default folder for screenshot</description>
+		</key>
 	</schema>
 </schemalist>

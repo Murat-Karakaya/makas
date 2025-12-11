@@ -7,5 +7,10 @@ glib-compile-resources --target=src/src.gresource --sourcedir=src src/org.exampl
 glib-compile-resources --target=src/data.gresource --sourcedir=src src/org.example.ScreenRecorder.data.gresource.xml
 
 # Run application
+# Compile schemas
+echo "Compiling schemas..."
+glib-compile-schemas data/
+
+# Run application
 echo "Starting application..."
-gjs -m dev_runner.js "$@"
+GSETTINGS_SCHEMA_DIR=data gjs -m dev_runner.js "$@"

@@ -1,7 +1,8 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk?version=3.0';
 import GObject from 'gi://GObject';
-import GLib from 'gi://GLib';
+
+import { settings } from '../window.js';
 
 export const ScreenshotPage = GObject.registerClass(
     class ScreenshotPage extends Gtk.Box {
@@ -25,12 +26,14 @@ export const ScreenshotPage = GObject.registerClass(
                 title: "Select Folder",
                 action: Gtk.FileChooserAction.SELECT_FOLDER
             });
-            this.folderBtn.set_current_folder(GLib.get_current_dir());
+            this.folderBtn.set_current_folder(settings.get_string('default-screenshot-folder'));
 
             let nameLabel = new Gtk.Label({ label: "Filename:" });
 
+            const date = new Date();
+            const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
             this.filenameEntry = new Gtk.Entry({
-                text: "screenshot.png",
+                text: `screenshot-${formattedDate}.png`,
                 placeholder_text: "screenshot.png"
             });
 

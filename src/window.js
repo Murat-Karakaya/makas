@@ -21,8 +21,11 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk?version=3.0';
 
-import { RecorderPage } from './recorder.js';
-import { ScreenshotPage } from './screenshot.js';
+import { RecorderPage } from './recorder/recorder.js';
+import { ScreenshotPage } from './screenshot/screenshot.js';
+import Gio from 'gi://Gio';
+
+export const settings = new Gio.Settings({ schema_id: 'org.example.ScreenRecorder' });
 
 export const ScreenrecorderWindow = GObject.registerClass({
     GTypeName: 'ScreenrecorderWindow',
@@ -32,6 +35,16 @@ export const ScreenrecorderWindow = GObject.registerClass({
     constructor(application) {
         super({ application });
 
+
+        //GTK Header
+        let headerBar = new Gtk.HeaderBar({
+            title: "Screen Recorder",
+            show_close_button: true,
+            visible: true
+        });
+
+        this.set_titlebar(headerBar);
+
         // Stack Switcher
         let stack = new Gtk.Stack({
             transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
@@ -40,13 +53,22 @@ export const ScreenrecorderWindow = GObject.registerClass({
 
         let switcher = new Gtk.StackSwitcher({
             stack: stack,
-            halign: Gtk.Align.CENTER,
             margin_top: 10,
             margin_bottom: 10,
             visible: true
         });
 
-        this._main_box.pack_start(switcher, false, false, 0);
+        let toolbar = new Gtk.Toolbar({
+            visible: true,
+        });
+
+        toolbar.toolbar_style = Gtk.ToolbarStyle.BOTH;
+        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
+
+        let toolItem = new Gtk.ToolItem({ visible: true });
+        toolItem.add(switcher);
+        toolbar.insert(toolItem, 0);
+        this._main_box.pack_start(toolbar, false, false, 0);
         this._main_box.pack_start(stack, true, true, 0);
 
         // --- Page 1: Screenshot ---

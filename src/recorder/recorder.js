@@ -1,8 +1,8 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import Gst from 'gi://Gst';
-import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
-import GLib from 'gi://GLib';
+
+import { settings } from '../window.js';
 
 export const RecorderPage = GObject.registerClass(
     class RecorderPage extends Gtk.Box {
@@ -27,13 +27,15 @@ export const RecorderPage = GObject.registerClass(
                 action: Gtk.FileChooserAction.SELECT_FOLDER
             });
             // Set default current folder
-            this.folderBtn.set_current_folder(GLib.get_current_dir());
+            this.folderBtn.set_current_folder(settings.get_string('default-recorder-folder'));
 
             let nameLabel = new Gtk.Label({ label: "Filename:" });
 
+            const date = new Date();
+            const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
             this.filenameEntry = new Gtk.Entry({
-                text: 'recording.mp4',
-                placeholder_text: 'recording.mp4'
+                text: `screen-recording-${formattedDate}.mp4`,
+                placeholder_text: "screen-recording.mp4"
             });
 
             fileBox.pack_start(folderLabel, false, false, 0);
