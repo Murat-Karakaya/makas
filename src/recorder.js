@@ -1,6 +1,10 @@
-const { Gtk, Gst, Gio, GObject, GLib } = imports.gi;
+import Gtk from 'gi://Gtk?version=3.0';
+import Gst from 'gi://Gst';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
 
-var RecorderPage = GObject.registerClass(
+export const RecorderPage = GObject.registerClass(
     class RecorderPage extends Gtk.Box {
         _init() {
             super._init({

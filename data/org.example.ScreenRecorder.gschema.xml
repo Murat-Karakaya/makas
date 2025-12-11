@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="screenrecorder">
+	<schema id="org.example.ScreenRecorder" path="/org/example/ScreenRecorder/">
+	</schema>
+</schemalist>

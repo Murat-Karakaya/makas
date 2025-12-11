@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="3.0"/>
+  <template class="ScreenrecorderWindow" parent="GtkApplicationWindow">
+    <property name="title" translatable="yes">ScreenRecorder</property>
+    <property name="default-width">800</property>
+    <property name="default-height">600</property>
+    <child type="titlebar">
+      <object class="GtkHeaderBar">
+        <property name="visible">True</property>
+        <property name="show-close-button">True</property>
+        <child>
+          <object class="GtkMenuButton">
+            <property name="tooltip-text" translatable="yes">Main Menu</property>
+            <property name="menu-model">primary_menu</property>
+            <child>
+              <object class="GtkImage">
+                <property name="icon-name">open-menu-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack-type">end</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="main_box">
+        <property name="orientation">vertical</property>
+        <property name="visible">True</property>
+      </object>
+    </child>
+  </template>
+  <menu id="primary_menu">
+  </menu>
+</interface>
+

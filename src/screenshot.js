@@ -1,6 +1,9 @@
-const { Gtk, Gdk, GObject, GLib } = imports.gi;
+import Gtk from 'gi://Gtk?version=3.0';
+import Gdk from 'gi://Gdk?version=3.0';
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
 
-var ScreenshotPage = GObject.registerClass(
+export const ScreenshotPage = GObject.registerClass(
     class ScreenshotPage extends Gtk.Box {
         _init() {
             super._init({
