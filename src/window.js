@@ -33,16 +33,6 @@ export const ScreenrecorderWindow = GObject.registerClass({
     constructor(application) {
         super({ application, title: "ScreenRecorder", default_width: 800, default_height: 600 });
 
-
-        //GTK Header
-        let headerBar = new Gtk.HeaderBar({
-            title: "Screen Recorder",
-            show_close_button: true,
-            visible: true
-        });
-
-        this.set_titlebar(headerBar);
-
         // Main Box
         this.main_box = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
@@ -58,9 +48,8 @@ export const ScreenrecorderWindow = GObject.registerClass({
 
         let switcher = new Gtk.StackSwitcher({
             stack: stack,
-            margin_top: 10,
-            margin_bottom: 10,
-            visible: true
+            margin_bottom: 2,
+            visible: true,
         });
 
         let toolbar = new Gtk.Toolbar({
@@ -70,10 +59,15 @@ export const ScreenrecorderWindow = GObject.registerClass({
         toolbar.toolbar_style = Gtk.ToolbarStyle.BOTH;
         toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
 
-        let toolItem = new Gtk.ToolItem({ visible: true });
+        let toolItem = new Gtk.ToolItem({
+            visible: true,
+            halign: Gtk.Align.CENTER,
+        });
+
+        toolItem.set_hexpand(true);
         toolItem.add(switcher);
         toolbar.insert(toolItem, 0);
-        this.main_box.pack_start(toolbar, false, false, 0);
+        this.main_box.add(toolbar);
         this.main_box.pack_start(stack, true, true, 0);
 
         // --- Page 1: Screenshot ---
