@@ -1,5 +1,6 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 
 import { settings } from './window.js';
 
@@ -25,23 +26,59 @@ export const PreferencesWindow = GObject.registerClass({
         contentArea.set_margin_start(12);
         contentArea.set_margin_end(12);
 
-        const screenshotFolderButton = new Gtk.Button({
-            label: 'Browse',
+        const grid = new Gtk.Grid({
+            row_spacing: 12,
+            column_spacing: 12,
+            column_homogeneous: false
         });
+        contentArea.add(grid);
+
+        // Screenshot Folder Row
+        const screenshotLabel = new Gtk.Label({ label: "Screenshot Folder:", halign: Gtk.Align.START });
+        const screenshotPathLabel = new Gtk.Label({
+            label: settings.get_string('default-screenshot-folder'),
+            hexpand: true,
+            halign: Gtk.Align.START,
+            ellipsize: Pango.EllipsizeMode.MIDDLE
+        });
+        const screenshotFolderButton = new Gtk.Button({ label: 'Browse' });
+
+        grid.attach(screenshotLabel, 0, 0, 1, 1);
+        grid.attach(screenshotPathLabel, 1, 0, 1, 1);
+        grid.attach(screenshotFolderButton, 2, 0, 1, 1);
 
         screenshotFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-screenshot-folder"));
 
-
-
-        const recorderFolderButton = new Gtk.Button({
-            label: 'Browse',
+        // Recorder Folder Row
+        const recorderLabel = new Gtk.Label({ label: "Recording Folder:", halign: Gtk.Align.START });
+        const recorderPathLabel = new Gtk.Label({
+            label: settings.get_string('default-recorder-folder'),
+            hexpand: true,
+            halign: Gtk.Align.START,
+            ellipsize: Pango.EllipsizeMode.MIDDLE
         });
+        const recorderFolderButton = new Gtk.Button({ label: 'Browse' });
+
+        grid.attach(recorderLabel, 0, 1, 1, 1);
+        grid.attach(recorderPathLabel, 1, 1, 1, 1);
+        grid.attach(recorderFolderButton, 2, 1, 1, 1);
 
         recorderFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-recorder-folder"));
 
+        // Sync labels when settings change
+        this._settingsSignalId = settings.connect('changed', (settings, key) => {
+            if (key === 'default-screenshot-folder') {
+                screenshotPathLabel.set_text(settings.get_string(key));
+            } else if (key === 'default-recorder-folder') {
+                recorderPathLabel.set_text(settings.get_string(key));
+            }
+        });
 
-        contentArea.add(screenshotFolderButton);
-        contentArea.add(recorderFolderButton);
+        this.connect('destroy', () => {
+            if (this._settingsSignalId) {
+                settings.disconnect(this._settingsSignalId);
+            }
+        });
     }
 
     _onOpenFolderSelector(key) {
