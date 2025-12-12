@@ -1,3 +1,2 @@
-src/src.gresource
-src/data.gresource
-data/gschemas.compiled
+**.gresource
+**.compiled
