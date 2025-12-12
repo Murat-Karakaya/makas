@@ -40,11 +40,25 @@ export const ScreenrecorderWindow = GObject.registerClass({
         });
         this.add(this.main_box);
 
+        const toolbar = new Gtk.Toolbar({
+            visible: true,
+        });
+
         // Stack Switcher
         let stack = new Gtk.Stack({
             transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
             visible: true
         });
+
+        toolbar.toolbar_style = Gtk.ToolbarStyle.BOTH;
+        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
+        this.main_box.add(toolbar);
+
+        let toolItem = new Gtk.ToolItem({
+            visible: true,
+            halign: Gtk.Align.CENTER,
+        });
+        toolbar.insert(toolItem, 0);
 
         let switcher = new Gtk.StackSwitcher({
             stack: stack,
@@ -52,22 +66,7 @@ export const ScreenrecorderWindow = GObject.registerClass({
             visible: true,
         });
 
-        let toolbar = new Gtk.Toolbar({
-            visible: true,
-        });
-
-        toolbar.toolbar_style = Gtk.ToolbarStyle.BOTH;
-        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
-
-        let toolItem = new Gtk.ToolItem({
-            visible: true,
-            halign: Gtk.Align.CENTER,
-        });
-
-        toolItem.set_hexpand(true);
         toolItem.add(switcher);
-        toolbar.insert(toolItem, 0);
-        this.main_box.add(toolbar);
         this.main_box.pack_start(stack, true, true, 0);
 
         // --- Page 1: Screenshot ---
