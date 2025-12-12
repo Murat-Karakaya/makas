@@ -25,16 +25,52 @@ export const PreferencesWindow = GObject.registerClass({
         contentArea.set_margin_start(12);
         contentArea.set_margin_end(12);
 
-        // Placeholder for settings - add your settings controls here
-
-        const ScreenshotFolderEntry = new Gtk.FileChooserButton({});
-
-
-
-        ScreenshotFolderEntry.set_current_folder(settings.get_string('default-screenshot-folder'));
-        ScreenshotFolderEntry.connect('file-set', () => {
-            settings.set_string('default-screenshot-folder', ScreenshotFolderEntry.get_filename());
+        const screenshotFolderButton = new Gtk.Button({
+            label: 'Browse',
         });
-        contentArea.add(ScreenshotFolderEntry);
+
+        screenshotFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-screenshot-folder"));
+
+
+
+        const recorderFolderButton = new Gtk.Button({
+            label: 'Browse',
+        });
+
+        recorderFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-recorder-folder"));
+
+
+        contentArea.add(screenshotFolderButton);
+        contentArea.add(recorderFolderButton);
+    }
+
+    _onOpenFolderSelector(key) {
+        // Store reference to prevent garbage collection
+        this._fileChooser = new Gtk.FileChooserNative({
+            title: 'Select a Folder',
+            transient_for: this,
+            action: Gtk.FileChooserAction.SELECT_FOLDER,
+            accept_label: 'Select',
+            cancel_label: 'Cancel',
+            modal: true,
+        });
+
+        this._fileChooser.connect('response', (dialog, response) => {
+            if (response === Gtk.ResponseType.ACCEPT) {
+                // For GTK3, use get_filename() for FileChooserNative
+                const folderPath = dialog.get_filename();
+                if (folderPath) {
+                    settings.set_string(key, folderPath);
+                    console.log(`${key} set to: ${folderPath}`);
+                }
+            } else {
+                console.log('File selection cancelled.');
+            }
+
+            // Clean up the reference
+            this._fileChooser = null;
+        });
+
+        this._fileChooser.show();
     }
 });
