@@ -65,12 +65,47 @@ export const PreferencesWindow = GObject.registerClass({
 
         recorderFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-recorder-folder"));
 
+        // Screenshot Delay Row
+        const delayLabel = new Gtk.Label({ label: "Screenshot Delay:", halign: Gtk.Align.START });
+        const delaySpinner = new Gtk.SpinButton({
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 60,
+                step_increment: 1,
+            }),
+            value: settings.get_int('screenshot-delay'),
+        });
+        delaySpinner.connect('value-changed', () => {
+            settings.set_int('screenshot-delay', delaySpinner.get_value_as_int());
+        });
+
+        grid.attach(delayLabel, 0, 2, 1, 1);
+        grid.attach(delaySpinner, 1, 2, 2, 1);
+
+        // Include Pointer Row
+        const pointerLabel = new Gtk.Label({ label: "Include Mouse Pointer:", halign: Gtk.Align.START });
+        const pointerSwitch = new Gtk.Switch({
+            active: settings.get_boolean('include-pointer'),
+            halign: Gtk.Align.START,
+        });
+        pointerSwitch.connect('state-set', (widget, state) => {
+            settings.set_boolean('include-pointer', state);
+            return false;
+        });
+
+        grid.attach(pointerLabel, 0, 3, 1, 1);
+        grid.attach(pointerSwitch, 1, 3, 2, 1);
+
         // Sync labels when settings change
         this._settingsSignalId = settings.connect('changed', (settings, key) => {
             if (key === 'default-screenshot-folder') {
                 screenshotPathLabel.set_text(settings.get_string(key));
             } else if (key === 'default-recorder-folder') {
                 recorderPathLabel.set_text(settings.get_string(key));
+            } else if (key === 'screenshot-delay') {
+                delaySpinner.set_value(settings.get_int(key));
+            } else if (key === 'include-pointer') {
+                pointerSwitch.set_active(settings.get_boolean(key));
             }
         });
 

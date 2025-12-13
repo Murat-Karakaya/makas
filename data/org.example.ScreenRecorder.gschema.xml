@@ -6,10 +6,25 @@
 			<summary>Default folder for recorder</summary>
 			<description>Default folder for recorder</description>
 		</key>
-        <key name="default-screenshot-folder" type="s">
+		<key name="default-screenshot-folder" type="s">
 			<default>'/home/murat/Pictures'</default>
 			<summary>Default folder for screenshot</summary>
 			<description>Default folder for screenshot</description>
+		</key>
+		<key name="screenshot-delay" type="i">
+			<default>0</default>
+			<summary>Screenshot delay in seconds</summary>
+			<description>Number of seconds to wait before taking the screenshot</description>
+		</key>
+		<key name="include-pointer" type="b">
+			<default>false</default>
+			<summary>Include mouse pointer</summary>
+			<description>Whether to include the mouse pointer in the screenshot</description>
+		</key>
+		<key name="last-save-directory" type="s">
+			<default>''</default>
+			<summary>Last save directory</summary>
+			<description>The last directory a screenshot was saved in</description>
 		</key>
 	</schema>
 </schemalist>
