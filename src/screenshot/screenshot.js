@@ -18,7 +18,7 @@ import Gio from 'gi://Gio';
 
 import { settings } from '../window.js';
 import { getCurrentDate } from '../utils.js';
-import { selectAreaAsync, selectWindowAsync, selectArea, selectWindow } from './area-selection.js';
+import { selectArea, selectWindow } from './area-selection.js';
 
 // Capture mode enumeration
 const CaptureMode = {
@@ -43,7 +43,6 @@ export const ScreenshotPage = GObject.registerClass(
             this._lastPixbuf = null;
 
             this._buildUI();
-            this._connectSettings();
 
             // Handle destruction to prevent calls on disposed objects
             this._isDestroyed = false;
@@ -101,13 +100,10 @@ export const ScreenshotPage = GObject.registerClass(
             this._delaySpinner = new Gtk.SpinButton({
                 adjustment: new Gtk.Adjustment({
                     lower: 0,
-                    upper: 60,
+                    upper: 60 * 60 * 24,
                     step_increment: 1,
                 }),
                 value: settings.get_int('screenshot-delay'),
-            });
-            this._delaySpinner.connect('value-changed', () => {
-                settings.set_int('screenshot-delay', this._delaySpinner.get_value_as_int());
             });
 
             // Include pointer toggle
@@ -115,10 +111,6 @@ export const ScreenshotPage = GObject.registerClass(
             this._pointerSwitch = new Gtk.Switch({
                 active: settings.get_boolean('include-pointer'),
                 halign: Gtk.Align.START,
-            });
-            this._pointerSwitch.connect('state-set', (widget, state) => {
-                settings.set_boolean('include-pointer', state);
-                return false;
             });
 
             optionsGrid.attach(delayLabel, 0, 0, 1, 1);
@@ -179,7 +171,7 @@ export const ScreenshotPage = GObject.registerClass(
             buttonBox.pack_start(this._copyBtn, false, false, 0);
             this.add(buttonBox);
 
-            // === Status Label ===
+
             this._statusLabel = new Gtk.Label({
                 label: 'Ready',
                 halign: Gtk.Align.CENTER,
@@ -187,18 +179,9 @@ export const ScreenshotPage = GObject.registerClass(
             });
             this.add(this._statusLabel);
 
-            // Connect button signals
+
             this._shootBtn.connect('clicked', () => this._onTakeScreenshot());
             this._copyBtn.connect('clicked', () => this._onCopyToClipboard());
-        }
-
-        _connectSettings() {
-            settings.connect('changed::screenshot-delay', () => {
-                this._delaySpinner.set_value(settings.get_int('screenshot-delay'));
-            });
-            settings.connect('changed::include-pointer', () => {
-                this._pointerSwitch.set_active(settings.get_boolean('include-pointer'));
-            });
         }
 
         _getDestinationPath() {
@@ -210,7 +193,7 @@ export const ScreenshotPage = GObject.registerClass(
         }
 
         _onTakeScreenshot() {
-            print('Screenshot: _onTakeScreenshot enter (callback version)');
+            print('Screenshot: _onTakeScreenshot enter');
             if (this._isDestroyed) {
                 print('Screenshot: Destroyed, aborting');
                 return;
@@ -219,7 +202,7 @@ export const ScreenshotPage = GObject.registerClass(
             const app = Gio.Application.get_default();
             if (app) {
                 print(`Screenshot: App found ${app}, holding`);
-                app.hold();
+                app.hold(); // Hold app to prevent it from exiting
             } else {
                 print('Screenshot: WARNING - App not found via get_default()');
             }
@@ -233,7 +216,7 @@ export const ScreenshotPage = GObject.registerClass(
             }
 
             // Start flow after small delay to allow hide
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
                 if (this._isDestroyed) {
                     this._finishScreenshot(app, topLevel);
                     return GLib.SOURCE_REMOVE;
@@ -275,10 +258,6 @@ export const ScreenshotPage = GObject.registerClass(
         }
 
         _startDelay(app, topLevel, selectionResult) {
-            if (this._isDestroyed) {
-                this._finishScreenshot(app, topLevel);
-                return;
-            }
 
             const delay = this._delaySpinner.get_value_as_int();
             print(`Screenshot: Delay phase, delay=${delay}`);
@@ -286,10 +265,6 @@ export const ScreenshotPage = GObject.registerClass(
             if (delay > 0) {
                 let remaining = delay;
                 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
-                    if (this._isDestroyed) {
-                        this._finishScreenshot(app, topLevel);
-                        return GLib.SOURCE_REMOVE;
-                    }
                     remaining--;
                     print(`Screenshot: Waiting... ${remaining}`);
                     if (remaining <= 0) {
@@ -298,51 +273,15 @@ export const ScreenshotPage = GObject.registerClass(
                     }
                     return GLib.SOURCE_CONTINUE;
                 });
-            } else {
-                // Small delay to ensure UI cleared if delay was 0
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-                    this._performCapture(app, topLevel, selectionResult);
-                    return GLib.SOURCE_REMOVE;
-                });
-            }
-        }
-
-        _performCapture(app, topLevel, selectionResult) {
-            if (this._isDestroyed) {
-                this._finishScreenshot(app, topLevel);
                 return;
             }
+            this._performCapture(app, topLevel, selectionResult);
+        }
 
+        async _performCapture(app, topLevel, selectionResult) {
             print('Screenshot: Capturing...');
             try {
-                this._captureScreenshot(selectionResult); // This is still async-ish but internally synchronous enough for pixbuf
-            } catch (e) {
-                print(`Screenshot error: ${e.message}`);
-                if (!this._isDestroyed) this._statusLabel.set_text(`Error: ${e.message}`);
-            }
 
-            this._finishScreenshot(app, topLevel);
-        }
-
-        _finishScreenshot(app, topLevel) {
-            print('Screenshot: Restoring window');
-            this._restoreWindow(topLevel);
-            if (app) app.release();
-            if (!this._isDestroyed) {
-                this._shootBtn.set_sensitive(true);
-            }
-        }
-
-        _restoreWindow(topLevel) {
-            if (this._isDestroyed) return;
-            if (topLevel && topLevel.show) {
-                topLevel.show();
-                topLevel.present();
-            }
-        }
-
-        async _captureScreenshot(selectionResult) {
-            try {
                 if (this._isDestroyed) return;
 
                 let pixbuf = null;
@@ -375,7 +314,7 @@ export const ScreenshotPage = GObject.registerClass(
                 }
 
                 // Add pointer if enabled
-                if (settings.get_boolean('include-pointer') && this._captureMode !== CaptureMode.AREA) {
+                if (this._pointerSwitch.get_active() && this._captureMode !== CaptureMode.AREA) {
                     pixbuf = this._compositePointer(pixbuf);
                 }
 
@@ -399,11 +338,33 @@ export const ScreenshotPage = GObject.registerClass(
                 } else {
                     this._statusLabel.set_text('Screenshot captured (not saved)');
                 }
+
             } catch (e) {
                 print(`Screenshot error: ${e.message}`);
-                this._statusLabel.set_text(`Error: ${e.message}`);
+                if (!this._isDestroyed) this._statusLabel.set_text(`Error: ${e.message}`);
+            }
+
+            this._finishScreenshot(app, topLevel);
+        }
+
+        _finishScreenshot(app, topLevel) {
+            print('Screenshot: Restoring window');
+            this._restoreWindow(topLevel);
+            if (app) app.release();
+            if (!this._isDestroyed) {
+                this._shootBtn.set_sensitive(true);
             }
         }
+
+        _restoreWindow(topLevel) {
+            if (this._isDestroyed) return;
+            if (topLevel && topLevel.show) {
+                topLevel.show();
+                topLevel.present();
+            }
+        }
+
+
 
         _captureScreen() {
             const rootWindow = Gdk.get_default_root_window();
@@ -418,22 +379,29 @@ export const ScreenshotPage = GObject.registerClass(
 
             if (selectionResult) {
                 // Find window at clicked active coordinates
-                const rootWindow = Gdk.get_default_root_window();
-                // This is a bit of a hack in GDK3/X11, getting the window at position from root
-                // Note: get_window_at_position is not always reliable for toplevels managed by WM
-                // But let's try to find it via display
-                const display = Gdk.Display.get_default();
-                // We might need to iterate windows or use the pointer logic again but at specific coords?
-                // Actually, Gdk.Window.at_pointer is deprecated or specific.
+                // rootWindow.get_window_at_position is not available in GDK3 introspection
+                // We iterate the window stack to find which window contains the point
+                const windows = screen.get_window_stack();
+                if (windows) {
+                    // Start from top (end of list)
+                    for (let i = windows.length - 1; i >= 0; i--) {
+                        const win = windows[i];
+                        if (!win.is_visible()) continue;
 
-                // Better approach with GDK3: Active window is often what we want if we clicked it to activate?
-                // But clicking the overlay overlay might confuse things.
-                // However, the overlay is destroyed before we get here. 
-                // So the click event passed through? No, we grabbed it.
+                        // Check bounds
+                        // win.get_frame_extents() returns the total area including decorations
+                        const rect = win.get_frame_extents();
 
-                // Let's use get_window_at_position from the root window
-                // Note: This returns a GdkWindow, which might be a child window.
-                activeWindow = rootWindow.get_window_at_position(selectionResult.x, selectionResult.y);
+                        if (selectionResult.x >= rect.x &&
+                            selectionResult.x < (rect.x + rect.width) &&
+                            selectionResult.y >= rect.y &&
+                            selectionResult.y < (rect.y + rect.height)) {
+                            activeWindow = win;
+                            print(`Screenshot: Found window at ${selectionResult.x},${selectionResult.y}: ${win}`);
+                            break;
+                        }
+                    }
+                }
             }
 
             if (!activeWindow) {
@@ -454,14 +422,26 @@ export const ScreenshotPage = GObject.registerClass(
             }
 
             // Get toplevel window
+            // Get toplevel window
             activeWindow = activeWindow.get_toplevel();
 
-            // Get window geometry including frame
-            const [, x, y, width, height] = activeWindow.get_geometry();
+            // Get window geometry including frame using frame extents
+            // timestamp get_geometry often returns 0/0 for unmapped or some types of windows
+            const rect = activeWindow.get_frame_extents();
+            const width = rect.width;
+            const height = rect.height;
+            const originX = rect.x;
+            const originY = rect.y;
+
+            print(`Screenshot: Capturing window rect: x=${originX}, y=${originY}, w=${width}, h=${height}`);
+
+            if (width <= 0 || height <= 0) {
+                print('Screenshot: Invalid window dimensions, falling back to screen capture');
+                return this._captureScreen();
+            }
 
             // Capture from root window at window position for frame decorations
             const rootWindow = Gdk.get_default_root_window();
-            const [originX, originY] = activeWindow.get_origin();
 
             return Gdk.pixbuf_get_from_window(
                 rootWindow,

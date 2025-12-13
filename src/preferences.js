@@ -70,7 +70,7 @@ export const PreferencesWindow = GObject.registerClass({
         const delaySpinner = new Gtk.SpinButton({
             adjustment: new Gtk.Adjustment({
                 lower: 0,
-                upper: 60,
+                upper: 60 * 60 * 24,
                 step_increment: 1,
             }),
             value: settings.get_int('screenshot-delay'),
