@@ -27,7 +27,12 @@ export function selectArea(callback) {
 
     const screen = Gdk.Screen.get_default();
     const visual = screen.get_rgba_visual();
-    const window = new Gtk.Window({ type: Gtk.WindowType.POPUP, decorated: false, skip_taskbar_hint: true, skip_pager_hint: true });
+    const window = new Gtk.Window({
+        type: Gtk.WindowType.POPUP,
+        decorated: false,
+        skip_taskbar_hint: true,
+        skip_pager_hint: true
+    });
 
     const display = Gdk.Display.get_default();
     let totalWidth = 0, totalHeight = 0;

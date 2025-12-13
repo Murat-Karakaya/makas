@@ -264,7 +264,7 @@ export const ScreenshotPage = GObject.registerClass(
             this._performCapture(app, topLevel, selectionResult);
         }
 
-        async _performCapture(app, topLevel, selectionResult) {
+        _performCapture(app, topLevel, selectionResult) {
             print('Screenshot: Capturing...');
             let pixbuf = null;
 
