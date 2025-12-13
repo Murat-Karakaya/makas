@@ -3,6 +3,7 @@ import Gdk from 'gi://Gdk?version=3.0';
 import GObject from 'gi://GObject';
 
 import { settings } from '../window.js';
+import { getCurrentDate } from '../utils.js';
 
 export const ScreenshotPage = GObject.registerClass(
     class ScreenshotPage extends Gtk.Box {
@@ -15,11 +16,12 @@ export const ScreenshotPage = GObject.registerClass(
             });
 
             // --- UI Elements ---
+            const fileGrid = new Gtk.Grid({
+                row_spacing: 12,
+                column_spacing: 12,
+            });
 
-            // 1. File Selection Row
-            let fileBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
-
-            let folderLabel = new Gtk.Label({ label: "Save in:" });
+            const folderLabel = new Gtk.Label({ label: "Save in:" });
 
             // FileChooserButton in SELECT_FOLDER mode
             this.folderBtn = new Gtk.FileChooserButton({
@@ -28,22 +30,22 @@ export const ScreenshotPage = GObject.registerClass(
             });
             this.folderBtn.set_current_folder(settings.get_string('default-screenshot-folder'));
 
-            let nameLabel = new Gtk.Label({ label: "Filename:" });
+            const nameLabel = new Gtk.Label({ label: "Filename:" });
 
-            const date = new Date();
-            const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
+
             this.filenameEntry = new Gtk.Entry({
-                text: `screenshot-${formattedDate}.png`,
-                placeholder_text: "screenshot.png"
+                text: `screenshot-${getCurrentDate()}.png`,
+                placeholder_text: "screenshot.png",
+                width_chars: 35
             });
 
-            fileBox.pack_start(folderLabel, false, false, 0);
-            fileBox.pack_start(this.folderBtn, true, true, 0);
-            fileBox.pack_start(nameLabel, false, false, 0);
-            fileBox.pack_start(this.filenameEntry, true, true, 0);
+            fileGrid.attach(folderLabel, 0, 0, 1, 1);
+            fileGrid.attach(this.folderBtn, 1, 0, 1, 1);
+            fileGrid.attach(nameLabel, 0, 1, 1, 1);
+            fileGrid.attach(this.filenameEntry, 1, 1, 1, 1);
 
             // 2. Control Row
-            let controlBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 10 });
+            const controlBox = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 10 });
 
             this.shootBtn = new Gtk.Button({ label: "Take Screenshot" });
             this.statusLabel = new Gtk.Label({ label: "Status: Idle" });
@@ -51,7 +53,7 @@ export const ScreenshotPage = GObject.registerClass(
             controlBox.pack_start(this.shootBtn, false, false, 0);
             controlBox.pack_start(this.statusLabel, false, false, 0);
 
-            this.add(fileBox);
+            this.add(fileGrid);
             this.add(controlBox);
 
             // --- Logic ---
@@ -62,14 +64,14 @@ export const ScreenshotPage = GObject.registerClass(
 
         _getDestinationPath() {
             let folder = this.folderBtn.get_filename();
-            let name = this.filenameEntry.get_text();
+            const name = this.filenameEntry.get_text();
             if (!folder || !name) return null;
             if (!folder.endsWith("/")) folder += "/";
             return folder + name;
         }
 
         _takeScreenshot() {
-            let filepath = this._getDestinationPath();
+            const filepath = this._getDestinationPath();
             if (!filepath) {
                 this.statusLabel.set_text("Error: Invalid path or filename");
                 return;
@@ -80,13 +82,13 @@ export const ScreenshotPage = GObject.registerClass(
             // For now, we just capture.
 
             try {
-                let window = Gdk.get_default_root_window();
-                let w = window.get_width();
-                let h = window.get_height();
+                const window = Gdk.get_default_root_window();
+                const w = window.get_width();
+                const h = window.get_height();
 
                 // Gdk.pixbuf_get_from_window is the standard Gtk3 way
                 // If this fails, we might need GdkPixbuf.Pixbuf.get_from_window depending on binding version
-                let pixbuf = Gdk.pixbuf_get_from_window(window, 0, 0, w, h);
+                const pixbuf = Gdk.pixbuf_get_from_window(window, 0, 0, w, h);
 
                 if (pixbuf) {
                     // savev(filename, type, option_keys, option_values)

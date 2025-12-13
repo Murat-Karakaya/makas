@@ -19,7 +19,7 @@ export const PreferencesWindow = GObject.registerClass({
         this.add_button('Close', Gtk.ResponseType.CLOSE);
         this.connect('response', () => this.destroy());
 
-        let contentArea = this.get_content_area();
+        const contentArea = this.get_content_area();
         contentArea.set_spacing(12);
         contentArea.set_margin_top(12);
         contentArea.set_margin_bottom(12);

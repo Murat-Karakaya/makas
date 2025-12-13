@@ -32,7 +32,7 @@ export const ScreenrecorderWindow = GObject.registerClass({
     GTypeName: 'ScreenrecorderWindow',
 }, class ScreenrecorderWindow extends Gtk.ApplicationWindow {
     constructor(application) {
-        super({ application, title: "ScreenRecorder", default_width: 800, default_height: 600 });
+        super({ application, title: "ScreenRecorder", default_width: 500, default_height: 400 });
 
         // Main Box
         this.main_box = new Gtk.Box({
@@ -46,12 +46,12 @@ export const ScreenrecorderWindow = GObject.registerClass({
         });
 
         // Stack Switcher
-        let stack = new Gtk.Stack({
+        const stack = new Gtk.Stack({
             transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
             margin_start: 25,
             margin_end: 25,
-            margin_top: 2,
-            margin_bottom: 2,
+            margin_top: 25,
+            margin_bottom: 25,
             visible: true
         });
 
@@ -60,7 +60,7 @@ export const ScreenrecorderWindow = GObject.registerClass({
         this.main_box.add(toolbar);
 
         // Add expanding separator to push switcher to center. I know this is ugly but I don't know how to do it better.
-        let leftSeparator = new Gtk.SeparatorToolItem({
+        const leftSeparator = new Gtk.SeparatorToolItem({
             draw: false,
             visible: true,
         });
@@ -68,10 +68,10 @@ export const ScreenrecorderWindow = GObject.registerClass({
         toolbar.insert(leftSeparator, 0);
 
         // Add switcher in the middle
-        let toolSwitcherContainer = new Gtk.ToolItem({
+        const toolSwitcherContainer = new Gtk.ToolItem({
             visible: true,
         });
-        let switcher = new Gtk.StackSwitcher({
+        const switcher = new Gtk.StackSwitcher({
             stack: stack,
             margin_bottom: 2,
             margin_start: 25,
@@ -81,7 +81,7 @@ export const ScreenrecorderWindow = GObject.registerClass({
         toolbar.insert(toolSwitcherContainer, -1);
 
         // Add expanding separator after switcher
-        let rightSeparator = new Gtk.SeparatorToolItem({
+        const rightSeparator = new Gtk.SeparatorToolItem({
             draw: false,
             visible: true,
         });
@@ -89,17 +89,17 @@ export const ScreenrecorderWindow = GObject.registerClass({
         toolbar.insert(rightSeparator, -1);
 
         // Menu button with dropdown
-        let menuToolItem = new Gtk.ToolItem({
+        const menuToolItem = new Gtk.ToolItem({
             visible: true,
         });
 
-        let menuButton = new Gtk.MenuButton({
+        const menuButton = new Gtk.MenuButton({
             visible: true,
             relief: Gtk.ReliefStyle.NONE,
         });
 
         // Set menu icon from icon theme
-        let menuIcon = new Gtk.Image({
+        const menuIcon = new Gtk.Image({
             icon_name: 'open-menu-symbolic',
             icon_size: Gtk.IconSize.SMALL_TOOLBAR,
             visible: true,
@@ -107,20 +107,20 @@ export const ScreenrecorderWindow = GObject.registerClass({
         menuButton.set_image(menuIcon);
 
         // Create popover menu
-        let popover = new Gtk.Popover();
-        let popoverBox = new Gtk.Box({
+        const popover = new Gtk.Popover();
+        const popoverBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             margin: 5,
             visible: true,
         });
 
-        let preferencesButton = new Gtk.ModelButton({
+        const preferencesButton = new Gtk.ModelButton({
             text: 'Preferences',
             visible: true,
         });
         preferencesButton.connect('clicked', () => {
             popover.popdown();
-            let prefsWindow = new PreferencesWindow(this);
+            const prefsWindow = new PreferencesWindow(this);
             prefsWindow.show_all();
         });
 
@@ -136,13 +136,13 @@ export const ScreenrecorderWindow = GObject.registerClass({
         this.main_box.pack_start(stack, true, true, 0);
 
         // --- Page 1: Screenshot ---
-        let screenshotPage = new ScreenshotPage();
+        const screenshotPage = new ScreenshotPage();
         screenshotPage.show_all();
         stack.add_titled(screenshotPage, "screenshot", "Screenshot");
 
 
         // --- Page 2: Recorder ---
-        let recorderPage = new RecorderPage();
+        const recorderPage = new RecorderPage();
         recorderPage.show_all();
         stack.add_titled(recorderPage, "recorder", "Recorder");
     }
