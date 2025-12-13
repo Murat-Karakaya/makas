@@ -43,12 +43,6 @@ export const ScreenshotPage = GObject.registerClass(
             this._lastPixbuf = null;
 
             this._buildUI();
-
-            // Handle destruction to prevent calls on disposed objects
-            this._isDestroyed = false;
-            this.connect('destroy', () => {
-                this._isDestroyed = true;
-            });
         }
 
         _buildUI() {
@@ -194,10 +188,6 @@ export const ScreenshotPage = GObject.registerClass(
 
         _onTakeScreenshot() {
             print('Screenshot: _onTakeScreenshot enter');
-            if (this._isDestroyed) {
-                print('Screenshot: Destroyed, aborting');
-                return;
-            }
 
             const app = Gio.Application.get_default();
             if (app) {
@@ -217,10 +207,6 @@ export const ScreenshotPage = GObject.registerClass(
 
             // Start flow after small delay to allow hide
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
-                if (this._isDestroyed) {
-                    this._finishScreenshot(app, topLevel);
-                    return GLib.SOURCE_REMOVE;
-                }
 
                 print(`Screenshot: Selection phase, mode=${this._captureMode}`);
 
@@ -280,11 +266,9 @@ export const ScreenshotPage = GObject.registerClass(
 
         async _performCapture(app, topLevel, selectionResult) {
             print('Screenshot: Capturing...');
+            let pixbuf = null;
+
             try {
-
-                if (this._isDestroyed) return;
-
-                let pixbuf = null;
 
                 switch (this._captureMode) {
                     case CaptureMode.SCREEN:
@@ -294,7 +278,6 @@ export const ScreenshotPage = GObject.registerClass(
                         pixbuf = this._captureWindow(selectionResult); // Pass selection result
                         break;
                     case CaptureMode.AREA:
-                        // Use the result we got earlier
                         if (selectionResult) {
                             const rootWindow = Gdk.get_default_root_window();
                             pixbuf = Gdk.pixbuf_get_from_window(
@@ -306,11 +289,10 @@ export const ScreenshotPage = GObject.registerClass(
                             );
                         }
                         break;
-                }
 
-                if (!pixbuf) {
-                    this._statusLabel.set_text('Capture cancelled or failed');
-                    return;
+                    default:
+                        this._statusLabel.set_text('Capture cancelled or failed');
+                        break;
                 }
 
                 // Add pointer if enabled
@@ -330,18 +312,16 @@ export const ScreenshotPage = GObject.registerClass(
                     // Update last save directory
                     const folder = this._folderBtn.get_filename();
                     if (folder) {
-                        settings.set_string('last-save-directory', folder);
+                        settings.set_string('screenshot-last-save-directory', folder);
                     }
 
                     // Update filename for next screenshot
                     this._filenameEntry.set_text(`Screenshot-${getCurrentDate()}.png`);
-                } else {
-                    this._statusLabel.set_text('Screenshot captured (not saved)');
                 }
 
             } catch (e) {
                 print(`Screenshot error: ${e.message}`);
-                if (!this._isDestroyed) this._statusLabel.set_text(`Error: ${e.message}`);
+                this._statusLabel.set_text(`Error: ${e.message}`);
             }
 
             this._finishScreenshot(app, topLevel);
@@ -349,28 +329,21 @@ export const ScreenshotPage = GObject.registerClass(
 
         _finishScreenshot(app, topLevel) {
             print('Screenshot: Restoring window');
-            this._restoreWindow(topLevel);
-            if (app) app.release();
-            if (!this._isDestroyed) {
-                this._shootBtn.set_sensitive(true);
-            }
-        }
 
-        _restoreWindow(topLevel) {
-            if (this._isDestroyed) return;
             if (topLevel && topLevel.show) {
                 topLevel.show();
                 topLevel.present();
             }
+
+            if (app) app.release();
+            this._shootBtn.set_sensitive(true);
         }
 
 
 
         _captureScreen() {
             const rootWindow = Gdk.get_default_root_window();
-            const width = rootWindow.get_width();
-            const height = rootWindow.get_height();
-            return Gdk.pixbuf_get_from_window(rootWindow, 0, 0, width, height);
+            return Gdk.pixbuf_get_from_window(rootWindow, 0, 0, rootWindow.get_width(), rootWindow.get_height());
         }
 
         _captureWindow(selectionResult) {
@@ -408,20 +381,6 @@ export const ScreenshotPage = GObject.registerClass(
                 activeWindow = screen.get_active_window();
             }
 
-            // Fallback: get window under pointer
-            if (!activeWindow) {
-                const seat = Gdk.Display.get_default().get_default_seat();
-                const pointer = seat.get_pointer();
-                activeWindow = pointer.get_window_at_position(null, null);
-            }
-
-            // Ultimate fallback: capture entire screen
-            if (!activeWindow || activeWindow === Gdk.get_default_root_window()) {
-                this._statusLabel.set_text('No active window, capturing screen');
-                return this._captureScreen();
-            }
-
-            // Get toplevel window
             // Get toplevel window
             activeWindow = activeWindow.get_toplevel();
 

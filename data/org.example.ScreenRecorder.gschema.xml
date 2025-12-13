@@ -17,11 +17,11 @@
 			<description>Number of seconds to wait before taking the screenshot</description>
 		</key>
 		<key name="include-pointer" type="b">
-			<default>false</default>
+			<default>true</default>
 			<summary>Include mouse pointer</summary>
 			<description>Whether to include the mouse pointer in the screenshot</description>
 		</key>
-		<key name="last-save-directory" type="s">
+		<key name="screenshot-last-save-directory" type="s">
 			<default>''</default>
 			<summary>Last save directory</summary>
 			<description>The last directory a screenshot was saved in</description>

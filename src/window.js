@@ -59,7 +59,7 @@ export const ScreenrecorderWindow = GObject.registerClass({
         toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
         this.main_box.add(toolbar);
 
-        // Add expanding separator to push switcher to center. I know this is ugly but I don't know how to do it better.
+        // Add expanding separator to push switcher to center. I know this is ugly and I will allow a commit to clean this up.
         const leftSeparator = new Gtk.SeparatorToolItem({
             draw: false,
             visible: true,
@@ -138,12 +138,12 @@ export const ScreenrecorderWindow = GObject.registerClass({
         // --- Page 1: Screenshot ---
         const screenshotPage = new ScreenshotPage();
         screenshotPage.show_all();
-        stack.add_titled(screenshotPage, "screenshot", "Screenshot");
+        stack.add_titled(screenshotPage, "screenshot", "  Screenshot  ");
 
 
         // --- Page 2: Recorder ---
         const recorderPage = new RecorderPage();
         recorderPage.show_all();
-        stack.add_titled(recorderPage, "recorder", "Recorder");
+        stack.add_titled(recorderPage, "recorder", "  Recorder  ");
     }
 });

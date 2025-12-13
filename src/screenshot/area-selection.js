@@ -10,40 +10,13 @@ import Gdk from 'gi://Gdk?version=3.0';
 import GLib from 'gi://GLib';
 import cairo from 'gi://cairo';
 
-/**
- * Show an area selection overlay and return the selected rectangle.
- * @returns {Promise<{x: number, y: number, width: number, height: number} | null>}
- *          The selected rectangle, or null if cancelled.
- */
-export function selectAreaAsync() {
-    print('Selection: selectAreaAsync called');
-    return new Promise((resolve) => {
-        selectArea((rect) => {
-            resolve(rect);
-        });
-    });
-}
-
-/**
- * Show a cursor for window selection and return the click position.
- * @returns {Promise<{x: number, y: number} | null>}
- *          The click coordinates, or null if cancelled.
- */
-export function selectWindowAsync() {
-    print('Selection: selectWindowAsync called');
-    return new Promise((resolve) => {
-        selectWindow((coords) => {
-            resolve(coords);
-        });
-    });
-}
 
 /**
  * Show an area selection overlay and return the selected rectangle via callback.
  * @param {Function} callback - Called with {x, y, width, height} or null
  */
 export function selectArea(callback) {
-    print('Selection: selectArea (callback) called');
+    print('Selection: selectArea called');
     const data = {
         rect: { x: 0, y: 0, width: 0, height: 0 },
         buttonPressed: false,
