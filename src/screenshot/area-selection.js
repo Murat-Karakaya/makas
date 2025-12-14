@@ -146,7 +146,7 @@ export function selectArea(startDelay) {
  * @param {Function} callback - Called with {x, y} or null.
  */
 export function selectWindow(startDelay) {
-    print('Selection: selectWindow (startDelay) called');
+    print('Selection: selectWindow called');
     let aborted = false;
     const screen = Gdk.Screen.get_default();
     const visual = screen.get_rgba_visual();

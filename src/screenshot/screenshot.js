@@ -1,14 +1,3 @@
-/**
- * screenshot.js - Screenshot page with gnome-screenshot feature parity
- * 
- * Features:
- * - Capture modes: Screen, Window, Area
- * - Delay timer (0-60 seconds)
- * - Include pointer toggle
- * - Copy to clipboard
- * - Save with file chooser
- */
-
 import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk?version=3.0';
 import GObject from 'gi://GObject';
@@ -350,21 +339,19 @@ export const ScreenshotPage = GObject.registerClass(
             this._shootBtn.set_sensitive(true);
         }
 
-
-
-        _captureScreen() {
-            const rootWindow = Gdk.get_default_root_window();
-            return Gdk.pixbuf_get_from_window(rootWindow, 0, 0, rootWindow.get_width(), rootWindow.get_height());
-        }
-
         _onCopyToClipboard() {
             if (!this._lastPixbuf) {
                 this._statusLabel.set_text('No screenshot to copy');
                 return;
             }
+            
+            // This bypasses bugs happening in my environment with the constant Gdk.SELECTION_CLIPBOARD
+            const CLIPBOARD_ATOM = Gdk.Atom.intern('CLIPBOARD', false);
 
-            const clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD);
+            const clipboard = Gtk.Clipboard.get(CLIPBOARD_ATOM);
             clipboard.set_image(this._lastPixbuf);
+            clipboard.store();
+            
             this._statusLabel.set_text('Copied to clipboard');
         }
     }
