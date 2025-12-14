@@ -206,3 +206,69 @@ export function selectWindow(callback) {
     const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
     seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
 }
+
+
+function captureWindow(selectionResult) {
+    const screen = Gdk.Screen.get_default();
+    let activeWindow = null;
+
+    if (selectionResult) {
+        // Find window at clicked active coordinates
+        // rootWindow.get_window_at_position is not available in GDK3 introspection
+        // We iterate the window stack to find which window contains the point
+        const windows = screen.get_window_stack();
+        if (windows) {
+            // Start from top (end of list)
+            for (let i = windows.length - 1; i >= 0; i--) {
+                const win = windows[i];
+                if (!win.is_visible()) continue;
+
+                // Check bounds
+                // win.get_frame_extents() returns the total area including decorations
+                const rect = win.get_frame_extents();
+
+                if (selectionResult.x >= rect.x &&
+                    selectionResult.x < (rect.x + rect.width) &&
+                    selectionResult.y >= rect.y &&
+                    selectionResult.y < (rect.y + rect.height)) {
+                    activeWindow = win;
+                    print(`Screenshot: Found window at ${selectionResult.x},${selectionResult.y}: ${win}`);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!activeWindow) {
+        activeWindow = screen.get_active_window();
+    }
+
+    // Get toplevel window
+    activeWindow = activeWindow.get_toplevel();
+
+    // Get window geometry including frame using frame extents
+    // timestamp get_geometry often returns 0/0 for unmapped or some types of windows
+    const rect = activeWindow.get_frame_extents();
+    const width = rect.width;
+    const height = rect.height;
+    const originX = rect.x;
+    const originY = rect.y;
+
+    print(`Screenshot: Capturing window rect: x=${originX}, y=${originY}, w=${width}, h=${height}`);
+
+    if (width <= 0 || height <= 0) {
+        print('Screenshot: Invalid window dimensions, falling back to screen capture');
+        return this._captureScreen();
+    }
+
+    // Capture from root window at window position for frame decorations
+    const rootWindow = Gdk.get_default_root_window();
+
+    return Gdk.pixbuf_get_from_window(
+        rootWindow,
+        originX,
+        originY,
+        width,
+        height
+    );
+}
