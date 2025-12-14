@@ -15,7 +15,7 @@ import cairo from 'gi://cairo';
  * Show an area selection overlay and return the selected rectangle via callback.
  * @param {Function} callback - Called with {x, y, width, height} or null
  */
-export function selectArea(callback) {
+export function selectArea(startDelay) {
     print('Selection: selectArea called');
     const data = {
         rect: { x: 0, y: 0, width: 0, height: 0 },
@@ -120,9 +120,9 @@ export function selectArea(callback) {
     window.connect('destroy', () => {
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
             if (data.aborted || data.rect.width < 5 || data.rect.height < 5) {
-                if (callback) callback(null);
+                if (startDelay) startDelay(null);
             } else {
-                if (callback) callback({
+                if (startDelay) startDelay({
                     x: Math.round(data.rect.x),
                     y: Math.round(data.rect.y),
                     width: Math.round(data.rect.width),
@@ -144,8 +144,8 @@ export function selectArea(callback) {
  * Show window selection cursor and return click position via callback.
  * @param {Function} callback - Called with {x, y} or null.
  */
-export function selectWindow(callback) {
-    print('Selection: selectWindow (callback) called');
+export function selectWindow(startDelay) {
+    print('Selection: selectWindow (startDelay) called');
     let aborted = false;
     const screen = Gdk.Screen.get_default();
     const visual = screen.get_rgba_visual();
@@ -181,7 +181,7 @@ export function selectWindow(callback) {
         const [, x, y] = event.get_root_coords();
         window.destroy();
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            if (!aborted && callback) callback({ x: Math.round(x), y: Math.round(y) });
+            if (!aborted && startDelay) captureWindowCoordinates(startDelay, { x: Math.round(x), y: Math.round(y) });
             return GLib.SOURCE_REMOVE;
         });
         return true;
@@ -192,7 +192,7 @@ export function selectWindow(callback) {
             aborted = true;
             window.destroy();
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-                if (callback) callback(null);
+                if (startDelay) startDelay(null);
                 return GLib.SOURCE_REMOVE;
             });
             return true;
@@ -208,7 +208,7 @@ export function selectWindow(callback) {
 }
 
 
-function captureWindow(selectionResult) {
+function captureWindowCoordinates(startDelay, selectionResult) {
     const screen = Gdk.Screen.get_default();
     let activeWindow = null;
 
@@ -243,32 +243,23 @@ function captureWindow(selectionResult) {
         activeWindow = screen.get_active_window();
     }
 
-    // Get toplevel window
-    activeWindow = activeWindow.get_toplevel();
-
-    // Get window geometry including frame using frame extents
-    // timestamp get_geometry often returns 0/0 for unmapped or some types of windows
-    const rect = activeWindow.get_frame_extents();
+    const rect = activeWindow.get_toplevel().get_frame_extents();
     const width = rect.width;
     const height = rect.height;
-    const originX = rect.x;
-    const originY = rect.y;
+    const x = rect.x;
+    const y = rect.y;
 
-    print(`Screenshot: Capturing window rect: x=${originX}, y=${originY}, w=${width}, h=${height}`);
+    print(`Screenshot: Capturing window rect: x=${x}, y=${y}, w=${width}, h=${height}`);
 
     if (width <= 0 || height <= 0) {
-        print('Screenshot: Invalid window dimensions, falling back to screen capture');
-        return this._captureScreen();
+        print('Screenshot: Invalid window dimensions, cancelling capture');
+        return startDelay(null);
     }
 
-    // Capture from root window at window position for frame decorations
-    const rootWindow = Gdk.get_default_root_window();
-
-    return Gdk.pixbuf_get_from_window(
-        rootWindow,
-        originX,
-        originY,
+    return startDelay({
+        x,
+        y,
         width,
         height
-    );
+    });
 }
