@@ -11,7 +11,6 @@
 
 import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk?version=3.0';
-import GdkPixbuf from 'gi://GdkPixbuf';
 import GObject from 'gi://GObject';
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
@@ -276,12 +275,11 @@ export const ScreenshotPage = GObject.registerClass(
                         pixbuf = this._captureScreen();
                         break;
                     case CaptureMode.WINDOW:
-                        if (selectionResult) {
-                            const rootWindow = Gdk.get_default_root_window();
+                        if (selectionResult && selectionResult.window) {
                             pixbuf = Gdk.pixbuf_get_from_window(
-                                rootWindow,
-                                selectionResult.x,
-                                selectionResult.y,
+                                selectionResult.window,
+                                0,
+                                0,
                                 selectionResult.width,
                                 selectionResult.height
                             );

@@ -208,11 +208,11 @@ export function selectWindow(startDelay) {
 }
 
 
-function captureWindowCoordinates(startDelay, selectionResult) {
+function captureWindowCoordinates(startDelay, pointerCoords) {
     const screen = Gdk.Screen.get_default();
     let activeWindow = null;
 
-    if (selectionResult) {
+    if (pointerCoords) {
         // Find window at clicked active coordinates
         // rootWindow.get_window_at_position is not available in GDK3 introspection
         // We iterate the window stack to find which window contains the point
@@ -227,12 +227,12 @@ function captureWindowCoordinates(startDelay, selectionResult) {
                 // win.get_frame_extents() returns the total area including decorations
                 const rect = win.get_frame_extents();
 
-                if (selectionResult.x >= rect.x &&
-                    selectionResult.x < (rect.x + rect.width) &&
-                    selectionResult.y >= rect.y &&
-                    selectionResult.y < (rect.y + rect.height)) {
+                if (pointerCoords.x >= rect.x &&
+                    pointerCoords.x < (rect.x + rect.width) &&
+                    pointerCoords.y >= rect.y &&
+                    pointerCoords.y < (rect.y + rect.height)) {
                     activeWindow = win;
-                    print(`Screenshot: Found window at ${selectionResult.x},${selectionResult.y}: ${win}`);
+                    print(`Screenshot: Found window at ${pointerCoords.x},${pointerCoords.y}: ${win}`);
                     break;
                 }
             }
@@ -243,13 +243,19 @@ function captureWindowCoordinates(startDelay, selectionResult) {
         activeWindow = screen.get_active_window();
     }
 
-    const rect = activeWindow.get_toplevel().get_frame_extents();
+    if (!activeWindow) {
+        print('Screenshot: Could not find a window to capture, cancelling.');
+        return startDelay(null);
+    }
+
+    const toplevel = activeWindow.get_toplevel();
+    const rect = toplevel.get_frame_extents();
     const width = rect.width;
     const height = rect.height;
     const x = rect.x;
     const y = rect.y;
 
-    print(`Screenshot: Capturing window rect: x=${x}, y=${y}, w=${width}, h=${height}`);
+    print(`Screenshot: Capturing window rect: w=${width}, h=${height}`);
 
     if (width <= 0 || height <= 0) {
         print('Screenshot: Invalid window dimensions, cancelling capture');
@@ -257,8 +263,7 @@ function captureWindowCoordinates(startDelay, selectionResult) {
     }
 
     return startDelay({
-        x,
-        y,
+        window: toplevel,
         width,
         height
     });
