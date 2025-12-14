@@ -9,6 +9,7 @@ import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk?version=3.0';
 import GLib from 'gi://GLib';
 import cairo from 'gi://cairo';
+import { getTargetGdkWindow } from './helpers.js';
 
 
 /**
@@ -212,36 +213,7 @@ function captureWindowCoordinates(startDelay, pointerCoords) {
     const screen = Gdk.Screen.get_default();
     let activeWindow = null;
 
-    if (pointerCoords) {
-        // Find window at clicked active coordinates
-        // rootWindow.get_window_at_position is not available in GDK3 introspection
-        // We iterate the window stack to find which window contains the point
-        const windows = screen.get_window_stack();
-        if (windows) {
-            // Start from top (end of list)
-            for (let i = windows.length - 1; i >= 0; i--) {
-                const win = windows[i];
-                if (!win.is_visible()) continue;
-
-                // Check bounds
-                // win.get_frame_extents() returns the total area including decorations
-                const rect = win.get_frame_extents();
-
-                if (pointerCoords.x >= rect.x &&
-                    pointerCoords.x < (rect.x + rect.width) &&
-                    pointerCoords.y >= rect.y &&
-                    pointerCoords.y < (rect.y + rect.height)) {
-                    activeWindow = win;
-                    print(`Screenshot: Found window at ${pointerCoords.x},${pointerCoords.y}: ${win}`);
-                    break;
-                }
-            }
-        }
-    }
-
-    if (!activeWindow) {
-        activeWindow = screen.get_active_window();
-    }
+    activeWindow = getTargetGdkWindow(pointerCoords);
 
     if (!activeWindow) {
         print('Screenshot: Could not find a window to capture, cancelling.');

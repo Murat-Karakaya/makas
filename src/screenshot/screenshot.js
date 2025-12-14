@@ -272,16 +272,19 @@ export const ScreenshotPage = GObject.registerClass(
 
                 switch (this._captureMode) {
                     case CaptureMode.SCREEN:
-                        pixbuf = this._captureScreen();
+                        const rootWindow = Gdk.get_default_root_window();
+                        pixbuf = Gdk.pixbuf_get_from_window(
+                            rootWindow, 
+                            0, 0, 
+                            rootWindow.get_width(), rootWindow.get_height()
+                        );
                         break;
                     case CaptureMode.WINDOW:
                         if (selectionResult && selectionResult.window) {
                             pixbuf = Gdk.pixbuf_get_from_window(
                                 selectionResult.window,
-                                0,
-                                0,
-                                selectionResult.width,
-                                selectionResult.height
+                                0, 0,
+                                selectionResult.width, selectionResult.height
                             );
                         }
                         break;
