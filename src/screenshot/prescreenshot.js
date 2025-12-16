@@ -153,7 +153,7 @@ export const PreScreenshot = GObject.registerClass(
             });
             this.add(this._statusLabel);
 
-            this._shootBtn.connect('clicked', () => this._onTakeScreenshot());
+            this._shootBtn.connect('clicked', () => this.this._callbacks.onTakeScreenshot(this.getCaptureOptions()));
         }
 
         getCaptureOptions() {
@@ -168,12 +168,6 @@ export const PreScreenshot = GObject.registerClass(
 
         setStatus(text) {
             this._statusLabel.set_text(text);
-        }
-
-        _onTakeScreenshot() {
-            if (this._callbacks.onTakeScreenshot) {
-                this._callbacks.onTakeScreenshot(this.getCaptureOptions());
-            }
         }
         
         updateFilename() {

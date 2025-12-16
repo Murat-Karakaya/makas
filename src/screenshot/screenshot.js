@@ -6,7 +6,7 @@ import Gio from 'gi://Gio';
 
 import { settings } from '../window.js';
 import { selectArea, selectWindow } from './area-selection.js';
-import { compositePointer, getCurrentDate } from './utils.js';
+import { compositePointer } from './utils.js';
 import { PreScreenshot } from './prescreenshot.js';
 import { PostScreenshot } from './postscreenshot.js';
 
