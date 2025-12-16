@@ -52,11 +52,8 @@ export const ScreenshotPage = GObject.registerClass(
     }
 
     onTakeScreenshot({ captureMode, delay, includePointer, folder, filename }) {
-      print("Screenshot: _onTakeScreenshot enter");
-
       const app = Gio.Application.get_default();
       if (app) {
-        print(`Screenshot: App found ${app}, holding`);
         app.hold();
       } else {
         print("Screenshot: WARNING - App not found via get_default()");

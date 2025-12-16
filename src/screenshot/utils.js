@@ -125,3 +125,36 @@ export const getDestinationPath = (options) => {
   if (!folder.endsWith("/")) folder += "/";
   return folder + name;
 };
+
+
+export function captureWindowCoordinates(startDelay, pointerCoords) {
+  const screen = Gdk.Screen.get_default();
+  let activeWindow = null;
+
+  activeWindow = getTargetGdkWindow(pointerCoords);
+
+  if (!activeWindow) {
+    print("Screenshot: Could not find a window to capture, cancelling.");
+    return startDelay(null);
+  }
+
+  const toplevel = activeWindow.get_toplevel();
+  const rect = toplevel.get_frame_extents();
+  const width = rect.width;
+  const height = rect.height;
+  const x = rect.x;
+  const y = rect.y;
+
+  print(`Screenshot: Capturing window rect: w=${width}, h=${height}`);
+
+  if (width <= 0 || height <= 0) {
+    print("Screenshot: Invalid window dimensions, cancelling capture");
+    return startDelay(null);
+  }
+
+  return startDelay({
+    window: toplevel,
+    width,
+    height,
+  });
+}

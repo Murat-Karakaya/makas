@@ -31,7 +31,6 @@ export const PreScreenshot = GObject.registerClass(
     }
 
     buildUI() {
-      // === Capture Mode Section ===
       const modeFrame = new Gtk.Frame({ label: "Capture Mode" });
       const modeBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
@@ -69,7 +68,6 @@ export const PreScreenshot = GObject.registerClass(
         if (areaRadio.get_active()) this._captureMode = CaptureMode.AREA;
       });
 
-      // === Options Section ===
       const optionsFrame = new Gtk.Frame({ label: "Options" });
       const optionsGrid = new Gtk.Grid({
         row_spacing: 8,
@@ -80,7 +78,6 @@ export const PreScreenshot = GObject.registerClass(
         margin_end: 12,
       });
 
-      // Delay spinner
       const delayLabel = new Gtk.Label({
         label: "Delay (seconds):",
         halign: Gtk.Align.START,
@@ -94,7 +91,6 @@ export const PreScreenshot = GObject.registerClass(
         value: settings.get_int("screenshot-delay"),
       });
 
-      // Include pointer toggle
       const pointerLabel = new Gtk.Label({
         label: "Include pointer:",
         halign: Gtk.Align.START,

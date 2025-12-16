@@ -9,7 +9,8 @@ import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";
 import cairo from "gi://cairo";
-import { getTargetGdkWindow } from "./utils.js";
+
+import { captureWindowCoordinates } from "./utils.js";
 
 /**
  * Show an area selection overlay and return the selected rectangle via callback.
@@ -226,36 +227,4 @@ export function selectWindow(startDelay) {
   const seat = display.get_default_seat();
   const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
   seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
-}
-
-function captureWindowCoordinates(startDelay, pointerCoords) {
-  const screen = Gdk.Screen.get_default();
-  let activeWindow = null;
-
-  activeWindow = getTargetGdkWindow(pointerCoords);
-
-  if (!activeWindow) {
-    print("Screenshot: Could not find a window to capture, cancelling.");
-    return startDelay(null);
-  }
-
-  const toplevel = activeWindow.get_toplevel();
-  const rect = toplevel.get_frame_extents();
-  const width = rect.width;
-  const height = rect.height;
-  const x = rect.x;
-  const y = rect.y;
-
-  print(`Screenshot: Capturing window rect: w=${width}, h=${height}`);
-
-  if (width <= 0 || height <= 0) {
-    print("Screenshot: Invalid window dimensions, cancelling capture");
-    return startDelay(null);
-  }
-
-  return startDelay({
-    window: toplevel,
-    width,
-    height,
-  });
 }
