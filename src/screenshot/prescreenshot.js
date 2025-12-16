@@ -24,8 +24,8 @@ export const PreScreenshot = GObject.registerClass(
         margin_top: 20,
       });
 
-      this._callbacks = callbacks;
-      this._captureMode = CaptureMode.SCREEN;
+      this.callbacks = callbacks;
+      this.captureMode = CaptureMode.SCREEN;
 
       this.buildUI();
     }
@@ -59,13 +59,13 @@ export const PreScreenshot = GObject.registerClass(
       this.add(modeFrame);
 
       screenRadio.connect("toggled", () => {
-        if (screenRadio.get_active()) this._captureMode = CaptureMode.SCREEN;
+        if (screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
       });
       windowRadio.connect("toggled", () => {
-        if (windowRadio.get_active()) this._captureMode = CaptureMode.WINDOW;
+        if (windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
       });
       areaRadio.connect("toggled", () => {
-        if (areaRadio.get_active()) this._captureMode = CaptureMode.AREA;
+        if (areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
       });
 
       const optionsFrame = new Gtk.Frame({ label: "Options" });
@@ -122,12 +122,12 @@ export const PreScreenshot = GObject.registerClass(
         label: "Folder:",
         halign: Gtk.Align.START,
       });
-      this._folderBtn = new Gtk.FileChooserButton({
+      this.folderBtn = new Gtk.FileChooserButton({
         title: "Select Folder",
         action: Gtk.FileChooserAction.SELECT_FOLDER,
         width_chars: 30,
       });
-      this._folderBtn.set_current_folder(
+      this.folderBtn.set_current_folder(
         settings.get_string("default-screenshot-folder"),
       );
 
@@ -135,16 +135,16 @@ export const PreScreenshot = GObject.registerClass(
         label: "Filename:",
         halign: Gtk.Align.START,
       });
-      this._filenameEntry = new Gtk.Entry({
+      this.filenameEntry = new Gtk.Entry({
         text: `Screenshot-${getCurrentDate()}.png`,
         placeholder_text: "screenshot.png",
         width_chars: 30,
       });
 
       fileGrid.attach(folderLabel, 0, 0, 1, 1);
-      fileGrid.attach(this._folderBtn, 1, 0, 1, 1);
+      fileGrid.attach(this.folderBtn, 1, 0, 1, 1);
       fileGrid.attach(nameLabel, 0, 1, 1, 1);
-      fileGrid.attach(this._filenameEntry, 1, 1, 1, 1);
+      fileGrid.attach(this.filenameEntry, 1, 1, 1, 1);
       fileFrame.add(fileGrid);
       this.add(fileFrame);
 
@@ -156,42 +156,38 @@ export const PreScreenshot = GObject.registerClass(
         margin_top: 8,
       });
 
-      this._shootBtn = new Gtk.Button({ label: "Take Screenshot" });
-      this._shootBtn
+      this.shootBtn = new Gtk.Button({ label: "Take Screenshot" });
+      this.shootBtn
         .get_style_context()
         .add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION);
 
-      buttonBox.pack_start(this._shootBtn, false, false, 0);
+      buttonBox.pack_start(this.shootBtn, false, false, 0);
       this.add(buttonBox);
 
-      this._statusLabel = new Gtk.Label({
+      this.statusLabel = new Gtk.Label({
         label: "Ready",
         halign: Gtk.Align.CENTER,
         margin_top: 8,
       });
-      this.add(this._statusLabel);
+      this.add(this.statusLabel);
 
-      this._shootBtn.connect("clicked", () =>
-        this._callbacks.onTakeScreenshot(this.getCaptureOptions()),
+      this.shootBtn.connect("clicked", () =>
+        this.callbacks.onTakeScreenshot({
+          captureMode: this.captureMode,
+          delay: this._delaySpinner.get_value_as_int(),
+          includePointer: this._pointerSwitch.get_active(),
+          folder: this.folderBtn.get_filename(),
+          filename: this.filenameEntry.get_text(),
+        }),
       );
     }
 
-    getCaptureOptions() {
-      return {
-        captureMode: this._captureMode,
-        delay: this._delaySpinner.get_value_as_int(),
-        includePointer: this._pointerSwitch.get_active(),
-        folder: this._folderBtn.get_filename(),
-        filename: this._filenameEntry.get_text(),
-      };
-    }
-
     setStatus(text) {
-      this._statusLabel.set_text(text);
+      this.statusLabel.set_text(text);
     }
 
     updateFilename() {
-      this._filenameEntry.set_text(`Screenshot-${getCurrentDate()}.png`);
+      this.filenameEntry.set_text(`Screenshot-${getCurrentDate()}.png`);
     }
   },
 );
