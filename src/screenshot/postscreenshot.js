@@ -17,10 +17,10 @@ export const PostScreenshot = GObject.registerClass(
       });
       this._callbacks = callbacks;
 
-      this._buildUI();
+      this.buildUI();
     }
 
-    _buildUI() {
+    buildUI() {
       const buttonBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 12,

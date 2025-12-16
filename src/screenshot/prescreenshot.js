@@ -27,10 +27,10 @@ export const PreScreenshot = GObject.registerClass(
       this._callbacks = callbacks;
       this._captureMode = CaptureMode.SCREEN;
 
-      this._buildUI();
+      this.buildUI();
     }
 
-    _buildUI() {
+    buildUI() {
       // === Capture Mode Section ===
       const modeFrame = new Gtk.Frame({ label: "Capture Mode" });
       const modeBox = new Gtk.Box({
