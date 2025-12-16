@@ -3,7 +3,6 @@
   <gresource prefix="/org/example/ScreenRecorder/js">
     <file>main.js</file>
     <file>window.js</file>
-    <file>recorder/recorder.js</file>
     <file>screenshot/screenshot.js</file>
   </gresource>
 </gresources>

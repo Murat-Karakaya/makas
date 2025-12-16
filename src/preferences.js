@@ -49,21 +49,6 @@ export const PreferencesWindow = GObject.registerClass({
 
         screenshotFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-screenshot-folder"));
 
-        // Recorder Folder Row
-        const recorderLabel = new Gtk.Label({ label: "Recording Folder:", halign: Gtk.Align.START });
-        const recorderPathLabel = new Gtk.Label({
-            label: settings.get_string('default-recorder-folder'),
-            hexpand: true,
-            halign: Gtk.Align.START,
-            ellipsize: Pango.EllipsizeMode.MIDDLE
-        });
-        const recorderFolderButton = new Gtk.Button({ label: 'Browse' });
-
-        grid.attach(recorderLabel, 0, 1, 1, 1);
-        grid.attach(recorderPathLabel, 1, 1, 1, 1);
-        grid.attach(recorderFolderButton, 2, 1, 1, 1);
-
-        recorderFolderButton.connect('clicked', () => this._onOpenFolderSelector("default-recorder-folder"));
 
         // Screenshot Delay Row
         const delayLabel = new Gtk.Label({ label: "Screenshot Delay:", halign: Gtk.Align.START });

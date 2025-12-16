@@ -5,9 +5,8 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 
 import { settings } from '../window.js';
-import { getCurrentDate } from '../utils.js';
 import { selectArea, selectWindow } from './area-selection.js';
-import { compositePointer } from './helpers.js';
+import { compositePointer, getCurrentDate } from './utils.js';
 
 // Capture mode enumeration
 const CaptureMode = {
@@ -26,6 +25,8 @@ export const ScreenshotPage = GObject.registerClass(
                 halign: Gtk.Align.CENTER,
                 margin_start: 20,
                 margin_end: 20,
+                margin_bottom: 20,
+                margin_top: 20,
             });
 
             this._captureMode = CaptureMode.SCREEN;

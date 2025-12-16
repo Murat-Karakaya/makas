@@ -9,7 +9,7 @@ import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk?version=3.0';
 import GLib from 'gi://GLib';
 import cairo from 'gi://cairo';
-import { getTargetGdkWindow } from './helpers.js';
+import { getTargetGdkWindow } from './utils.js';
 
 
 /**

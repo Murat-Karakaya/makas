@@ -21,7 +21,6 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk?version=3.0';
 
-import { RecorderPage } from './recorder/recorder.js';
 import { ScreenshotPage } from './screenshot/screenshot.js';
 import Gio from 'gi://Gio';
 import { PreferencesWindow } from './preferences.js';
@@ -44,49 +43,9 @@ export const ScreenrecorderWindow = GObject.registerClass({
         const toolbar = new Gtk.Toolbar({
             visible: true,
         });
-
-        // Stack Switcher
-        const stack = new Gtk.Stack({
-            transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
-            margin_start: 25,
-            margin_end: 25,
-            margin_top: 25,
-            margin_bottom: 25,
-            visible: true
-        });
-
         toolbar.toolbar_style = Gtk.ToolbarStyle.BOTH;
         toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
         this.main_box.add(toolbar);
-
-        // Add expanding separator to push switcher to center. I know this is ugly and I will allow a commit to clean this up.
-        const leftSeparator = new Gtk.SeparatorToolItem({
-            draw: false,
-            visible: true,
-        });
-        leftSeparator.set_expand(true);
-        toolbar.insert(leftSeparator, 0);
-
-        // Add switcher in the middle
-        const toolSwitcherContainer = new Gtk.ToolItem({
-            visible: true,
-        });
-        const switcher = new Gtk.StackSwitcher({
-            stack: stack,
-            margin_bottom: 2,
-            margin_start: 25,
-            visible: true,
-        });
-        toolSwitcherContainer.add(switcher);
-        toolbar.insert(toolSwitcherContainer, -1);
-
-        // Add expanding separator after switcher
-        const rightSeparator = new Gtk.SeparatorToolItem({
-            draw: false,
-            visible: true,
-        });
-        rightSeparator.set_expand(true);
-        toolbar.insert(rightSeparator, -1);
 
         // Menu button with dropdown
         const menuToolItem = new Gtk.ToolItem({
@@ -130,20 +89,11 @@ export const ScreenrecorderWindow = GObject.registerClass({
         menuButton.set_popover(popover);
 
         menuToolItem.add(menuButton);
-        toolbar.insert(menuToolItem, -1);
-
-        // Add Stack
-        this.main_box.pack_start(stack, true, true, 0);
+        toolbar.insert(menuToolItem, 0);
 
         // --- Page 1: Screenshot ---
         const screenshotPage = new ScreenshotPage();
         screenshotPage.show_all();
-        stack.add_titled(screenshotPage, "screenshot", "  Screenshot  ");
-
-
-        // --- Page 2: Recorder ---
-        const recorderPage = new RecorderPage();
-        recorderPage.show_all();
-        stack.add_titled(recorderPage, "recorder", "  Recorder  ");
+        this.main_box.add(screenshotPage);
     }
 });
