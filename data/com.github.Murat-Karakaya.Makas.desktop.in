@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=screenrecorder
-Exec=org.example.ScreenRecorder
-Icon=org.example.ScreenRecorder
+Name=Makas
+Exec=com.github.Murat-Karakaya.Makas
+Icon=com.github.Murat-Karakaya.Makas
 Terminal=false
 Type=Application
 Categories=Utility;

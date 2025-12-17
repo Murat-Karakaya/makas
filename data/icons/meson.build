@@ -1,4 +1,4 @@
-application_id = 'org.example.ScreenRecorder'
+application_id = 'com.github.Murat-Karakaya.Makas'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(

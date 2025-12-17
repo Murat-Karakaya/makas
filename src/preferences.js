@@ -1,6 +1,5 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
-import Pango from "gi://Pango";
 
 import { settings } from "./window.js";
 
@@ -44,7 +43,6 @@ export const PreferencesWindow = GObject.registerClass(
         label: settings.get_string("default-screenshot-folder"),
         hexpand: true,
         halign: Gtk.Align.START,
-        ellipsize: Pango.EllipsizeMode.MIDDLE,
       });
       const screenshotFolderButton = new Gtk.Button({ label: "Browse" });
 

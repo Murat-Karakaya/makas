@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.example.ScreenRecorder
-Exec=@bindir@/org.example.ScreenRecorder --gapplication-service

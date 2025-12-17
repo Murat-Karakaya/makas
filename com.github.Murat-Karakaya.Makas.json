@@ -1,5 +1,5 @@
 {
-    "id" : "org.example.ScreenRecorder",
+    "id" : "com.github.Murat-Karakaya.Makas",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "48",
     "sdk" : "org.gnome.Sdk",
@@ -7,7 +7,7 @@
         "org.freedesktop.Sdk.Extension.node20",
         "org.freedesktop.Sdk.Extension.typescript"
     ],
-    "command" : "org.example.ScreenRecorder",
+    "command" : "com.github.Murat-Karakaya.Makas",
     "finish-args" : [
         "--share=network",
         "--share=ipc",
@@ -31,7 +31,7 @@
     ],
     "modules" : [
         {
-            "name" : "screenrecorder",
+            "name" : "Makas",
             "builddir" : true,
             "buildsystem" : "meson",
             "sources" : [

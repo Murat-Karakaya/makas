@@ -7,7 +7,7 @@ import Gst from 'gi://Gst';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 
-import { ScreenrecorderWindow } from './window.js';
+import { ScreenshotWindow } from './window.js';
 
 // Initialize GStreamer
 Gst.init(null);
@@ -16,7 +16,7 @@ export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {
         _init() {
             super._init({
-                application_id: 'org.example.ScreenRecorder',
+                application_id: 'com.github.Murat-Karakaya.Makas',
                 flags: Gio.ApplicationFlags.FLAGS_NONE
             });
         }
@@ -24,7 +24,7 @@ export const ScreenRecorderApp = GObject.registerClass(
         vfunc_activate() {
             let win = this.active_window;
             if (!win) {
-                win = new ScreenrecorderWindow(this);
+                win = new ScreenshotWindow(this);
             }
             win.present();
         }

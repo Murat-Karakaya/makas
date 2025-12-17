@@ -1,1 +1,1 @@
-i18n.gettext('screenrecorder', preset: 'glib')
+i18n.gettext('Makas', preset: 'glib')

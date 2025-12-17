@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="screenrecorder">
-	<schema id="org.example.ScreenRecorder" path="/org/example/ScreenRecorder/">
+<schemalist gettext-domain="Makas">
+	<schema id="com.github.Murat-Karakaya.Makas" path="/com/github/Murat-Karakaya/Makas/">
 		<key name="default-recorder-folder" type="s">
 			<default>'/home/murat/Videos'</default>
 			<summary>Default folder for recorder</summary>

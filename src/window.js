@@ -26,18 +26,18 @@ import { ScreenshotPage } from "./screenshot/screenshot.js";
 import { PreferencesWindow } from "./preferences.js";
 
 export const settings = new Gio.Settings({
-  schema_id: "org.example.ScreenRecorder",
+  schema_id: "com.github.Murat-Karakaya.Makas",
 });
 
-export const ScreenrecorderWindow = GObject.registerClass(
+export const ScreenshotWindow = GObject.registerClass(
   {
-    GTypeName: "ScreenrecorderWindow",
+    GTypeName: "ScreenshotWindow",
   },
-  class ScreenrecorderWindow extends Gtk.ApplicationWindow {
+  class ScreenshotWindow extends Gtk.ApplicationWindow {
     constructor(application) {
       super({
         application,
-        title: "ScreenRecorder",
+        title: "Makas",
         default_width: 500,
         default_height: 400,
       });

@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.github.Murat-Karakaya.Makas
+Exec=@bindir@/com.github.Murat-Karakaya.Makas --gapplication-service
