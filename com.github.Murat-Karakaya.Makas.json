@@ -1,8 +1,8 @@
 {
     "id" : "com.github.Murat-Karakaya.Makas",
-    "runtime" : "org.gnome.Platform",
+    "runtime" : "org.freedesktop.Platform",
     "runtime-version" : "48",
-    "sdk" : "org.gnome.Sdk",
+    "sdk" : "org.freedesktop.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.node20",
         "org.freedesktop.Sdk.Extension.typescript"
