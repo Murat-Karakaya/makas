@@ -32,9 +32,7 @@ This project supports building as a Flatpak, Debian package (.deb), and AppImage
 ### 1. Flatpak
 You need `flatpak-builder` installed.
 ```bash
-flatpak-builder --force-clean build-dir org.x.Makas.json
-# To install locally:
-flatpak-builder --user --install --force-clean build-dir org.x.Makas.json
+flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir org.x.Makas.json
 ```
 
 ### 2. Debian Package (.deb)

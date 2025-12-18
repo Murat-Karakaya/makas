@@ -17,8 +17,8 @@ data_res = gnome.compile_resources('org.x.Makas.data',
 
 bin_conf = configuration_data()
 bin_conf.set('GJS', find_program('gjs').full_path())
-bin_conf.set('0.1', meson.project_version())
-bin_conf.set('makas', meson.project_name())
+bin_conf.set('PACKAGE_VERSION', meson.project_version())
+bin_conf.set('PACKAGE_NAME', 'org.x.Makas')
 bin_conf.set('prefix', get_option('prefix'))
 bin_conf.set('libdir', get_option('prefix') / get_option('libdir'))
 bin_conf.set('datadir', get_option('prefix') / get_option('datadir'))
