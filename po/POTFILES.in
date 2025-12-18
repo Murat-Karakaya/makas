@@ -1,8 +1,8 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/com.github.Murat-Karakaya.Makas.desktop.in
-data/com.github.Murat-Karakaya.Makas.metainfo.xml.in
-data/com.github.Murat-Karakaya.Makas.gschema.xml
+data/org.x.Makas.desktop.in
+data/org.x.Makas.metainfo.xml.in
+data/org.x.Makas.gschema.xml
 src/main.js
 src/window.js
 src/window.ui

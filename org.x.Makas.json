@@ -1,15 +1,16 @@
 {
-    "id": "com.github.Murat-Karakaya.Makas",
+    "id": "org.x.Makas",
     "runtime": "org.freedesktop.Platform",
     "runtime-version": "25.08",
     "sdk": "org.freedesktop.Sdk",
-    "command": "com.github.Murat-Karakaya.Makas",
+    "command": "org.x.Makas",
     "finish-args": [
         "--share=network",
         "--share=ipc",
-        "--socket=fallback-x11",
+        "--socket=x11",
         "--device=dri",
-        "--socket=wayland"
+        "--filesystem=xdg-pictures:rw",
+        "--filesystem=xdg-videos:rw"
     ],
     "cleanup": [
         "/include",
@@ -29,8 +30,8 @@
             "buildsystem": "meson",
             "sources": [
                 {
-                    "type": "git",
-                    "url": "file:///home/murat/Desktop/Coding%20Stuff/"
+                    "type": "dir",
+                    "path": "."
                 }
             ]
         }

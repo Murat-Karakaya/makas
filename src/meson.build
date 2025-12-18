@@ -1,15 +1,15 @@
 pkgdatadir = get_option('datadir') / meson.project_name()
 gnome = import('gnome')
 
-src_res = gnome.compile_resources('com.github.Murat-Karakaya.Makas.src',
-  'com.github.Murat-Karakaya.Makas.src.gresource.xml',
+src_res = gnome.compile_resources('org.x.Makas.src',
+  'org.x.Makas.src.gresource.xml',
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
 )
 
-data_res = gnome.compile_resources('com.github.Murat-Karakaya.Makas.data',
-  'com.github.Murat-Karakaya.Makas.data.gresource.xml',
+data_res = gnome.compile_resources('org.x.Makas.data',
+  'org.x.Makas.data.gresource.xml',
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
@@ -25,8 +25,8 @@ bin_conf.set('datadir', get_option('prefix') / get_option('datadir'))
 bin_conf.set('resource_path', '/com/github/Murat-Karakaya/Makas')
 
 configure_file(
-  input: 'com.github.Murat-Karakaya.Makas.in',
-  output: 'com.github.Murat-Karakaya.Makas',
+  input: 'org.x.Makas.in',
+  output: 'org.x.Makas',
   configuration: bin_conf,
   install: true,
   install_dir: get_option('bindir')

@@ -1,5 +1,8 @@
 # screenrecorder
 
+
+## Roadmap
+
 ### FIXME: 
 
 It's better to take Screenshot after the window animation is done. 
@@ -20,3 +23,29 @@ Free select (Might never be added)
 Add package builds
 
 Open image with other applications
+
+
+## Build and Package
+
+This project supports building as a Flatpak, Debian package (.deb), and AppImage.
+
+### 1. Flatpak
+You need `flatpak-builder` installed.
+```bash
+flatpak-builder --force-clean build-dir org.x.Makas.json
+# To install locally:
+flatpak-builder --user --install --force-clean build-dir org.x.Makas.json
+```
+
+### 2. Debian Package (.deb)
+Run the provided script to build a `.deb` package.
+```bash
+bash scripts/build-deb.sh
+```
+The resulting package will be named `makas_0.1.0_amd64.deb`.
+
+## Development
+To run the app in development mode:
+```bash
+./run.sh
+```

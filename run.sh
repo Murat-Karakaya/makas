@@ -3,8 +3,8 @@ set -e
 
 # Compile resources
 echo "Compiling resources..."
-glib-compile-resources --target=src/src.gresource --sourcedir=src src/com.github.Murat-Karakaya.Makas.src.gresource.xml
-glib-compile-resources --target=src/data.gresource --sourcedir=src src/com.github.Murat-Karakaya.Makas.data.gresource.xml
+glib-compile-resources --target=src/src.gresource --sourcedir=src src/org.x.Makas.src.gresource.xml
+glib-compile-resources --target=src/data.gresource --sourcedir=src src/org.x.Makas.data.gresource.xml
 
 # Run application
 # Compile schemas

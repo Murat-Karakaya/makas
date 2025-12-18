@@ -26,7 +26,7 @@ import { ScreenshotPage } from "./screenshot/screenshot.js";
 import { PreferencesWindow } from "./preferences.js";
 
 export const settings = new Gio.Settings({
-  schema_id: "com.github.Murat-Karakaya.Makas",
+  schema_id: "org.x.Makas",
 });
 
 export const ScreenshotWindow = GObject.registerClass(

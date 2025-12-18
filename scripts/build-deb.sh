@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+APP_NAME="makas"
+VERSION="0.1.0"
+DEB_NAME="${APP_NAME}_${VERSION}_amd64"
+BUILD_DIR="build-deb"
+PKG_DIR="pkg-deb"
+
+echo "Building .deb package for ${APP_NAME} v${VERSION}..."
+
+# Clean up previous builds
+rm -rf "$BUILD_DIR" "$PKG_DIR"
+
+# Configure and build
+meson setup "$BUILD_DIR" --prefix=/usr
+meson compile -C "$BUILD_DIR"
+
+# Install to temp directory
+DESTDIR="$(pwd)/$PKG_DIR" meson install -C "$BUILD_DIR"
+
+# Create DEBIAN directory
+mkdir -p "$PKG_DIR/DEBIAN"
+
+# Create control file
+cat <<EOF > "$PKG_DIR/DEBIAN/control"
+Package: ${APP_NAME}
+Version: ${VERSION}
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Murat Karakaya
+Depends: gjs, libgtk-3-0, gir1.2-gtk-3.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
+Description: A simple screen recorder and screenshot tool.
+EOF
+
+# Build the package
+dpkg-deb --build "$PKG_DIR" "${DEB_NAME}.deb"
+
+echo "Successfully built ${DEB_NAME}.deb"

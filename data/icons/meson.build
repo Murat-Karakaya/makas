@@ -1,4 +1,4 @@
-application_id = 'com.github.Murat-Karakaya.Makas'
+application_id = 'org.x.Makas'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(
