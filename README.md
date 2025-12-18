@@ -18,3 +18,5 @@ Text recognition
 Free select (Might never be added)
 
 Add package builds
+
+Open image with other applications
