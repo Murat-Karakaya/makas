@@ -1,6 +1,7 @@
 **.gresource
 **.compiled
 gnome-screenshot
-build
 .flatpak-builder
 repo
+*.deb
+pkg-deb

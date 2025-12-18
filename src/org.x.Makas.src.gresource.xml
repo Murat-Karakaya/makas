@@ -4,5 +4,10 @@
     <file>main.js</file>
     <file>window.js</file>
     <file>screenshot/screenshot.js</file>
+    <file>screenshot/area-selection.js</file>
+    <file>screenshot/postscreenshot.js</file>
+    <file>screenshot/prescreenshot.js</file>
+    <file>screenshot/utils.js</file>
+    <file>preferences.js</file>
   </gresource>
 </gresources>

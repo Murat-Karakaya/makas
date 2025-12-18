@@ -24,6 +24,8 @@ Add package builds
 
 Open image with other applications
 
+Change exec for debs to be `makas` instead of `org.x.Makas`
+
 
 ## Build and Package
 
