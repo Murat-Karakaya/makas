@@ -1,4 +1,4 @@
-pkgdatadir = get_option('datadir') / meson.project_name()
+pkgdatadir = get_option('datadir') / 'org.x.Makas'
 gnome = import('gnome')
 
 src_res = gnome.compile_resources('org.x.Makas.src',
