@@ -37,7 +37,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: Murat Karakaya
-Depends: gjs, libgtk-3-0, gir1.2-gtk-3.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
+Depends: gjs, libgtk-3-0, gir1.2-gtk-3.0, gir1.2-wnck-3.0, gir1.2-gdkpixbuf-2.0
 Description: A simple screen recorder and screenshot tool.
 EOF
 

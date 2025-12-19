@@ -3,7 +3,6 @@
  */
 
 import Gtk from 'gi://Gtk?version=3.0';
-import Gst from 'gi://Gst';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import GLib from 'gi://GLib';
@@ -12,9 +11,6 @@ import GLib from 'gi://GLib';
 GLib.setenv('GDK_BACKEND', 'x11', true);
 
 import { ScreenshotWindow } from './window.js';
-
-// Initialize GStreamer
-Gst.init(null);
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {

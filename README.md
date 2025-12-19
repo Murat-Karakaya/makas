@@ -40,7 +40,8 @@ flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --i
 ### 2. Debian Package (.deb)
 Run the provided script to build a `.deb` package.
 ```bash
-bash scripts/build-deb.sh
+chmod +x ./scripts/build-deb.sh
+./scripts/build-deb.sh
 ```
 The resulting package will be named `makas_0.1.0_amd64.deb`.
 
