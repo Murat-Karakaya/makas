@@ -1,6 +1,5 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
-import Wnck from "gi://Wnck?version=3.0";
 import GdkX11 from "gi://GdkX11?version=3.0";
 
 export function compositePointer(pixbuf) {
@@ -67,7 +66,7 @@ export function compositePointer(pixbuf) {
  * Finds the window at (x,y) and returns it as a Gdk.Window
  * suitable for screenshotting/pixbuf operations.
  */
-export function getTargetGdkWindow({ x, y }) {
+/* function getTargetGdkWindow({ x, y }) {
   let screen = Wnck.Screen.get_default();
   screen.force_update();
 
@@ -110,6 +109,82 @@ export function getTargetGdkWindow({ x, y }) {
   }
 
   return null;
+} */
+
+
+function getTargetGdkWindow({ x, y }) {
+  let screen = Gdk.Screen.get_default();
+
+  // 1. Get the current workspace (Desktop)
+  // GdkX11.Screen methods are often mixed into the screen instance at runtime
+  // or available via casting. We try the instance method first.
+  let currentDesktop = null;
+  if (typeof screen.get_current_desktop === 'function') {
+    currentDesktop = screen.get_current_desktop();
+  } else {
+    // Fallback: This handles cases where GJS doesn't map the method to the object directly
+    // This is rare but possible depending on the GJS/GTK version.
+    // If this fails, we might assume workspace 0 or fail safe.
+    try {
+      currentDesktop = GdkX11.Screen.get_current_desktop(screen);
+    } catch (e) {
+      // If we really can't get the desktop, we can't filter safely.
+      // Assuming 0 or continuing might be dangerous, but usually this works.
+    }
+  }
+
+  // 2. Get the stacking list (Bottom -> Top)
+  let windows = screen.get_window_stack();
+  if (!windows) return null;
+
+  // 3. Process Top -> Bottom
+  windows.reverse();
+
+  for (let i = 0; i < windows.length; i++) {
+    let win = windows[i];
+
+    // --- Filter 1: Basic X11 Visibility ---
+    if (!win.is_viewable()) continue;
+
+    // --- Filter 2: Workspace Logic ---
+    // This effectively replaces Wnck.Window.is_on_workspace()
+    if (currentDesktop !== null && typeof win.get_desktop === 'function') {
+      let winDesktop = win.get_desktop();
+
+      // 0xFFFFFFFF (4294967295) is the X11 standard for "Pinned" (Always on Visible Workspace)
+      let isPinned = (winDesktop === 0xFFFFFFFF || winDesktop === 4294967295);
+
+      if (winDesktop !== currentDesktop && !isPinned) {
+        continue;
+      }
+    }
+
+    // --- Filter 3: Window Type ---
+    let typeHint = win.get_type_hint();
+    if (
+      typeHint === Gdk.WindowTypeHint.DESKTOP ||
+      typeHint === Gdk.WindowTypeHint.DOCK
+    ) {
+      continue;
+    }
+
+    // --- Filter 4: Geometry Intersection ---
+    // get_frame_extents includes the window decorations (title bar, etc.)
+    let rect = win.get_frame_extents();
+
+    if (
+      x >= rect.x &&
+      x < rect.x + rect.width &&
+      y >= rect.y &&
+      y < rect.y + rect.height
+    ) {
+      // Ensure we have the structure events (copied from your original requirement)
+      win.set_events(Gdk.EventMask.STRUCTURE_MASK);
+      return win;
+    }
+  }
+
+  return null;
 }
 
 export const getCurrentDate = () => {
@@ -128,7 +203,6 @@ export const getDestinationPath = (options) => {
 
 
 export function captureWindowCoordinates(startDelay, pointerCoords) {
-  const screen = Gdk.Screen.get_default();
   let activeWindow = null;
 
   activeWindow = getTargetGdkWindow(pointerCoords);
@@ -142,8 +216,6 @@ export function captureWindowCoordinates(startDelay, pointerCoords) {
   const rect = toplevel.get_frame_extents();
   const width = rect.width;
   const height = rect.height;
-  const x = rect.x;
-  const y = rect.y;
 
   print(`Screenshot: Capturing window rect: w=${width}, h=${height}`);
 

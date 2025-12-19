@@ -1,7 +1,7 @@
 {
     "id": "org.x.Makas",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "46",
+    "runtime-version": "48",
     "sdk": "org.gnome.Sdk",
     "command": "org.x.Makas",
     "finish-args": [
@@ -9,8 +9,7 @@
         "--share=ipc",
         "--socket=x11",
         "--device=dri",
-        "--filesystem=xdg-pictures:rw",
-        "--filesystem=xdg-videos:rw"
+        "--filesystem=xdg-pictures:rw"
     ],
     "cleanup": [
         "/include",
