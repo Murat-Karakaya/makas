@@ -31,3 +31,8 @@ configure_file(
   install: true,
   install_dir: get_option('bindir')
 )
+
+install_symlink('makas',
+  pointing_to: 'org.x.Makas',
+  install_dir: get_option('bindir')
+)

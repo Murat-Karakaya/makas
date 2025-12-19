@@ -2,6 +2,7 @@
 Name=Makas
 Exec=org.x.Makas
 Icon=org.x.Makas
+StartupWMClass=org.x.Makas
 Terminal=false
 Type=Application
 Categories=Utility;
