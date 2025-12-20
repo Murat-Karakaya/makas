@@ -49,5 +49,6 @@ The resulting package will be named `makas_x.x.x_amd64.deb`.
 ## Development
 To run the app in development mode:
 ```bash
-./run.sh
+rm -rf builddir && meson setup builddir . && meson compile -C builddir 2>&1
+./run.sh 2>&1 | head -30
 ```

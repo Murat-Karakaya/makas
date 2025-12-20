@@ -29,7 +29,7 @@ struct _MakasScreenshot {
   GObject parent_instance;
 };
 
-G_DEFINE_TYPE(MakasScreenshot, makas_screenshot, G_TYPE_OBJECT)
+G_DEFINE_TYPE(MakasScreenshot, makas_screenshot, G_TYPE_OBJECT);
 
 static void makas_screenshot_class_init(MakasScreenshotClass *klass) {
   (void)klass;
@@ -208,8 +208,8 @@ static void apply_xshape_mask(GdkPixbuf *pixbuf, Display *display,
 
   if (!has_alpha) {
     /* Need to add alpha channel */
-    GdkPixbuf *tmp = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
-    /* Copy back (caller needs to handle this) */
+    /* Caller should have added an alpha channel already */
+    g_warning("apply_xshape_mask: pixbuf has no alpha channel");
     XFree(rectangles);
     return;
   }
@@ -256,7 +256,6 @@ static void composite_pointer(GdkPixbuf *pixbuf, GdkWindow *wm_window) {
   GdkSeat *seat;
   GdkDevice *device;
   gint cx, cy, xhot, yhot;
-  GdkRectangle win_rect;
 
   cursor = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_LEFT_PTR);
   cursor_pixbuf = gdk_cursor_get_image(cursor);

@@ -5,3 +5,5 @@ gnome-screenshot
 repo
 *.deb
 pkg-deb
+compile_commands.json
+.clangd
