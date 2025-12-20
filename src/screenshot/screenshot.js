@@ -6,7 +6,7 @@ import Gio from "gi://Gio";
 
 import { settings } from "../window.js";
 import { selectArea, selectWindow } from "./area-selection.js";
-import { compositePointer, getDestinationPath } from "./utils.js";
+import { compositePointer, getDestinationPath, wait } from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
 
@@ -51,7 +51,7 @@ export const ScreenshotPage = GObject.registerClass(
       this.lastPixbuf = null;
     }
 
-    onTakeScreenshot({ captureMode, delay, includePointer, folder, filename }) {
+    async onTakeScreenshot({ captureMode, delay, includePointer, folder, filename }) {
       const app = Gio.Application.get_default();
       if (app) {
         app.hold();
@@ -66,96 +66,75 @@ export const ScreenshotPage = GObject.registerClass(
         topLevel.hide();
       }
 
-      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
+      try {
+        // Wait for window to hide
+        await wait(400);
+
+        let selectionResult = null;
         print(`Screenshot: Selection phase, mode=${captureMode}`);
+
         if (captureMode === CaptureMode.AREA) {
-          selectArea((result) => {
-            if (!result) {
-              print("Screenshot: Area selection cancelled");
-              this.preScreenshot.setStatus("Capture cancelled");
-              this.finishScreenshot(app, topLevel);
-            } else {
-              this.startDelay(app, topLevel, result, {
-                delay,
-                captureMode,
-                includePointer,
-                folder,
-                filename,
-              });
-            }
-          });
-          return GLib.SOURCE_REMOVE;
+          selectionResult = await selectArea();
+          if (!selectionResult) {
+            print("Screenshot: Area selection cancelled");
+            this.preScreenshot.setStatus("Capture cancelled");
+            return;
+          }
+        } else if (captureMode === CaptureMode.WINDOW) {
+          selectionResult = await selectWindow();
+          if (!selectionResult) {
+            print("Screenshot: Window selection cancelled");
+            this.preScreenshot.setStatus("Capture cancelled");
+            return;
+          }
         }
 
-        if (captureMode === CaptureMode.WINDOW) {
-          selectWindow((result) => {
-            if (!result) {
-              print("Screenshot: Window selection cancelled");
-              this.preScreenshot.setStatus("Capture cancelled");
-              this.finishScreenshot(app, topLevel);
-            } else {
-              this.startDelay(app, topLevel, result, {
-                delay,
-                captureMode,
-                includePointer,
-                folder,
-                filename,
-              });
-            }
-          });
-          return GLib.SOURCE_REMOVE;
+        if (delay > 0) {
+          await this.startDelay(delay);
         }
 
-        this.startDelay(app, topLevel, null, {
-          delay,
+        await this.performCapture(selectionResult, {
           captureMode,
           includePointer,
           folder,
           filename,
         });
-        return GLib.SOURCE_REMOVE;
-      });
+      } catch (e) {
+        print(`Screenshot error during flow: ${e.message}`);
+        this.preScreenshot.setStatus(`Error: ${e.message}`);
+      } finally {
+        print("Screenshot: Restoring window");
+        if (topLevel && topLevel.show) {
+          topLevel.show();
+          topLevel.present();
+        }
+        if (app) app.release();
+      }
     }
 
-    startDelay(
-      app,
-      topLevel,
-      selectionResult,
-      { delay, captureMode, includePointer, folder, filename },
-    ) {
+    async startDelay(delay) {
       print(`Screenshot: Delay phase, delay=${delay}`);
       this.preScreenshot.setStatus(`Capturing in ${delay}s...`);
 
-      if (delay > 0) {
-        let remaining = delay;
+      if (delay <= 0) return;
+
+      let remaining = delay;
+      return new Promise((resolve) => {
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
           remaining--;
-          this.preScreenshot.setStatus(`Capturing in ${remaining}s...`);
-          print(`Screenshot: Waiting... ${remaining}`);
-          if (remaining <= 0) {
-            this.performCapture(app, topLevel, selectionResult, {
-              captureMode,
-              includePointer,
-              folder,
-              filename,
-            });
+          if (remaining > 0) {
+            this.preScreenshot.setStatus(`Capturing in ${remaining}s...`);
+            print(`Screenshot: Waiting... ${remaining}`);
+            return GLib.SOURCE_CONTINUE;
+          } else {
+            resolve();
             return GLib.SOURCE_REMOVE;
           }
-          return GLib.SOURCE_CONTINUE;
         });
-        return;
-      }
-      this.performCapture(app, topLevel, selectionResult, {
-        captureMode,
-        includePointer,
-        folder,
-        filename,
       });
     }
 
-    performCapture(
-      app,
-      topLevel,
+    async performCapture(
       selectionResult,
       { captureMode, includePointer, folder, filename },
     ) {
@@ -163,78 +142,62 @@ export const ScreenshotPage = GObject.registerClass(
       this.preScreenshot.setStatus("Capturing...");
       let pixbuf = null;
 
-      try {
-        switch (captureMode) {
-          case CaptureMode.SCREEN:
+      switch (captureMode) {
+        case CaptureMode.SCREEN:
+          const rootWindow = Gdk.get_default_root_window();
+          pixbuf = Gdk.pixbuf_get_from_window(
+            rootWindow,
+            0,
+            0,
+            rootWindow.get_width(),
+            rootWindow.get_height(),
+          );
+          break;
+        case CaptureMode.WINDOW:
+          if (selectionResult && selectionResult.window) {
+            pixbuf = Gdk.pixbuf_get_from_window(
+              selectionResult.window,
+              0,
+              0,
+              selectionResult.width,
+              selectionResult.height,
+            );
+          }
+          break;
+        case CaptureMode.AREA:
+          if (selectionResult) {
             const rootWindow = Gdk.get_default_root_window();
             pixbuf = Gdk.pixbuf_get_from_window(
               rootWindow,
-              0,
-              0,
-              rootWindow.get_width(),
-              rootWindow.get_height(),
+              selectionResult.x,
+              selectionResult.y,
+              selectionResult.width,
+              selectionResult.height,
             );
-            break;
-          case CaptureMode.WINDOW:
-            if (selectionResult && selectionResult.window) {
-              pixbuf = Gdk.pixbuf_get_from_window(
-                selectionResult.window,
-                0,
-                0,
-                selectionResult.width,
-                selectionResult.height,
-              );
-            }
-            break;
-          case CaptureMode.AREA:
-            if (selectionResult) {
-              const rootWindow = Gdk.get_default_root_window();
-              pixbuf = Gdk.pixbuf_get_from_window(
-                rootWindow,
-                selectionResult.x,
-                selectionResult.y,
-                selectionResult.width,
-                selectionResult.height,
-              );
-            }
-            break;
-          default:
-            this.preScreenshot.setStatus("Capture cancelled or failed");
-            break;
-        }
-
-        if (includePointer && captureMode !== CaptureMode.AREA) {
-          pixbuf = compositePointer(pixbuf);
-        }
-
-        this.lastPixbuf = pixbuf;
-
-        const filepath = getDestinationPath({ folder, filename });
-        if (filepath) {
-          pixbuf.savev(filepath, "png", [], []);
-          this.preScreenshot.setStatus(`Saved: ${filepath}`);
-          if (folder) {
-            settings.set_string("screenshot-last-save-directory", folder);
           }
+          break;
+        default:
+          this.preScreenshot.setStatus("Capture cancelled or failed");
+          break;
+      }
+
+      if (includePointer && captureMode !== CaptureMode.AREA) {
+        pixbuf = compositePointer(pixbuf);
+      }
+
+      this.lastPixbuf = pixbuf;
+
+      const filepath = getDestinationPath({ folder, filename });
+      if (filepath) {
+        pixbuf.savev(filepath, "png", [], []);
+        this.preScreenshot.setStatus(`Saved: ${filepath}`);
+        if (folder) {
+          settings.set_string("screenshot-last-save-directory", folder);
         }
-
-        this.postScreenshot.setImage(pixbuf);
-        this.stack.set_visible_child_name("post");
-      } catch (e) {
-        print(`Screenshot error: ${e.message}`);
-        this.preScreenshot.setStatus(`Error: ${e.message}`);
       }
 
-      this.finishScreenshot(app, topLevel);
-    }
-
-    finishScreenshot(app, topLevel) {
-      print("Screenshot: Restoring window");
-      if (topLevel && topLevel.show) {
-        topLevel.show();
-        topLevel.present();
-      }
-      if (app) app.release();
+      this.postScreenshot.setImage(pixbuf);
+      this.stack.set_visible_child_name("post");
     }
   },
 );

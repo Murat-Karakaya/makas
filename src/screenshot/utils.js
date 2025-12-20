@@ -62,56 +62,12 @@ export function compositePointer(pixbuf) {
 
   return pixbuf;
 }
-/**
- * Finds the window at (x,y) and returns it as a Gdk.Window
- * suitable for screenshotting/pixbuf operations.
+
+
+/*
+ * Finds the window at (x,y) and returns it as a Gdk.Window.
+ * Developer's Note: This function is AI generated with Gemini 3 Pro.
  */
-/* function getTargetGdkWindow({ x, y }) {
-  let screen = Wnck.Screen.get_default();
-  screen.force_update();
-
-  let activeWorkspace = screen.get_active_workspace();
-  let windows = screen.get_windows_stacked().reverse();
-  let foundWnckWindow = null;
-
-  // 1. Find the Wnck Window first (same logic as before)
-  for (let i = 0; i < windows.length; i++) {
-    let win = windows[i];
-
-    if (!win.is_on_workspace(activeWorkspace) && !win.is_pinned()) continue;
-    if (
-      win.get_window_type() === Wnck.WindowType.DESKTOP ||
-      win.get_window_type() === Wnck.WindowType.DOCK
-    )
-      continue;
-
-    let [wx, wy, width, height] = win.get_geometry();
-
-    if (x >= wx && x < wx + width && y >= wy && y < wy + height) {
-      foundWnckWindow = win;
-      break;
-    }
-  }
-
-  if (!foundWnckWindow) return null;
-
-  // 2. The Bridge: Convert Wnck (Manager) -> XID -> Gdk (Draw/Read)
-  let xid = foundWnckWindow.get_xid();
-  let display = Gdk.Display.get_default();
-
-  // This creates a Gdk.Window wrapper around the external application's window
-  let gdkWindow = GdkX11.X11Window.foreign_new_for_display(display, xid);
-
-  // Essential: Ensure Gdk knows about the window events/structure immediately
-  if (gdkWindow) {
-    gdkWindow.set_events(Gdk.EventMask.STRUCTURE_MASK);
-    return gdkWindow;
-  }
-
-  return null;
-} */
-
-
 function getTargetGdkWindow({ x, y }) {
   let screen = Gdk.Screen.get_default();
 
@@ -228,5 +184,20 @@ export function captureWindowCoordinates(startDelay, pointerCoords) {
     window: toplevel,
     width,
     height,
+  });
+}
+
+
+/**
+ * Wait for a specified number of milliseconds.
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+export function wait(ms) {
+  return new Promise((resolve) => {
+    GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+      resolve();
+      return GLib.SOURCE_REMOVE;
+    });
   });
 }

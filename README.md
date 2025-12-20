@@ -12,24 +12,23 @@ Window capture doesn't work for apps with decorations as expected. the header do
 
 ### DO CLEANUP: 
 
-Dechain _StartDelay and _PerformScreenshot
+Squeeky Clean
 
-### TODO: 
+### TO DO: 
 
 Text recognition
 
 Free select (Might never be added)
 
-Add package builds
-
 Open image with other applications
 
-Change exec for debs to be `makas` instead of `org.x.Makas`
+Add an option for a minimum delay before taking the screenshot.
 
+Add Appimage and nix package builds.
 
 ## Build and Package
 
-This project supports building as a Flatpak, Debian package (.deb), and AppImage.
+This project supports building as a Flatpak and Debian package (.deb).
 
 ### 1. Flatpak
 You need `flatpak-builder` installed.

@@ -33,5 +33,5 @@ export const ScreenRecorderApp = GObject.registerClass(
 
 export function main(argv) {
     const app = new ScreenRecorderApp();
-    return app.run(argv);
+    return app.runAsync(argv);
 }
