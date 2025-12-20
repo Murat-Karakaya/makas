@@ -14,10 +14,6 @@ Warn the user about how for the settings to take effect, they need to restart th
 
 Either disable show pointer when area mode is selected or make it work.
 
-### DO CLEANUP: 
-
-Prefrences and window is a mess. 
-
 ### TO DO: 
 
 Text recognition
