@@ -6,7 +6,7 @@ import Gio from "gi://Gio";
 
 import { settings } from "../window.js";
 import { selectArea, selectWindow } from "./area-selection.js";
-import { compositePointer, getDestinationPath, wait } from "./utils.js";
+import { compositePointer, getDestinationPath, wait, captureWindowWithXShape } from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
 
@@ -154,14 +154,17 @@ export const ScreenshotPage = GObject.registerClass(
           );
           break;
         case CaptureMode.WINDOW:
-          if (selectionResult && selectionResult.window) {
-            pixbuf = Gdk.pixbuf_get_from_window(
-              selectionResult.window,
-              0,
-              0,
-              selectionResult.width,
-              selectionResult.height,
+          // Use C library for window capture with XShape transparency
+          if (selectionResult && selectionResult.clickX !== undefined) {
+            pixbuf = captureWindowWithXShape(
+              selectionResult.clickX,
+              selectionResult.clickY,
+              includePointer,
             );
+            // Skip pointer compositing since C library handles it
+            if (pixbuf && includePointer) {
+              includePointer = false;
+            }
           }
           break;
         case CaptureMode.AREA:

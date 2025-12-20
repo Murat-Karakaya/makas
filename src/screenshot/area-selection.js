@@ -10,8 +10,6 @@ import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";
 import cairo from "gi://cairo";
 
-import { captureWindowCoordinates } from "./utils.js";
-
 /**
  * Show an area selection overlay and return the selected rectangle.
  * @returns {Promise<{x, y, width, height}|null>}
@@ -201,12 +199,15 @@ export function selectWindow() {
       const [, x, y] = event.get_root_coords();
       window.destroy();
       GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-        if (!aborted)
-          captureWindowCoordinates(resolve, {
-            x: Math.round(x),
-            y: Math.round(y),
+        if (!aborted) {
+          // Return click coordinates - the C library will find the window
+          resolve({
+            clickX: Math.round(x),
+            clickY: Math.round(y),
           });
-        else resolve(null);
+        } else {
+          resolve(null);
+        }
         return GLib.SOURCE_REMOVE;
       });
       return true;

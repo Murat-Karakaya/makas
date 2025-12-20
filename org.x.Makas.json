@@ -12,7 +12,6 @@
         "--filesystem=xdg-pictures:rw"
     ],
     "cleanup": [
-        "/include",
         "/lib/pkgconfig",
         "/man",
         "/share/doc",

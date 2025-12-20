@@ -44,7 +44,7 @@ Run the provided script to build a `.deb` package.
 chmod +x ./scripts/build-deb.sh
 ./scripts/build-deb.sh
 ```
-The resulting package will be named `makas_0.1.0_amd64.deb`.
+The resulting package will be named `makas_x.x.x_amd64.deb`.
 
 ## Development
 To run the app in development mode:

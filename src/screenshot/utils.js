@@ -2,6 +2,34 @@ import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GdkX11 from "gi://GdkX11?version=3.0";
 import GLib from "gi://GLib";
+import MakasScreenshot from "gi://MakasScreenshot";
+
+// C library instance for window capture with XShape support
+let screenshotHelper = null;
+
+/**
+ * Get the C library screenshot helper instance.
+ * @returns {MakasScreenshot.Screenshot}
+ */
+function getScreenshotHelper() {
+  if (!screenshotHelper) {
+    screenshotHelper = MakasScreenshot.Screenshot.new();
+  }
+  return screenshotHelper;
+}
+
+/**
+ * Capture a window at (x, y) with decorations and transparent rounded corners.
+ * Uses the C library with XShape support.
+ * @param {number} x - X coordinate
+ * @param {number} y - Y coordinate
+ * @param {boolean} includePointer - Whether to include mouse pointer
+ * @returns {GdkPixbuf.Pixbuf|null}
+ */
+export function captureWindowWithXShape(x, y, includePointer) {
+  const helper = getScreenshotHelper();
+  return helper.capture_window(x, y, includePointer);
+}
 
 export function compositePointer(pixbuf) {
   try {
