@@ -74,9 +74,15 @@ static Window find_wm_window(GdkWindow *window) {
 /* Find the window at coordinates (x, y) */
 static GdkWindow *find_window_at_coords(gint x, gint y) {
   GdkScreen *screen = gdk_screen_get_default();
-  GList *windows = gdk_screen_get_window_stack(screen);
   GdkWindow *found = NULL;
 
+  /* Get current desktop for workspace filtering */
+  gint current_desktop = -1;
+  if (GDK_IS_X11_SCREEN(screen)) {
+    current_desktop = gdk_x11_screen_get_current_desktop(screen);
+  }
+
+  GList *windows = gdk_screen_get_window_stack(screen);
   if (!windows)
     return NULL;
 
@@ -88,18 +94,36 @@ static GdkWindow *find_window_at_coords(gint x, gint y) {
     GdkRectangle rect;
     GdkWindowTypeHint type_hint;
 
+    /* Filter 1: Basic Viewability */
     if (!gdk_window_is_viewable(win))
       continue;
 
+    /* Filter 2: Workspace Logic */
+    if (current_desktop != -1 && GDK_IS_X11_WINDOW(win)) {
+      guint32 win_desktop = gdk_x11_window_get_desktop(win);
+      /* 0xFFFFFFFF (4294967295) is "Pinned" (Always on Visible Workspace) */
+      gboolean is_pinned = (win_desktop == 0xFFFFFFFF);
+
+      if (win_desktop != (guint32)current_desktop && !is_pinned) {
+        continue;
+      }
+    }
+
+    /* Filter 3: Window Type */
     type_hint = gdk_window_get_type_hint(win);
     if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP ||
         type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
       continue;
 
+    /* Filter 4: Geometry Intersection */
     gdk_window_get_frame_extents(win, &rect);
 
     if (x >= rect.x && x < rect.x + rect.width && y >= rect.y &&
         y < rect.y + rect.height) {
+      /* Ensure we have structure events as in the JS version */
+      gdk_window_set_events(win,
+                            gdk_window_get_events(win) | GDK_STRUCTURE_MASK);
+
       found = gdk_window_get_toplevel(win);
       break;
     }
