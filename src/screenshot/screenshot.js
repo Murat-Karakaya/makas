@@ -68,7 +68,7 @@ export const ScreenshotPage = GObject.registerClass(
 
       try {
         // Wait for window to hide
-        await wait(400);
+        await wait(settings.get_int("window-wait"));
 
         let selectionResult = null;
         print(`Screenshot: Selection phase, mode=${captureMode}`);
@@ -191,9 +191,6 @@ export const ScreenshotPage = GObject.registerClass(
       if (filepath) {
         pixbuf.savev(filepath, "png", [], []);
         this.preScreenshot.setStatus(`Saved: ${filepath}`);
-        if (folder) {
-          settings.set_string("screenshot-last-save-directory", folder);
-        }
       }
 
       this.postScreenshot.setImage(pixbuf);

@@ -1,30 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="Makas">
 	<schema id="org.x.Makas" path="/com/github/Murat-Karakaya/Makas/">
-		<key name="default-recorder-folder" type="s">
-			<default>'/home/murat/Videos'</default>
-			<summary>Default folder for recorder</summary>
-			<description>Default folder for recorder</description>
-		</key>
-		<key name="default-screenshot-folder" type="s">
+		<key name="screenshot-save-folder" type="s">
 			<default>'/home/murat/Pictures'</default>
 			<summary>Default folder for screenshot</summary>
 			<description>Default folder for screenshot</description>
+		</key>
+		<key name="last-screenshot-save-folder" type="b">
+			<default>false</default>
+			<summary>is last save directory</summary>
+			<description>Wether to remember the last used option for screenshot save folder</description>
 		</key>
 		<key name="screenshot-delay" type="i">
 			<default>0</default>
 			<summary>Screenshot delay in seconds</summary>
 			<description>Number of seconds to wait before taking the screenshot</description>
 		</key>
+		<key name="last-screenshot-delay" type="b">
+			<default>false</default>
+			<summary>is last delay option</summary>
+			<description>Wether to remember the last used option for screenshot delay</description>
+		</key>
+		<key name="screenshot-mode" type="i">
+			<default>0</default>
+			<summary>Screenshot mode</summary>
+			<description>Default option selected for screenshot mode</description>
+		</key>
+		<key name="last-screenshot-mode" type="b">
+			<default>false</default>
+			<summary>is last mode option</summary>
+			<description>Wether to remember the last used option for screenshot mode</description>
+		</key>
 		<key name="include-pointer" type="b">
 			<default>true</default>
 			<summary>Include mouse pointer</summary>
 			<description>Whether to include the mouse pointer in the screenshot</description>
 		</key>
-		<key name="screenshot-last-save-directory" type="s">
-			<default>''</default>
-			<summary>Last save directory</summary>
-			<description>The last directory a screenshot was saved in</description>
+		<key name="last-include-pointer" type="b">
+			<default>true</default>
+			<summary>is last pointer option</summary>
+			<description>Wether to remember the last used option for include pointer</description>
+		</key>
+
+		<key name="window-wait" type="i">
+			<default>400</default>
+			<summary>Window wait time</summary>
+			<description>Number of seconds to wait for the window to close before taking the screenshot</description>
 		</key>
 	</schema>
 </schemalist>

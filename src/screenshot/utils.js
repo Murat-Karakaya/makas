@@ -1,6 +1,7 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GdkX11 from "gi://GdkX11?version=3.0";
+import GLib from "gi://GLib";
 
 export function compositePointer(pixbuf) {
   try {

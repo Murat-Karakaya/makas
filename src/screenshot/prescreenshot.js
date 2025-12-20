@@ -28,6 +28,8 @@ export const PreScreenshot = GObject.registerClass(
       this.captureMode = CaptureMode.SCREEN;
 
       this.buildUI();
+      this.setUpValues();
+      this.syncValues();
     }
 
     buildUI() {
@@ -42,31 +44,21 @@ export const PreScreenshot = GObject.registerClass(
         halign: Gtk.Align.CENTER,
       });
 
-      const screenRadio = new Gtk.RadioButton({ label: "Screen" });
-      const windowRadio = new Gtk.RadioButton({
+      this.screenRadio = new Gtk.RadioButton({ label: "Screen" });
+      this.windowRadio = new Gtk.RadioButton({
         label: "Window",
-        group: screenRadio,
+        group: this.screenRadio,
       });
-      const areaRadio = new Gtk.RadioButton({
+      this.areaRadio = new Gtk.RadioButton({
         label: "Area",
-        group: screenRadio,
+        group: this.screenRadio,
       });
 
-      modeBox.pack_start(screenRadio, false, false, 0);
-      modeBox.pack_start(windowRadio, false, false, 0);
-      modeBox.pack_start(areaRadio, false, false, 0);
+      modeBox.pack_start(this.screenRadio, false, false, 0);
+      modeBox.pack_start(this.windowRadio, false, false, 0);
+      modeBox.pack_start(this.areaRadio, false, false, 0);
       modeFrame.add(modeBox);
       this.add(modeFrame);
-
-      screenRadio.connect("toggled", () => {
-        if (screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
-      });
-      windowRadio.connect("toggled", () => {
-        if (windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
-      });
-      areaRadio.connect("toggled", () => {
-        if (areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
-      });
 
       const optionsFrame = new Gtk.Frame({ label: "Options" });
       const optionsGrid = new Gtk.Grid({
@@ -82,7 +74,7 @@ export const PreScreenshot = GObject.registerClass(
         label: "Delay (seconds):",
         halign: Gtk.Align.START,
       });
-      this._delaySpinner = new Gtk.SpinButton({
+      this.delaySpinner = new Gtk.SpinButton({
         adjustment: new Gtk.Adjustment({
           lower: 0,
           upper: 60 * 60 * 24,
@@ -95,17 +87,18 @@ export const PreScreenshot = GObject.registerClass(
         label: "Include pointer:",
         halign: Gtk.Align.START,
       });
-      this._pointerSwitch = new Gtk.Switch({
+      this.pointerSwitch = new Gtk.Switch({
         active: settings.get_boolean("include-pointer"),
         halign: Gtk.Align.START,
       });
 
       optionsGrid.attach(delayLabel, 0, 0, 1, 1);
-      optionsGrid.attach(this._delaySpinner, 1, 0, 1, 1);
+      optionsGrid.attach(this.delaySpinner, 1, 0, 1, 1);
       optionsGrid.attach(pointerLabel, 0, 1, 1, 1);
-      optionsGrid.attach(this._pointerSwitch, 1, 1, 1, 1);
+      optionsGrid.attach(this.pointerSwitch, 1, 1, 1, 1);
       optionsFrame.add(optionsGrid);
       this.add(optionsFrame);
+
 
       // === File Section ===
       const fileFrame = new Gtk.Frame({ label: "Save Location" });
@@ -127,9 +120,6 @@ export const PreScreenshot = GObject.registerClass(
         action: Gtk.FileChooserAction.SELECT_FOLDER,
         width_chars: 30,
       });
-      this.folderBtn.set_current_folder(
-        settings.get_string("default-screenshot-folder"),
-      );
 
       const nameLabel = new Gtk.Label({
         label: "Filename:",
@@ -174,8 +164,8 @@ export const PreScreenshot = GObject.registerClass(
       this.shootBtn.connect("clicked", () =>
         this.callbacks.onTakeScreenshot({
           captureMode: this.captureMode,
-          delay: this._delaySpinner.get_value_as_int(),
-          includePointer: this._pointerSwitch.get_active(),
+          delay: this.delaySpinner.get_value_as_int(),
+          includePointer: this.pointerSwitch.get_active(),
           folder: this.folderBtn.get_filename(),
           filename: this.filenameEntry.get_text(),
         }),
@@ -188,6 +178,67 @@ export const PreScreenshot = GObject.registerClass(
 
     updateFilename() {
       this.filenameEntry.set_text(`Screenshot-${getCurrentDate()}.png`);
+    }
+
+    syncValues() {
+      this.delaySpinner.connect("value-changed", () => {
+        if (settings.get_boolean("last-screenshot-delay")) {
+          settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
+        }
+      });
+      this.pointerSwitch.connect("notify::active", () => {
+        if (settings.get_boolean("last-include-pointer")) {
+          settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
+        }
+      });
+      this.folderBtn.connect("file-set", () => {
+        if (settings.get_boolean("last-screenshot-save-folder")) {
+          const folder = this.folderBtn.get_filename();
+          if (folder) {
+            settings.set_string("screenshot-save-folder", folder);
+          }
+        }
+      });
+
+      this.screenRadio.connect("toggled", () => {
+        if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_int("screenshot-mode", CaptureMode.SCREEN);
+        }
+      });
+      this.windowRadio.connect("toggled", () => {
+        if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_int("screenshot-mode", CaptureMode.WINDOW);
+        }
+      });
+      this.areaRadio.connect("toggled", () => {
+        if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_int("screenshot-mode", CaptureMode.AREA);
+        }
+      });
+    }
+
+    setUpValues() {
+      this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
+      this.folderBtn.set_current_folder(settings.get_string("screenshot-save-folder"));
+
+
+      switch (settings.get_int("screenshot-mode")) {
+        case CaptureMode.WINDOW:
+          this.windowRadio.set_active(true);
+          this.captureMode = CaptureMode.WINDOW;
+          break;
+        case CaptureMode.AREA:
+          this.areaRadio.set_active(true);
+          this.captureMode = CaptureMode.AREA;
+          break;
+        default:
+          this.screenRadio.set_active(true);
+          this.captureMode = CaptureMode.SCREEN;
+          break;
+      }
     }
   },
 );

@@ -1,5 +1,6 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
+import Gio from "gi://Gio";
 
 import { settings } from "./window.js";
 
@@ -13,8 +14,8 @@ export const PreferencesWindow = GObject.registerClass(
         title: "Preferences",
         transient_for: parent,
         modal: true,
-        default_width: 400,
-        default_height: 300,
+        default_width: 450,
+        default_height: 400,
       });
 
       this.add_button("Close", Gtk.ResponseType.CLOSE);
@@ -34,89 +35,145 @@ export const PreferencesWindow = GObject.registerClass(
       });
       contentArea.add(grid);
 
-      // Screenshot Folder Row
-      const screenshotLabel = new Gtk.Label({
-        label: "Screenshot Folder:",
+      let row = 0;
+
+      this.screenshotLabel = new Gtk.Label({
+        label: "Default Screenshot Folder:",
         halign: Gtk.Align.START,
       });
-      const screenshotPathLabel = new Gtk.Label({
-        label: settings.get_string("default-screenshot-folder"),
+      this.screenshotPathLabel = new Gtk.Label({
+        label: settings.get_string("screenshot-save-folder"),
         hexpand: true,
         halign: Gtk.Align.START,
       });
-      const screenshotFolderButton = new Gtk.Button({ label: "Browse" });
+      this.screenshotFolderButton = new Gtk.Button({ label: "Browse" });
 
-      grid.attach(screenshotLabel, 0, 0, 1, 1);
-      grid.attach(screenshotPathLabel, 1, 0, 1, 1);
-      grid.attach(screenshotFolderButton, 2, 0, 1, 1);
+      grid.attach(this.screenshotLabel, 0, row, 1, 1);
+      grid.attach(this.screenshotPathLabel, 1, row, 1, 1);
+      grid.attach(this.screenshotFolderButton, 2, row, 1, 1);
+      row++;
 
-      screenshotFolderButton.connect("clicked", () =>
-        this._onOpenFolderSelector("default-screenshot-folder"),
+      this.screenshotFolderButton.connect("clicked", () =>
+        this.onOpenFolderSelector("screenshot-save-folder"),
       );
 
-      // Screenshot Delay Row
-      const delayLabel = new Gtk.Label({
-        label: "Screenshot Delay:",
+      this.lastFolderCheck = new Gtk.CheckButton({
+        label: "Remember last used folder",
         halign: Gtk.Align.START,
       });
-      const delaySpinner = new Gtk.SpinButton({
+
+      grid.attach(this.lastFolderCheck, 2, row, 1, 1);
+      row++;
+
+      // Separator
+      grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
+      row++;
+
+      // --- Screenshot Delay ---
+      this.delayLabel = new Gtk.Label({
+        label: "Default Delay (seconds):",
+        halign: Gtk.Align.START,
+      });
+      this.delaySpinner = new Gtk.SpinButton({
         adjustment: new Gtk.Adjustment({
           lower: 0,
-          upper: 60 * 60 * 24,
+          upper: 3600,
           step_increment: 1,
         }),
-        value: settings.get_int("screenshot-delay"),
-      });
-      delaySpinner.connect("value-changed", () => {
-        settings.set_int("screenshot-delay", delaySpinner.get_value_as_int());
       });
 
-      grid.attach(delayLabel, 0, 2, 1, 1);
-      grid.attach(delaySpinner, 1, 2, 2, 1);
+      grid.attach(this.delayLabel, 0, row, 1, 1);
+      grid.attach(this.delaySpinner, 1, row, 2, 1);
+      row++;
 
-      // Include Pointer Row
-      const pointerLabel = new Gtk.Label({
-        label: "Include Mouse Pointer:",
+      this.lastDelayCheck = new Gtk.CheckButton({
+        label: "Remember last used delay",
         halign: Gtk.Align.START,
       });
-      const pointerSwitch = new Gtk.Switch({
-        active: settings.get_boolean("include-pointer"),
+
+      grid.attach(this.lastDelayCheck, 2, row, 1, 1);
+      row++;
+
+      // Separator
+      grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
+      row++;
+
+      // --- Include Pointer ---
+      this.pointerLabel = new Gtk.Label({
+        label: "Include Pointer:",
         halign: Gtk.Align.START,
       });
-      pointerSwitch.connect("state-set", (widget, state) => {
-        settings.set_boolean("include-pointer", state);
-        return false;
+      this.pointerSwitch = new Gtk.Switch({
+        halign: Gtk.Align.START,
       });
 
-      grid.attach(pointerLabel, 0, 3, 1, 1);
-      grid.attach(pointerSwitch, 1, 3, 2, 1);
+      grid.attach(this.pointerLabel, 0, row, 1, 1);
+      grid.attach(this.pointerSwitch, 1, row, 2, 1);
+      row++;
 
-      // Sync labels when settings change
-      this._settingsSignalId = settings.connect("changed", (settings, key) => {
-        switch (key) {
-          case "default-screenshot-folder":
-            screenshotPathLabel.set_text(settings.get_string(key));
-            break;
-          case "default-recorder-folder":
-            recorderPathLabel.set_text(settings.get_string(key));
-            break;
-          case "screenshot-delay":
-            delaySpinner.set_value(settings.get_int(key));
-            break;
-          case "include-pointer":
-            pointerSwitch.set_active(settings.get_boolean(key));
-            break;
-        }
+      this.lastPointerCheck = new Gtk.CheckButton({
+        label: "Remember last pointer option",
+        halign: Gtk.Align.START,
       });
+
+      grid.attach(this.lastPointerCheck, 2, row, 1, 1);
+      row++;
+
+      // Separator
+      grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
+      row++;
+
+      // --- Screenshot Mode ---
+      this.modeLabel = new Gtk.Label({
+        label: "Default Mode:",
+        halign: Gtk.Align.START,
+      });
+      this.modeCombo = new Gtk.ComboBoxText();
+      this.modeCombo.append_text("Screen");
+      this.modeCombo.append_text("Window");
+      this.modeCombo.append_text("Area");
+
+      grid.attach(this.modeLabel, 0, row, 1, 1);
+      grid.attach(this.modeCombo, 1, row, 2, 1);
+      row++;
+
+      this.lastModeCheck = new Gtk.CheckButton({
+        label: "Remember last used mode",
+        halign: Gtk.Align.START,
+      });
+
+      grid.attach(this.lastModeCheck, 2, row, 1, 1);
+      row++;
+
+      // --- Window Wait ---
+      grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
+      row++;
+
+      this.waitLabel = new Gtk.Label({
+        label: "Window Transition Wait (ms):",
+        halign: Gtk.Align.START,
+      });
+      this.waitSpinner = new Gtk.SpinButton({
+        adjustment: new Gtk.Adjustment({
+          lower: 0,
+          upper: 5000,
+          step_increment: 50,
+        }),
+      });
+
+      grid.attach(this.waitLabel, 0, row, 1, 1);
+      grid.attach(this.waitSpinner, 1, row, 2, 1);
+      row++;
+
 
       this.connect("destroy", () => {
-        if (this._settingsSignalId) {
-          settings.disconnect(this._settingsSignalId);
-        }
+        if (this._settingsSignalId) settings.disconnect(this._settingsSignalId);
       });
+
+      this.syncValues();
     }
 
-    _onOpenFolderSelector(key) {
+    onOpenFolderSelector(key) {
       // Store reference to prevent garbage collection
       this._fileChooser = new Gtk.FileChooserNative({
         title: "Select a Folder",
@@ -131,11 +188,12 @@ export const PreferencesWindow = GObject.registerClass(
         if (response === Gtk.ResponseType.ACCEPT) {
           const folderPath = dialog.get_filename();
           if (folderPath) {
+            this.screenshotPathLabel.set_text(folderPath);
             settings.set_string(key, folderPath);
-            console.log(`${key} set to: ${folderPath}`);
+            print(`${key} set to: ${folderPath}`);
           }
         } else {
-          console.log("File selection cancelled.");
+          print("File selection cancelled.");
         }
 
         // Clean up the reference
@@ -144,5 +202,22 @@ export const PreferencesWindow = GObject.registerClass(
 
       this._fileChooser.show();
     }
+
+    syncValues() {
+      settings.bind("last-screenshot-delay", this.lastDelayCheck, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("screenshot-delay", this.delaySpinner, "value", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("last-screenshot-mode", this.lastModeCheck, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("screenshot-mode", this.modeCombo, "active", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("last-include-pointer", this.lastPointerCheck, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);
+    }
   },
 );
+
+
