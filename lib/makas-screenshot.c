@@ -19,6 +19,7 @@
 
 #include "makas-screenshot.h"
 #include "glib.h"
+#include "makas-screenshot-shell.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>
@@ -313,24 +314,31 @@ static void composite_pointer(GdkPixbuf *pixbuf, GdkWindow *wm_window) {
   g_object_unref(cursor_pixbuf);
 }
 
-/**
- * makas_screenshot_capture_window:
- *
- * Captures a window at (x, y) with:
- * - Window decorations (title bar, borders)
- * - Full window content (even if off-screen or occluded)
- * - Transparent rounded corners (using XShape)
- * - Optional mouse pointer
- */
+/* Capture window logic implemented below */
 GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
                                            gint y, gboolean include_pointer) {
   GdkWindow *window, *wm_window = NULL;
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
   Display *display;
+  g_autoptr(GError) error = NULL;
 
   g_return_val_if_fail(MAKAS_IS_SCREENSHOT(self), NULL);
 
+  // Try GNOME Shell backend first
+  screenshot = makas_screenshot_capture_window_shell(include_pointer, &error);
+  if (screenshot) {
+    g_debug("Captured window via GNOME Shell");
+    return screenshot;
+  }
+
+  if (error) {
+    g_warning("GNOME Shell screenshot failed: %s. Falling back to X11.",
+              error->message);
+    g_clear_error(&error);
+  }
+
+  // Fallback to X11
   display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 
   window = find_window_at_coords(x, y);
