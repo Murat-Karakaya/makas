@@ -18,6 +18,7 @@
  */
 
 #include "makas-screenshot.h"
+#include "glib.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>
@@ -41,34 +42,30 @@ MakasScreenshot *makas_screenshot_new(void) {
   return g_object_new(MAKAS_TYPE_SCREENSHOT, NULL);
 }
 
-// find_wm_window is just a copy-pasta from gnome-screenshot (with the same name)
-static Window
- find_wm_window (GdkWindow *window)
- {
-    Window xid, root, parent, *children;
-    unsigned int nchildren;
-    
-    if (window == gdk_get_default_root_window ())
-        return None;
-    
-    xid = GDK_WINDOW_XID (window);
-    
-    do
-    {
-    if (XQueryTree (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
-                    xid, &root, &parent, &children, &nchildren) == 0)
-        {
-        g_warning ("Couldn't find window manager window");
-        return None;
-        }
-    
-    if (root == parent)
-        return xid;
-    
-    xid = parent;
+// find_wm_window is just a copy-pasta from gnome-screenshot (with the same
+// name)
+static Window find_wm_window(GdkWindow *window) {
+  Window xid, root, parent, *children;
+  unsigned int nchildren;
+
+  if (window == gdk_get_default_root_window())
+    return None;
+
+  xid = GDK_WINDOW_XID(window);
+
+  do {
+    if (XQueryTree(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), xid, &root,
+                   &parent, &children, &nchildren) == 0) {
+      g_warning("Couldn't find window manager window");
+      return None;
     }
-    while (TRUE);
- }
+
+    if (root == parent)
+      return xid;
+
+    xid = parent;
+  } while (TRUE);
+}
 
 static GdkWindow *find_window_at_coords(gint x, gint y) {
   GdkScreen *screen = gdk_screen_get_default();
@@ -87,34 +84,39 @@ static GdkWindow *find_window_at_coords(gint x, gint y) {
 
   for (GList *l = windows; l != NULL; l = l->next) {
     GdkWindow *win = l->data;
-    
+
     GdkWindowTypeHint type_hint = gdk_window_get_type_hint(win);
 
-    //Just ignore the dock and the desktop. Might wanto to expose the option to include them in the future.
-    if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP || type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
-      continue; 
+    // Just ignore the dock and the desktop. Might wanto to expose the option to
+    // include them in the future.
+    if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP ||
+        type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
+      continue;
 
     if (!gdk_window_is_viewable(win))
       continue;
 
     if (current_desktop != -1 && GDK_IS_X11_WINDOW(win)) {
       guint32 win_desktop = gdk_x11_window_get_desktop(win);
-      
-      //0xFFFFFFFF is "Pinned" (Always on Visible Workspace)
-      if (win_desktop != (guint32)current_desktop && win_desktop != 0xFFFFFFFF) {
+
+      // 0xFFFFFFFF is "Pinned" (Always on Visible Workspace)
+      if (win_desktop != (guint32)current_desktop &&
+          win_desktop != 0xFFFFFFFF) {
         continue;
       }
     }
-    
+
     GdkRectangle rect;
     gdk_window_get_frame_extents(win, &rect);
 
-    if (x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height) {
-      // This is included here to handle a hypothetical scenario where 
+    if (x >= rect.x && x < rect.x + rect.width && y >= rect.y &&
+        y < rect.y + rect.height) {
+      // This is included here to handle a hypothetical scenario where
       // the window doesn't exist by the time it must be captured.
-      // We actually don't try to find the window before the delay, We find it right 
-      // before capturing it. So this precaution might not be necessary.
-      gdk_window_set_events(win, gdk_window_get_events(win) | GDK_STRUCTURE_MASK);
+      // We actually don't try to find the window before the delay, We find it
+      // right before capturing it. So this precaution might not be necessary.
+      gdk_window_set_events(win,
+                            gdk_window_get_events(win) | GDK_STRUCTURE_MASK);
 
       found = gdk_window_get_toplevel(win);
       break;
@@ -345,7 +347,8 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   }
 
   /* Get GdkWindow for the WM frame */
-  wm_window =gdk_x11_window_foreign_new_for_display(gdk_window_get_display (window), wm_xid);
+  wm_window = gdk_x11_window_foreign_new_for_display(
+      gdk_window_get_display(window), wm_xid);
 
   GdkRectangle wm_rect;
   gdk_window_get_frame_extents(wm_window, &wm_rect);
