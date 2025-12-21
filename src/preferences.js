@@ -165,6 +165,22 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(this.waitSpinner, 1, row, 2, 1);
       row++;
 
+      // --- Capture Backend ---
+      grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
+      row++;
+
+      this.backendLabel = new Gtk.Label({
+        label: "Capture Backend:",
+        halign: Gtk.Align.START,
+      });
+      this.backendCombo = new Gtk.ComboBoxText();
+      this.backendCombo.append_text("Shell (Wayland/X11)");
+      this.backendCombo.append_text("X11 (Legacy)");
+
+      grid.attach(this.backendLabel, 0, row, 1, 1);
+      grid.attach(this.backendCombo, 1, row, 2, 1);
+      row++;
+
 
       this.connect("destroy", () => {
         if (this._settingsSignalId) settings.disconnect(this._settingsSignalId);
@@ -214,6 +230,8 @@ export const PreferencesWindow = GObject.registerClass(
       settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("capture-backend", this.backendCombo, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);
     }

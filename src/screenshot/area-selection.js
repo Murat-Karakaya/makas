@@ -155,7 +155,6 @@ export function selectArea() {
  */
 export function selectWindow() {
   return new Promise((resolve) => {
-    print("Selection: selectWindow called");
     let aborted = false;
     const screen = Gdk.Screen.get_default();
     const visual = screen.get_rgba_visual();

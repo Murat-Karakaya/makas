@@ -33,11 +33,12 @@ export function captureWindowWithXShape(x, y, includePointer) {
 }
 
 /**
- * Capture the window using Shell D-Bus interface.
+ * Capture using Shell D-Bus interface.
  * @param {boolean} includePointer
+ * @param {object} params - { mode, x, y, width, height }
  * @returns {Promise<GdkPixbuf.Pixbuf|null>}
  */
-export async function captureWindowWithShell(includePointer) {
+export async function captureWithShell(includePointer, params) {
   const serviceNameGnome = "org.gnome.Shell.Screenshot";
   const objectPathGnome = "/org/gnome/Shell/Screenshot";
   const interfaceNameGnome = "org.gnome.Shell.Screenshot";
@@ -52,23 +53,45 @@ export async function captureWindowWithShell(includePointer) {
   ]);
 
   const connection = Gio.DBus.session;
-  const params = new GLib.Variant("(bbbs)", [
-    true,
-    includePointer,
-    true,
-    tmpFilename,
-  ]);
+  let method = "Screenshot";
+  let dbusParams = null;
+
+  // We use numeric modes consistent with CaptureMode in screenshot.js
+  // SCREEN: 0, WINDOW: 1, AREA: 2
+  if (params.mode === 1) {
+    method = "ScreenshotWindow";
+    dbusParams = new GLib.Variant("(bbbs)", [
+      true, // include_decorations
+      includePointer,
+      true, // flash
+      tmpFilename,
+    ]);
+  } else if (params.mode === 2) {
+    method = "ScreenshotArea";
+    dbusParams = new GLib.Variant("(iiiibs)", [
+      params.x,
+      params.y,
+      params.width,
+      params.height,
+      true, // flash
+      tmpFilename,
+    ]);
+  } else {
+    method = "Screenshot";
+    dbusParams = new GLib.Variant("(bbs)", [
+      includePointer,
+      true, // flash
+      tmpFilename,
+    ]);
+  }
 
   try {
-    // connection.call should technically work.
-    // But since the Promise resolves without actually finishing it's work,
-    // it causes a race condition. So we use call_sync.
     connection.call_sync(
       serviceNameGnome,
       objectPathGnome,
       interfaceNameGnome,
-      "ScreenshotWindow",
-      params,
+      method,
+      dbusParams,
       null,
       Gio.DBusCallFlags.NONE,
       -1,
@@ -79,7 +102,7 @@ export async function captureWindowWithShell(includePointer) {
     GLib.unlink(tmpFilename);
     return pixbuf;
   } catch (e) {
-    print(`Shell screenshot failed: ${e.message}`);
+    print(`Shell screenshot (${method}) failed: ${e.message}`);
     if (GLib.file_test(tmpFilename, GLib.FileTest.EXISTS)) {
       GLib.unlink(tmpFilename);
     }

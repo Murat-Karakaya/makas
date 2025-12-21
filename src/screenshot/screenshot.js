@@ -11,7 +11,7 @@ import {
   getDestinationPath,
   wait,
   captureWindowWithXShape,
-  captureWindowWithShell,
+  captureWithShell,
 } from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
@@ -148,31 +148,45 @@ export const ScreenshotPage = GObject.registerClass(
       this.preScreenshot.setStatus("Capturing...");
       let pixbuf = null;
 
-      switch (captureMode) {
-        case CaptureMode.SCREEN:
-          const rootWindow = Gdk.get_default_root_window();
-          pixbuf = Gdk.pixbuf_get_from_window(
-            rootWindow,
-            0,
-            0,
-            rootWindow.get_width(),
-            rootWindow.get_height(),
-          );
-          break;
-        case CaptureMode.WINDOW:
-          // Try Shell D-Bus interface first
-          if (selectionResult && selectionResult.clickX !== undefined) {
-            pixbuf = await captureWindowWithShell(includePointer);
+      const backend = settings.get_int("capture-backend");
+      const useShell = backend === 0;
 
-            if (pixbuf) {
-              print("Screenshot: Captured window via Shell D-Bus");
-              // Skip pointer compositing since Shell handles it
-              if (includePointer) {
-                includePointer = false;
-              }
-            } else {
-              print("Screenshot: Shell D-Bus capture failed, falling back to X11");
-              // Fallback to X11 C library
+      if (useShell) {
+        let shellParams = { mode: captureMode };
+        if (captureMode === CaptureMode.AREA && selectionResult) {
+          shellParams.x = selectionResult.x;
+          shellParams.y = selectionResult.y;
+          shellParams.width = selectionResult.width;
+          shellParams.height = selectionResult.height;
+        }
+
+        pixbuf = await captureWithShell(includePointer, shellParams);
+
+        if (pixbuf) {
+          print(`Screenshot: Captured ${Object.keys(CaptureMode)[captureMode]} via Shell D-Bus`);
+          // Skip pointer compositing since Shell handles it
+          if (includePointer) {
+            includePointer = false;
+          }
+        } else {
+          print("Screenshot: Shell D-Bus capture failed, falling back to X11");
+        }
+      }
+
+      if (!pixbuf) {
+        switch (captureMode) {
+          case CaptureMode.SCREEN:
+            const rootWindow = Gdk.get_default_root_window();
+            pixbuf = Gdk.pixbuf_get_from_window(
+              rootWindow,
+              0,
+              0,
+              rootWindow.get_width(),
+              rootWindow.get_height(),
+            );
+            break;
+          case CaptureMode.WINDOW:
+            if (selectionResult && selectionResult.clickX !== undefined) {
               pixbuf = captureWindowWithXShape(
                 selectionResult.clickX,
                 selectionResult.clickY,
@@ -183,23 +197,20 @@ export const ScreenshotPage = GObject.registerClass(
                 includePointer = false;
               }
             }
-          }
-          break;
-        case CaptureMode.AREA:
-          if (selectionResult) {
-            const rootWindow = Gdk.get_default_root_window();
-            pixbuf = Gdk.pixbuf_get_from_window(
-              rootWindow,
-              selectionResult.x,
-              selectionResult.y,
-              selectionResult.width,
-              selectionResult.height,
-            );
-          }
-          break;
-        default:
-          this.preScreenshot.setStatus("Capture cancelled or failed");
-          break;
+            break;
+          case CaptureMode.AREA:
+            if (selectionResult) {
+              const rootWindow = Gdk.get_default_root_window();
+              pixbuf = Gdk.pixbuf_get_from_window(
+                rootWindow,
+                selectionResult.x,
+                selectionResult.y,
+                selectionResult.width,
+                selectionResult.height,
+              );
+            }
+            break;
+        }
       }
 
       if (includePointer && captureMode !== CaptureMode.AREA) {

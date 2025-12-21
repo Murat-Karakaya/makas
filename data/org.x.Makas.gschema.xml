@@ -47,5 +47,11 @@
 			<summary>Window wait time</summary>
 			<description>Number of seconds to wait for the window to close before taking the screenshot</description>
 		</key>
+
+		<key name="capture-backend" type="i">
+			<default>0</default>
+			<summary>Capture backend</summary>
+			<description>The backend used for capturing (0 for Shell, 1 for X11)</description>
+		</key>
 	</schema>
 </schemalist>
