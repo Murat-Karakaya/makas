@@ -1,14 +1,3 @@
-/* makas-screenshot.h - Window screenshot with XShape transparency
- *
- * Based on gnome-screenshot by:
- *   Copyright (C) 2001-2006  Jonathan Blandford <jrb@alum.mit.edu>
- *   Copyright (C) 2008 Cosimo Cecchi <cosimoc@gnome.org>
- *   Copyright (C) 2020 Alexander Mikhaylenko <alexm@gnome.org>
- *
- * Modified for Makas by Murat Karakaya
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
-
 #ifndef MAKAS_SCREENSHOT_H
 #define MAKAS_SCREENSHOT_H
 

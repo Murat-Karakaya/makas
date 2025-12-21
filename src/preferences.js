@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
-import { settings } from "./window.js";
+import { hasShellScreenshot, settings } from "./screenshot/utils.js";
 
 export const PreferencesWindow = GObject.registerClass(
   {
@@ -191,7 +191,7 @@ export const PreferencesWindow = GObject.registerClass(
 
     onOpenFolderSelector(key) {
       // Store reference to prevent garbage collection
-      this._fileChooser = new Gtk.FileChooserNative({
+      this.fileChooser = new Gtk.FileChooserNative({
         title: "Select a Folder",
         transient_for: this,
         action: Gtk.FileChooserAction.SELECT_FOLDER,
@@ -200,7 +200,7 @@ export const PreferencesWindow = GObject.registerClass(
         modal: true,
       });
 
-      this._fileChooser.connect("response", (dialog, response) => {
+      this.fileChooser.connect("response", (dialog, response) => {
         if (response === Gtk.ResponseType.ACCEPT) {
           const folderPath = dialog.get_filename();
           if (folderPath) {
@@ -212,11 +212,10 @@ export const PreferencesWindow = GObject.registerClass(
           print("File selection cancelled.");
         }
 
-        // Clean up the reference
-        this._fileChooser = null;
+        this.fileChooser.destroy();
       });
 
-      this._fileChooser.show();
+      this.fileChooser.show();
     }
 
     syncValues() {
@@ -231,6 +230,16 @@ export const PreferencesWindow = GObject.registerClass(
 
       settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
 
+      const shellAvailable = hasShellScreenshot();
+
+      if (!shellAvailable) {
+        // This kind hoop is made to prevent the combo box from being sensitive
+        // otherwise it will remain sensitive for some reason.
+        this.backendCombo.connect('realize', () => {
+          this.backendCombo.set_sensitive(false);
+        });
+        this.backendCombo.set_tooltip_text("GNOME Shell screenshot service not found. X11 backend is mandatory.");
+      }
       settings.bind("capture-backend", this.backendCombo, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);

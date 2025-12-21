@@ -5,12 +5,13 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
-import GLib from 'gi://GLib';
-
-// Force X11 backend as the app currently only works on X11
-GLib.setenv('GDK_BACKEND', 'x11', true);
 
 import { ScreenshotWindow } from './window.js';
+import { settings, hasShellScreenshot } from './screenshot/utils.js';
+
+if (!hasShellScreenshot()) {
+    settings.set_int('capture-backend', 1);
+}
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {

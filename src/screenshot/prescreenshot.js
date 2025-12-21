@@ -1,7 +1,6 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
-import { settings } from "../window.js";
-import { getCurrentDate } from "./utils.js";
+import { getCurrentDate, settings } from "./utils.js";
 
 // Capture mode enumeration
 const CaptureMode = {

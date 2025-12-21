@@ -4,11 +4,10 @@ import GObject from "gi://GObject";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 
-import { settings } from "../window.js";
 import { selectArea, selectWindow } from "./area-selection.js";
 import {
   compositePointer,
-  getDestinationPath,
+  settings,
   wait,
   captureWindowWithXShape,
   captureWithShell,
@@ -74,7 +73,10 @@ export const ScreenshotPage = GObject.registerClass(
 
       try {
         // Wait for window to hide
-        await wait(settings.get_int("window-wait"));
+        const windowWait = settings.get_int("window-wait");
+        if (windowWait > delay * 1000) {
+          await wait(windowWait);
+        }
 
         let selectionResult = null;
         print(`Screenshot: Selection phase, mode=${captureMode}`);
@@ -87,15 +89,21 @@ export const ScreenshotPage = GObject.registerClass(
             return;
           }
         } else if (captureMode === CaptureMode.WINDOW) {
-          selectionResult = await selectWindow();
-          if (!selectionResult) {
-            print("Screenshot: Window selection cancelled");
-            this.preScreenshot.setStatus("Capture cancelled");
-            return;
+          const backend = settings.get_int("capture-backend");
+          if (backend === 1) { // X11
+            selectionResult = await selectWindow();
+            if (!selectionResult) {
+              print("Screenshot: Window selection cancelled");
+              this.preScreenshot.setStatus("Capture cancelled");
+              return;
+            }
+          } else {
+            // Shell backend takes the active window automatically
+            selectionResult = { clickX: 0, clickY: 0 }; // Just to trigger the logic
           }
         }
 
-        if (delay > 0) {
+        if (windowWait < delay * 1000) {
           await this.startDelay(delay);
         }
 
@@ -142,7 +150,7 @@ export const ScreenshotPage = GObject.registerClass(
 
     async performCapture(
       selectionResult,
-      { captureMode, includePointer, folder, filename },
+      { captureMode, includePointer },
     ) {
       print("Screenshot: Capturing...");
       this.preScreenshot.setStatus("Capturing...");
@@ -218,12 +226,6 @@ export const ScreenshotPage = GObject.registerClass(
       }
 
       this.lastPixbuf = pixbuf;
-
-      const filepath = getDestinationPath({ folder, filename });
-      if (filepath) {
-        pixbuf.savev(filepath, "png", [], []);
-        this.preScreenshot.setStatus(`Saved: ${filepath}`);
-      }
 
       this.postScreenshot.setImage(pixbuf);
       this.stack.set_visible_child_name("post");

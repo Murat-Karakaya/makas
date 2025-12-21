@@ -20,14 +20,9 @@
 
 import GObject from "gi://GObject";
 import Gtk from "gi://Gtk?version=3.0";
-import Gio from "gi://Gio";
 
 import { ScreenshotPage } from "./screenshot/screenshot.js";
 import { PreferencesWindow } from "./preferences.js";
-
-export const settings = new Gio.Settings({
-  schema_id: "org.x.Makas",
-});
 
 export const ScreenshotWindow = GObject.registerClass(
   {

@@ -110,6 +110,35 @@ export async function captureWithShell(includePointer, params) {
   }
 }
 
+/**
+ * Check if the Shell screenshot interface is available.
+ * @returns {boolean}
+ */
+export function hasShellScreenshot() {
+  const serviceNameGnome = "org.gnome.Shell.Screenshot";
+
+  const connection = Gio.DBus.session;
+  try {
+    // We try to call a method that we know exists but with invalid arguments
+    // to see if the interface itself is responsive, or we can just check names.
+    // However, checking for the name on the bus is more reliable for "availability".
+    const result = connection.call_sync(
+      "org.freedesktop.DBus",
+      "/org/freedesktop/DBus",
+      "org.freedesktop.DBus",
+      "GetNameOwner",
+      new GLib.Variant("(s)", [serviceNameGnome]),
+      null,
+      Gio.DBusCallFlags.NONE,
+      -1,
+      null,
+    );
+    return !!result;
+  } catch (e) {
+    return false;
+  }
+}
+
 export function compositePointer(pixbuf) {
   try {
     const display = Gdk.Display.get_default();
@@ -309,3 +338,8 @@ export function wait(ms) {
     });
   });
 }
+
+
+export const settings = new Gio.Settings({
+  schema_id: "org.x.Makas",
+});

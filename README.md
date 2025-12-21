@@ -3,6 +3,11 @@
 
 ## Roadmap
 
+
+### TEST:
+
+I never confirmed that if the shell DBus is unavailable, the x11 backend will be enforced.
+
 ### FIXME: 
 
 It's better to take Screenshot after the window animation is done. 
@@ -49,6 +54,16 @@ The resulting package will be named `makas_x.x.x_amd64.deb`.
 ## Development
 To run the app in development mode:
 ```bash
-rm -rf builddir && meson setup builddir . && meson compile -C builddir 2>&1
-./run.sh 2>&1 | head -30
+./run.sh
 ```
+
+
+## Credits
+
+The open source codebase of the gnome-screenshot has significantly helped the making of this project.
+This project is not exactly a fork of gnome-screenshot, but it has been inspired by it.
+
+
+## License
+
+This project is licensed under the GNU GENERAL PUBLIC LICENSE Version 3.
