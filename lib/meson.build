@@ -14,12 +14,10 @@ xcomposite_dep = dependency('xcomposite')
 
 lib_sources = [
   'makas-screenshot.c',
-  'makas-screenshot-shell.c',
 ]
 
 lib_headers = [
   'makas-screenshot.h',
-  'makas-screenshot-shell.h',
 ]
 
 # Build shared library

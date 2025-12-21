@@ -3,6 +3,7 @@ import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GdkX11 from "gi://GdkX11?version=3.0";
 import GLib from "gi://GLib";
 import MakasScreenshot from "gi://MakasScreenshot";
+import Gio from "gi://Gio";
 
 // C library instance for window capture with XShape support
 let screenshotHelper = null;
@@ -29,6 +30,61 @@ function getScreenshotHelper() {
 export function captureWindowWithXShape(x, y, includePointer) {
   const helper = getScreenshotHelper();
   return helper.capture_window(x, y, includePointer);
+}
+
+/**
+ * Capture the window using Shell D-Bus interface.
+ * @param {boolean} includePointer
+ * @returns {Promise<GdkPixbuf.Pixbuf|null>}
+ */
+export async function captureWindowWithShell(includePointer) {
+  const serviceNameGnome = "org.gnome.Shell.Screenshot";
+  const objectPathGnome = "/org/gnome/Shell/Screenshot";
+  const interfaceNameGnome = "org.gnome.Shell.Screenshot";
+
+  const cacheDir = GLib.get_user_cache_dir();
+  const makasCache = GLib.build_filenamev([cacheDir, "makas"]);
+  GLib.mkdir_with_parents(makasCache, 0o700);
+
+  const tmpFilename = GLib.build_filenamev([
+    makasCache,
+    `scr-${getCurrentDate()}.png`,
+  ]);
+
+  const connection = Gio.DBus.session;
+  const params = new GLib.Variant("(bbbs)", [
+    true,
+    includePointer,
+    true,
+    tmpFilename,
+  ]);
+
+  try {
+    // connection.call should technically work.
+    // But since the Promise resolves without actually finishing it's work,
+    // it causes a race condition. So we use call_sync.
+    connection.call_sync(
+      serviceNameGnome,
+      objectPathGnome,
+      interfaceNameGnome,
+      "ScreenshotWindow",
+      params,
+      null,
+      Gio.DBusCallFlags.NONE,
+      -1,
+      null,
+    );
+
+    const pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
+    GLib.unlink(tmpFilename);
+    return pixbuf;
+  } catch (e) {
+    print(`Shell screenshot failed: ${e.message}`);
+    if (GLib.file_test(tmpFilename, GLib.FileTest.EXISTS)) {
+      GLib.unlink(tmpFilename);
+    }
+    return null;
+  }
 }
 
 export function compositePointer(pixbuf) {

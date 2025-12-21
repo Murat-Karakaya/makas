@@ -19,7 +19,6 @@
 
 #include "makas-screenshot.h"
 #include "glib.h"
-#include "makas-screenshot-shell.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>
@@ -325,18 +324,7 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
 
   g_return_val_if_fail(MAKAS_IS_SCREENSHOT(self), NULL);
 
-  // Try GNOME Shell backend first
-  screenshot = makas_screenshot_capture_window_shell(include_pointer, &error);
-  if (screenshot) {
-    g_debug("Captured window via GNOME Shell");
-    return screenshot;
-  }
-
-  if (error) {
-    g_warning("GNOME Shell screenshot failed: %s. Falling back to X11.",
-              error->message);
-    g_clear_error(&error);
-  }
+  screenshot = NULL;
 
   // Fallback to X11
   display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());

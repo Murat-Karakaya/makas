@@ -6,7 +6,13 @@ import Gio from "gi://Gio";
 
 import { settings } from "../window.js";
 import { selectArea, selectWindow } from "./area-selection.js";
-import { compositePointer, getDestinationPath, wait, captureWindowWithXShape } from "./utils.js";
+import {
+  compositePointer,
+  getDestinationPath,
+  wait,
+  captureWindowWithXShape,
+  captureWindowWithShell,
+} from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
 
@@ -154,16 +160,28 @@ export const ScreenshotPage = GObject.registerClass(
           );
           break;
         case CaptureMode.WINDOW:
-          // Use C library for window capture with XShape transparency
+          // Try Shell D-Bus interface first
           if (selectionResult && selectionResult.clickX !== undefined) {
-            pixbuf = captureWindowWithXShape(
-              selectionResult.clickX,
-              selectionResult.clickY,
-              includePointer,
-            );
-            // Skip pointer compositing since C library handles it
-            if (pixbuf && includePointer) {
-              includePointer = false;
+            pixbuf = await captureWindowWithShell(includePointer);
+
+            if (pixbuf) {
+              print("Screenshot: Captured window via Shell D-Bus");
+              // Skip pointer compositing since Shell handles it
+              if (includePointer) {
+                includePointer = false;
+              }
+            } else {
+              print("Screenshot: Shell D-Bus capture failed, falling back to X11");
+              // Fallback to X11 C library
+              pixbuf = captureWindowWithXShape(
+                selectionResult.clickX,
+                selectionResult.clickY,
+                includePointer,
+              );
+              // Skip pointer compositing since C library handles it
+              if (pixbuf && includePointer) {
+                includePointer = false;
+              }
             }
           }
           break;
