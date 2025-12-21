@@ -24,12 +24,11 @@ function getScreenshotHelper() {
  * Uses the C library with XShape support.
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
- * @param {boolean} includePointer - Whether to include mouse pointer
  * @returns {GdkPixbuf.Pixbuf|null}
  */
-export function captureWindowWithXShape(x, y, includePointer) {
+export function captureWindowWithXShape(x, y) {
   const helper = getScreenshotHelper();
-  return helper.capture_window(x, y, includePointer);
+  return helper.capture_window(x, y);
 }
 
 /**

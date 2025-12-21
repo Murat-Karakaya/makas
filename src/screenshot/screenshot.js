@@ -172,14 +172,16 @@ export const ScreenshotPage = GObject.registerClass(
 
         if (pixbuf) {
           print(`Screenshot: Captured ${Object.keys(CaptureMode)[captureMode]} via Shell D-Bus`);
-          // Skip pointer compositing since Shell handles it
-          if (includePointer) {
-            includePointer = false;
-          }
-        } else {
-          print("Screenshot: Shell D-Bus capture failed, falling back to X11");
+          this.lastPixbuf = pixbuf;
+
+          this.postScreenshot.setImage(pixbuf);
+          this.stack.set_visible_child_name("post");
+
+          return;
         }
       }
+
+      print("Screenshot: Shell D-Bus capture failed, falling back to X11");
 
       if (!pixbuf) {
         switch (captureMode) {
@@ -197,13 +199,8 @@ export const ScreenshotPage = GObject.registerClass(
             if (selectionResult && selectionResult.clickX !== undefined) {
               pixbuf = captureWindowWithXShape(
                 selectionResult.clickX,
-                selectionResult.clickY,
-                includePointer,
+                selectionResult.clickY
               );
-              // Skip pointer compositing since C library handles it
-              if (pixbuf && includePointer) {
-                includePointer = false;
-              }
             }
             break;
           case CaptureMode.AREA:

@@ -1,22 +1,3 @@
-/* makas-screenshot.c - Window screenshot with XComposite + XShape
- *
- * ATTRIBUTION: This file contains code adapted from gnome-screenshot
- * (https://gitlab.gnome.org/GNOME/gnome-screenshot)
- *
- * Original authors:
- *   Copyright (C) 2001-2006  Jonathan Blandford <jrb@alum.mit.edu>
- *   Copyright (C) 2008 Cosimo Cecchi <cosimoc@gnome.org>
- *   Copyright (C) 2020 Alexander Mikhaylenko <alexm@gnome.org>
- *
- * Modified for Makas by Murat Karakaya
- * SPDX-License-Identifier: GPL-2.0-or-later
- *
- * BORROWED CODE FROM gnome-screenshot/src/screenshot-backend-x11.c:
- * - find_wm_window(): - Traverse X11 window tree to find WM frame
- * - XShape transparency logic: - Apply XShape mask for rounded
- * corners
- */
-
 #include "makas-screenshot.h"
 #include "glib.h"
 
@@ -267,55 +248,9 @@ static void apply_xshape_mask(GdkPixbuf *pixbuf, Display *display,
   XFree(rectangles);
 }
 
-/* Composite cursor onto pixbuf */
-static void composite_pointer(GdkPixbuf *pixbuf, GdkWindow *wm_window) {
-  GdkCursor *cursor;
-  GdkPixbuf *cursor_pixbuf;
-  GdkSeat *seat;
-  GdkDevice *device;
-  gint cx, cy, xhot, yhot;
-
-  cursor = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_LEFT_PTR);
-  cursor_pixbuf = gdk_cursor_get_image(cursor);
-  g_object_unref(cursor);
-
-  if (cursor_pixbuf == NULL)
-    return;
-
-  seat = gdk_display_get_default_seat(gdk_display_get_default());
-  device = gdk_seat_get_pointer(seat);
-
-  /* Get cursor position relative to window */
-  gdk_window_get_device_position(wm_window, device, &cx, &cy, NULL);
-
-  const gchar *xhot_str = gdk_pixbuf_get_option(cursor_pixbuf, "x_hot");
-  const gchar *yhot_str = gdk_pixbuf_get_option(cursor_pixbuf, "y_hot");
-  xhot = xhot_str ? atoi(xhot_str) : 0;
-  yhot = yhot_str ? atoi(yhot_str) : 0;
-
-  gint cursor_x = cx - xhot;
-  gint cursor_y = cy - yhot;
-
-  /* Composite if within bounds */
-  if (cursor_x >= 0 && cursor_y >= 0 &&
-      cursor_x < gdk_pixbuf_get_width(pixbuf) &&
-      cursor_y < gdk_pixbuf_get_height(pixbuf)) {
-    gint cursor_width = MIN(gdk_pixbuf_get_width(cursor_pixbuf),
-                            gdk_pixbuf_get_width(pixbuf) - cursor_x);
-    gint cursor_height = MIN(gdk_pixbuf_get_height(cursor_pixbuf),
-                             gdk_pixbuf_get_height(pixbuf) - cursor_y);
-
-    gdk_pixbuf_composite(cursor_pixbuf, pixbuf, cursor_x, cursor_y,
-                         cursor_width, cursor_height, cursor_x, cursor_y, 1.0,
-                         1.0, GDK_INTERP_BILINEAR, 255);
-  }
-
-  g_object_unref(cursor_pixbuf);
-}
-
 /* Capture window logic implemented below */
 GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
-                                           gint y, gboolean include_pointer) {
+                                           gint y) {
   GdkWindow *window, *wm_window = NULL;
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
@@ -368,11 +303,6 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   /* Apply XShape mask for transparent rounded corners */
   int scale_factor = gdk_window_get_scale_factor(wm_window);
   apply_xshape_mask(screenshot, display, wm_xid, scale_factor);
-
-  /* Composite pointer if requested */
-  if (include_pointer) {
-    composite_pointer(screenshot, wm_window);
-  }
 
   g_object_unref(wm_window);
 

@@ -34,7 +34,7 @@ MakasScreenshot *makas_screenshot_new(void);
  * on failure
  */
 GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
-                                           gint y, gboolean include_pointer);
+                                           gint y);
 
 G_END_DECLS
 
