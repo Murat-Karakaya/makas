@@ -12,8 +12,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * BORROWED CODE FROM gnome-screenshot/src/screenshot-backend-x11.c:
- * - find_wm_window(): Lines 78-104 - Traverse X11 window tree to find WM frame
- * - XShape transparency logic: Lines 398-495 - Apply XShape mask for rounded
+ * - find_wm_window(): - Traverse X11 window tree to find WM frame
+ * - XShape transparency logic: - Apply XShape mask for rounded
  * corners
  */
 
@@ -41,42 +41,39 @@ MakasScreenshot *makas_screenshot_new(void) {
   return g_object_new(MAKAS_TYPE_SCREENSHOT, NULL);
 }
 
-/* BORROWED: find_wm_window from gnome-screenshot:78-104
- * Traverses the X11 window tree to find the WM frame window (includes
- * decorations).
- */
-static Window find_wm_window(GdkWindow *window) {
-  Window xid, root, parent, *children;
-  unsigned int nchildren;
-
-  if (window == gdk_get_default_root_window())
-    return None;
-
-  xid = GDK_WINDOW_XID(window);
-
-  do {
-    if (XQueryTree(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), xid, &root,
-                   &parent, &children, &nchildren) == 0) {
-      g_warning("Couldn't find window manager window");
-      return None;
-    }
-
-    if (children)
-      XFree(children);
-
+// find_wm_window is just a copy-pasta from gnome-screenshot (with the same name)
+static Window
+ find_wm_window (GdkWindow *window)
+ {
+    Window xid, root, parent, *children;
+    unsigned int nchildren;
+    
+    if (window == gdk_get_default_root_window ())
+        return None;
+    
+    xid = GDK_WINDOW_XID (window);
+    
+    do
+    {
+    if (XQueryTree (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+                    xid, &root, &parent, &children, &nchildren) == 0)
+        {
+        g_warning ("Couldn't find window manager window");
+        return None;
+        }
+    
     if (root == parent)
-      return xid;
-
+        return xid;
+    
     xid = parent;
-  } while (TRUE);
-}
+    }
+    while (TRUE);
+ }
 
-/* Find the window at coordinates (x, y) */
 static GdkWindow *find_window_at_coords(gint x, gint y) {
   GdkScreen *screen = gdk_screen_get_default();
   GdkWindow *found = NULL;
 
-  /* Get current desktop for workspace filtering */
   gint current_desktop = -1;
   if (GDK_IS_X11_SCREEN(screen)) {
     current_desktop = gdk_x11_screen_get_current_desktop(screen);
@@ -86,43 +83,38 @@ static GdkWindow *find_window_at_coords(gint x, gint y) {
   if (!windows)
     return NULL;
 
-  /* Reverse to get top-to-bottom order */
   windows = g_list_reverse(windows);
 
   for (GList *l = windows; l != NULL; l = l->next) {
     GdkWindow *win = l->data;
-    GdkRectangle rect;
-    GdkWindowTypeHint type_hint;
+    
+    GdkWindowTypeHint type_hint = gdk_window_get_type_hint(win);
 
-    /* Filter 1: Basic Viewability */
+    //Just ignore the dock and the desktop. Might wanto to expose the option to include them in the future.
+    if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP || type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
+      continue; 
+
     if (!gdk_window_is_viewable(win))
       continue;
 
-    /* Filter 2: Workspace Logic */
     if (current_desktop != -1 && GDK_IS_X11_WINDOW(win)) {
       guint32 win_desktop = gdk_x11_window_get_desktop(win);
-      /* 0xFFFFFFFF (4294967295) is "Pinned" (Always on Visible Workspace) */
-      gboolean is_pinned = (win_desktop == 0xFFFFFFFF);
-
-      if (win_desktop != (guint32)current_desktop && !is_pinned) {
+      
+      //0xFFFFFFFF is "Pinned" (Always on Visible Workspace)
+      if (win_desktop != (guint32)current_desktop && win_desktop != 0xFFFFFFFF) {
         continue;
       }
     }
-
-    /* Filter 3: Window Type */
-    type_hint = gdk_window_get_type_hint(win);
-    if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP ||
-        type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
-      continue;
-
-    /* Filter 4: Geometry Intersection */
+    
+    GdkRectangle rect;
     gdk_window_get_frame_extents(win, &rect);
 
-    if (x >= rect.x && x < rect.x + rect.width && y >= rect.y &&
-        y < rect.y + rect.height) {
-      /* Ensure we have structure events as in the JS version */
-      gdk_window_set_events(win,
-                            gdk_window_get_events(win) | GDK_STRUCTURE_MASK);
+    if (x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height) {
+      // This is included here to handle a hypothetical scenario where 
+      // the window doesn't exist by the time it must be captured.
+      // We actually don't try to find the window before the delay, We find it right 
+      // before capturing it. So this precaution might not be necessary.
+      gdk_window_set_events(win, gdk_window_get_events(win) | GDK_STRUCTURE_MASK);
 
       found = gdk_window_get_toplevel(win);
       break;
@@ -334,20 +326,18 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
   Display *display;
-  GdkRectangle wm_rect;
 
   g_return_val_if_fail(MAKAS_IS_SCREENSHOT(self), NULL);
 
   display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 
-  /* Find window at coordinates */
   window = find_window_at_coords(x, y);
   if (window == NULL) {
     g_warning("No window found at coordinates (%d, %d)", x, y);
     return NULL;
   }
 
-  /* Find the WM frame window (includes decorations) */
+  // --- Getting the WM frame ---
   wm_xid = find_wm_window(window);
   if (wm_xid == None) {
     g_warning("Could not find WM window");
@@ -355,17 +345,11 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   }
 
   /* Get GdkWindow for the WM frame */
-  wm_window =
-      gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), wm_xid);
-  if (wm_window == NULL) {
-    g_warning("Could not create GdkWindow for WM frame");
-    return NULL;
-  }
+  wm_window =gdk_x11_window_foreign_new_for_display(gdk_window_get_display (window), wm_xid);
 
-  /* Get WM window dimensions (includes decorations) */
+  GdkRectangle wm_rect;
   gdk_window_get_frame_extents(wm_window, &wm_rect);
 
-  /* Capture using XComposite (gets full window, even off-screen/occluded) */
   screenshot =
       capture_window_pixmap(display, wm_xid, wm_rect.width, wm_rect.height);
 
