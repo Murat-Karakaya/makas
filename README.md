@@ -27,11 +27,7 @@ Free select (Might never be added)
 
 Open image with other applications
 
-Add an option for a minimum delay before taking the screenshot.
-
 Add Appimage and nix package builds.
-
-Saving options should be in postscreenshot window
 
 ## Build and Package
 
