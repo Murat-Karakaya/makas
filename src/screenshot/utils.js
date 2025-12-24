@@ -37,10 +37,10 @@ export function captureWindowWithXShape(x, y) {
  * @param {object} params - { mode, x, y, width, height }
  * @returns {Promise<GdkPixbuf.Pixbuf|null>}
  */
-export async function captureWithShell(includePointer, params) {
+export async function captureWithShell(includePointer, captureMode, params) {
   const serviceNameGnome = "org.gnome.Shell.Screenshot";
+  const interfaceNameGnome = serviceNameGnome;
   const objectPathGnome = "/org/gnome/Shell/Screenshot";
-  const interfaceNameGnome = "org.gnome.Shell.Screenshot";
 
   const cacheDir = GLib.get_user_cache_dir();
   const makasCache = GLib.build_filenamev([cacheDir, "makas"]);
@@ -54,34 +54,38 @@ export async function captureWithShell(includePointer, params) {
   const connection = Gio.DBus.session;
   let method = "Screenshot";
   let dbusParams = null;
-
-  // We use numeric modes consistent with CaptureMode in screenshot.js
   // SCREEN: 0, WINDOW: 1, AREA: 2
-  if (params.mode === 1) {
-    method = "ScreenshotWindow";
-    dbusParams = new GLib.Variant("(bbbs)", [
-      true, // include_decorations
-      includePointer,
-      true, // flash
-      tmpFilename,
-    ]);
-  } else if (params.mode === 2) {
-    method = "ScreenshotArea";
-    dbusParams = new GLib.Variant("(iiiibs)", [
-      params.x,
-      params.y,
-      params.width,
-      params.height,
-      true, // flash
-      tmpFilename,
-    ]);
-  } else {
-    method = "Screenshot";
-    dbusParams = new GLib.Variant("(bbs)", [
-      includePointer,
-      true, // flash
-      tmpFilename,
-    ]);
+  switch (captureMode) {
+    case 0:
+      method = "Screenshot";
+      dbusParams = new GLib.Variant("(bbs)", [
+        includePointer,
+        true, // flash
+        tmpFilename,
+      ]);
+      break;
+    case 1:
+      method = "ScreenshotWindow";
+      dbusParams = new GLib.Variant("(bbbs)", [
+        true, // include_decorations
+        includePointer,
+        true, // flash
+        tmpFilename,
+      ]);
+      break;
+    case 2:
+      method = "ScreenshotArea";
+      dbusParams = new GLib.Variant("(iiiibs)", [
+        params.x,
+        params.y,
+        params.width,
+        params.height,
+        true, // flash
+        tmpFilename,
+      ]);
+      break;
+    default:
+      throw new Error("Invalid screenshot mode. Please report this issue to the developer.");
   }
 
   try {

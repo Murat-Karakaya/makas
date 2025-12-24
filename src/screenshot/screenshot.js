@@ -156,19 +156,8 @@ export const ScreenshotPage = GObject.registerClass(
       this.preScreenshot.setStatus("Capturing...");
       let pixbuf = null;
 
-      const backend = settings.get_int("capture-backend");
-      const useShell = backend === 0;
-
-      if (useShell) {
-        let shellParams = { mode: captureMode };
-        if (captureMode === CaptureMode.AREA && selectionResult) {
-          shellParams.x = selectionResult.x;
-          shellParams.y = selectionResult.y;
-          shellParams.width = selectionResult.width;
-          shellParams.height = selectionResult.height;
-        }
-
-        pixbuf = await captureWithShell(includePointer, shellParams);
+      if (settings.get_int("capture-backend") === 0) {
+        pixbuf = await captureWithShell(includePointer, captureMode, selectionResult);
 
         if (pixbuf) {
           print(`Screenshot: Captured ${Object.keys(CaptureMode)[captureMode]} via Shell D-Bus`);
@@ -179,46 +168,44 @@ export const ScreenshotPage = GObject.registerClass(
 
           return;
         }
+        print("Screenshot: Shell D-Bus capture failed, falling back to X11");
       }
-
-      print("Screenshot: Shell D-Bus capture failed, falling back to X11");
-
-      if (!pixbuf) {
-        switch (captureMode) {
-          case CaptureMode.SCREEN:
+      
+      switch (captureMode) {
+        case CaptureMode.SCREEN:
+          const rootWindow = Gdk.get_default_root_window();
+          pixbuf = Gdk.pixbuf_get_from_window(
+            rootWindow,
+            0,
+            0,
+            rootWindow.get_width(),
+            rootWindow.get_height(),
+          );
+          break;
+        case CaptureMode.WINDOW:
+          if (selectionResult && selectionResult.clickX !== undefined) {
+            pixbuf = captureWindowWithXShape(
+              selectionResult.clickX,
+              selectionResult.clickY
+            );
+          }
+          break;
+        case CaptureMode.AREA:
+          if (selectionResult) {
             const rootWindow = Gdk.get_default_root_window();
             pixbuf = Gdk.pixbuf_get_from_window(
               rootWindow,
-              0,
-              0,
-              rootWindow.get_width(),
-              rootWindow.get_height(),
+              selectionResult.x,
+              selectionResult.y,
+              selectionResult.width,
+              selectionResult.height,
             );
-            break;
-          case CaptureMode.WINDOW:
-            if (selectionResult && selectionResult.clickX !== undefined) {
-              pixbuf = captureWindowWithXShape(
-                selectionResult.clickX,
-                selectionResult.clickY
-              );
-            }
-            break;
-          case CaptureMode.AREA:
-            if (selectionResult) {
-              const rootWindow = Gdk.get_default_root_window();
-              pixbuf = Gdk.pixbuf_get_from_window(
-                rootWindow,
-                selectionResult.x,
-                selectionResult.y,
-                selectionResult.width,
-                selectionResult.height,
-              );
-            }
-            break;
-        }
+          }
+          break;
       }
 
-      if (includePointer && captureMode !== CaptureMode.AREA) {
+      if (includePointer) {
+        print("Compositing pointer");
         pixbuf = compositePointer(pixbuf);
       }
 
