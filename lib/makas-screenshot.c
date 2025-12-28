@@ -250,7 +250,7 @@ static void apply_xshape_mask(GdkPixbuf *pixbuf, Display *display,
 
 /* Capture window logic implemented below */
 GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
-                                           gint y) {
+                                           gint y, gboolean include_pointer) {
   GdkWindow *window, *wm_window = NULL;
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
@@ -317,7 +317,75 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
                                         crop_width, crop_height);
   screenshot = gdk_pixbuf_copy(screenshot);
 
+  if (include_pointer) {
+    makas_screenshot_composite_cursor(self, screenshot, frame_rect.x + crop_x,
+                                      frame_rect.y + crop_y);
+  }
+
   g_object_unref(frame_pixbuf);
 
   return screenshot;
+}
+
+void makas_screenshot_composite_cursor(MakasScreenshot *self, GdkPixbuf *pixbuf,
+                                       gint root_x_offset, gint root_y_offset) {
+  g_return_if_fail(MAKAS_IS_SCREENSHOT(self));
+  g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
+
+  GdkDisplay *display = gdk_display_get_default();
+  GdkSeat *seat = gdk_display_get_default_seat(display);
+  GdkDevice *pointer = gdk_seat_get_pointer(seat);
+
+  GdkScreen *screen;
+  gint x, y;
+  gdk_device_get_position(pointer, &screen, &x, &y);
+
+  GdkCursor *cursor = gdk_cursor_new_for_display(display, GDK_LEFT_PTR);
+  if (!cursor) {
+    g_warning("Could not create cursor for compositing");
+    return;
+  }
+
+  GdkPixbuf *cursor_pixbuf = gdk_cursor_get_image(cursor);
+  if (!cursor_pixbuf) {
+    // Some themes/cursors might not support getting the image directly this way
+    g_object_unref(cursor);
+    return;
+  }
+
+  gint hot_x = 0;
+  gint hot_y = 0;
+
+  const gchar *hot_x_str = gdk_pixbuf_get_option(cursor_pixbuf, "x_hot");
+  const gchar *hot_y_str = gdk_pixbuf_get_option(cursor_pixbuf, "y_hot");
+
+  if (hot_x_str)
+    hot_x = atoi(hot_x_str);
+  if (hot_y_str)
+    hot_y = atoi(hot_y_str);
+
+  gint dest_x = x - root_x_offset - hot_x;
+  gint dest_y = y - root_y_offset - hot_y;
+
+  gint pb_width = gdk_pixbuf_get_width(pixbuf);
+  gint pb_height = gdk_pixbuf_get_height(pixbuf);
+  gint cur_width = gdk_pixbuf_get_width(cursor_pixbuf);
+  gint cur_height = gdk_pixbuf_get_height(cursor_pixbuf);
+
+  /* Intersection logic to ensure safe memory access */
+  gint inter_x = MAX(0, dest_x);
+  gint inter_y = MAX(0, dest_y);
+  gint inter_right = MIN(pb_width, dest_x + cur_width);
+  gint inter_bottom = MIN(pb_height, dest_y + cur_height);
+  gint inter_w = inter_right - inter_x;
+  gint inter_h = inter_bottom - inter_y;
+
+  if (inter_w > 0 && inter_h > 0) {
+    gdk_pixbuf_composite(cursor_pixbuf, pixbuf, inter_x, inter_y, inter_w,
+                         inter_h, dest_x, dest_y, 1.0, 1.0, GDK_INTERP_BILINEAR,
+                         255);
+  }
+
+  g_object_unref(cursor_pixbuf);
+  g_object_unref(cursor);
 }

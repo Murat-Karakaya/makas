@@ -6,7 +6,7 @@ import Gio from "gi://Gio";
 
 import { selectArea, selectWindow } from "./area-selection.js";
 import {
-  compositePointer,
+  compositeCursor,
   settings,
   wait,
   captureWindowWithXShape,
@@ -170,7 +170,7 @@ export const ScreenshotPage = GObject.registerClass(
         }
         print("Screenshot: Shell D-Bus capture failed, falling back to X11");
       }
-      
+
       switch (captureMode) {
         case CaptureMode.SCREEN:
           const rootWindow = Gdk.get_default_root_window();
@@ -181,13 +181,18 @@ export const ScreenshotPage = GObject.registerClass(
             rootWindow.get_width(),
             rootWindow.get_height(),
           );
+          if (includePointer) {
+            compositeCursor(pixbuf, 0, 0);
+          }
           break;
         case CaptureMode.WINDOW:
           if (selectionResult && selectionResult.clickX !== undefined) {
             pixbuf = captureWindowWithXShape(
               selectionResult.clickX,
-              selectionResult.clickY
+              selectionResult.clickY,
+              includePointer
             );
+            // pointer already composited in C for WINDOW mode
           }
           break;
         case CaptureMode.AREA:
@@ -200,13 +205,11 @@ export const ScreenshotPage = GObject.registerClass(
               selectionResult.width,
               selectionResult.height,
             );
+            if (includePointer) {
+              compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
+            }
           }
           break;
-      }
-
-      if (includePointer) {
-        print("Compositing pointer");
-        pixbuf = compositePointer(pixbuf);
       }
 
       this.lastPixbuf = pixbuf;
