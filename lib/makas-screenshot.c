@@ -270,6 +270,8 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
     return NULL;
   }
 
+  GdkRectangle inner_rect;
+  gdk_window_get_frame_extents(window, &inner_rect);
   // --- Getting the WM frame ---
   wm_xid = find_wm_window(window);
   if (wm_xid == None) {
@@ -281,30 +283,41 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   wm_window = gdk_x11_window_foreign_new_for_display(
       gdk_window_get_display(window), wm_xid);
 
-  GdkRectangle wm_rect;
-  gdk_window_get_frame_extents(wm_window, &wm_rect);
+  GdkRectangle frame_rect;
+  gdk_window_get_frame_extents(wm_window, &frame_rect);
 
-  screenshot =
-      capture_window_pixmap(display, wm_xid, wm_rect.width, wm_rect.height);
+  GdkPixbuf *frame_pixbuf = capture_window_pixmap(
+      display, wm_xid, frame_rect.width, frame_rect.height);
 
-  if (screenshot == NULL) {
+  if (!frame_pixbuf) {
     g_warning("Failed to capture window pixmap");
     g_object_unref(wm_window);
     return NULL;
   }
 
-  /* Ensure we have alpha channel for XShape transparency */
-  if (!gdk_pixbuf_get_has_alpha(screenshot)) {
-    GdkPixbuf *tmp = gdk_pixbuf_add_alpha(screenshot, FALSE, 0, 0, 0);
-    g_object_unref(screenshot);
-    screenshot = tmp;
+  if (!gdk_pixbuf_get_has_alpha(frame_pixbuf)) {
+    GdkPixbuf *tmp = gdk_pixbuf_add_alpha(frame_pixbuf, FALSE, 0, 0, 0);
+    g_object_unref(frame_pixbuf);
+    frame_pixbuf = tmp;
   }
 
-  /* Apply XShape mask for transparent rounded corners */
+  /* Apply XShape mask to the FULL frame first */
   int scale_factor = gdk_window_get_scale_factor(wm_window);
-  apply_xshape_mask(screenshot, display, wm_xid, scale_factor);
+  apply_xshape_mask(frame_pixbuf, display, wm_xid, scale_factor);
 
   g_object_unref(wm_window);
+
+  int crop_x = inner_rect.x - frame_rect.x;
+  int crop_y = 0;
+  int crop_width = inner_rect.width;
+
+  int crop_height = inner_rect.y - frame_rect.y + inner_rect.height;
+
+  screenshot = gdk_pixbuf_new_subpixbuf(frame_pixbuf, crop_x, crop_y,
+                                        crop_width, crop_height);
+  screenshot = gdk_pixbuf_copy(screenshot);
+
+  g_object_unref(frame_pixbuf);
 
   return screenshot;
 }
