@@ -2,10 +2,10 @@ import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GLib from "gi://GLib";
 import MakasScreenshot from "gi://MakasScreenshot";
 import Gio from "gi://Gio";
+import Gdk from "gi://Gdk?version=3.0";
+import { CaptureMode } from "./constants.js";
 
-// C library instance for window capture with XShape support
 let screenshotHelper = null;
-
 /**
  * Get the C library screenshot helper instance.
  * @returns {MakasScreenshot.Screenshot}
@@ -18,14 +18,67 @@ function getScreenshotHelper() {
 }
 
 /**
- * Composite cursor onto pixbuf using C library (handles offsets).
+ * Composite cursor onto pixbuf using JS logic (Gdk/GdkPixbuf).
  * @param {GdkPixbuf.Pixbuf} pixbuf
- * @param {number} offsetX - Root X offset
- * @param {number} offsetY - Root Y offset
+ * @param {number} rootX - root X coordinate where the pixbuf starts
+ * @param {number} rootY - root Y coordinate where the pixbuf starts
  */
-export function compositeCursor(pixbuf, offsetX = 0, offsetY = 0) {
-  const helper = getScreenshotHelper();
-  helper.composite_cursor(pixbuf, offsetX, offsetY);
+export function compositeCursor(pixbuf, rootX, rootY) {
+  const display = Gdk.Display.get_default();
+  const seat = display.get_default_seat();
+  const pointer = seat.get_pointer();
+
+  const [_, x, y] = pointer.get_position();
+
+  // Create cursor to get its image
+  // Note: This creates a standard arrow cursor. Getting the *actual* current cursor image 
+  // is quite complex
+  const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.LEFT_PTR);
+  const cursorPixbuf = cursor.get_image();
+
+  if (!cursorPixbuf) return;
+  let hotX = 0;
+  let hotY = 0;
+  try {
+    const hotXStr = cursorPixbuf.get_option("x_hot");
+    const hotYStr = cursorPixbuf.get_option("y_hot");
+    if (hotXStr) hotX = +hotXStr; // hotX/YStr is actually a string. But the type is coerted into an int.
+    if (hotYStr) hotY = +hotYStr; // Seems fishy but you gotta live life on the edge from time to time.
+
+  } catch (e) {
+    print(e);
+  }
+
+  const destX = x - rootX - hotX;
+  const destY = y - rootY - hotY;
+
+  const pbWidth = pixbuf.get_width();
+  const pbHeight = pixbuf.get_height();
+  const curWidth = cursorPixbuf.get_width();
+  const curHeight = cursorPixbuf.get_height();
+
+  const interX = Math.max(0, destX);
+  const interY = Math.max(0, destY);
+  const interRight = Math.min(pbWidth, destX + curWidth);
+  const interBottom = Math.min(pbHeight, destY + curHeight);
+  const interW = interRight - interX;
+  const interH = interBottom - interY;
+
+  if (interW > 0 && interH > 0) {
+    cursorPixbuf.composite(
+      pixbuf,
+      interX,
+      interY,
+      interW,
+      interH,
+      destX,
+      destY,
+      1.0,
+      1.0,
+      GdkPixbuf.InterpType.BILINEAR,
+      255
+    );
+  }
 }
 
 /**
@@ -33,12 +86,20 @@ export function compositeCursor(pixbuf, offsetX = 0, offsetY = 0) {
  * Uses the C library with XShape support.
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
- * @param {boolean} includePointer
- * @returns {GdkPixbuf.Pixbuf|null}
+ * @returns {object} { pixbuf, offsetX, offsetY } or null
  */
-export function captureWindowWithXShape(x, y, includePointer = false) {
+export function captureWindowWithXShape(x, y) {
   const helper = getScreenshotHelper();
-  return helper.capture_window(x, y, includePointer);
+  // GJS handles (out) arguments by returning an array: [return_val, out_arg1, out_arg2, ...]
+  const result = helper.capture_window(x, y);
+
+  if (!result || !result[0]) return null;
+
+  return {
+    pixbuf: result[0],
+    offsetX: result[1],
+    offsetY: result[2]
+  };
 }
 
 /**
@@ -64,9 +125,8 @@ export async function captureWithShell(includePointer, captureMode, params) {
   const connection = Gio.DBus.session;
   let method = "Screenshot";
   let dbusParams = null;
-  // SCREEN: 0, WINDOW: 1, AREA: 2
   switch (captureMode) {
-    case 0:
+    case CaptureMode.SCREEN:
       method = "Screenshot";
       dbusParams = new GLib.Variant("(bbs)", [
         includePointer,
@@ -74,7 +134,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
         tmpFilename,
       ]);
       break;
-    case 1:
+    case CaptureMode.WINDOW:
       method = "ScreenshotWindow";
       dbusParams = new GLib.Variant("(bbbs)", [
         true, // include_decorations
@@ -83,7 +143,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
         tmpFilename,
       ]);
       break;
-    case 2:
+    case CaptureMode.AREA:
       if (includePointer) {
         // SCREENSHOT_AREA doesn't support cursor in Shell.
         // We capture SCREEN (0) instead, then crop.
@@ -126,14 +186,13 @@ export async function captureWithShell(includePointer, captureMode, params) {
     GLib.unlink(tmpFilename);
 
     // If we hijacked area capture for cursor, we need to crop now
-    if (captureMode === 2 && includePointer && pixbuf) {
+    if (captureMode === CaptureMode.AREA && includePointer && pixbuf) {
       const cropped = pixbuf.new_subpixbuf(
         params.x,
         params.y,
         params.width,
         params.height
       );
-      // COPY to ensure we have a clean pixbuf, not sharing buffer
       return cropped.copy();
     }
 

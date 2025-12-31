@@ -14,13 +14,7 @@ import {
 } from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
-
-// Capture mode enumeration
-const CaptureMode = {
-  SCREEN: 0,
-  WINDOW: 1,
-  AREA: 2,
-};
+import { CaptureMode } from "./constants.js";
 
 export const ScreenshotPage = GObject.registerClass(
   class ScreenshotPage extends Gtk.Box {
@@ -187,12 +181,17 @@ export const ScreenshotPage = GObject.registerClass(
           break;
         case CaptureMode.WINDOW:
           if (selectionResult && selectionResult.clickX !== undefined) {
-            pixbuf = captureWindowWithXShape(
+            const result = captureWindowWithXShape(
               selectionResult.clickX,
-              selectionResult.clickY,
-              includePointer
+              selectionResult.clickY
             );
-            // pointer already composited in C for WINDOW mode
+
+            if (result) {
+              pixbuf = result.pixbuf;
+              if (includePointer) {
+                compositeCursor(pixbuf, result.offsetX, result.offsetY);
+              }
+            }
           }
           break;
         case CaptureMode.AREA:

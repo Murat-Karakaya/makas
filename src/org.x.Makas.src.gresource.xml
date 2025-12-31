@@ -8,6 +8,7 @@
     <file>screenshot/postscreenshot.js</file>
     <file>screenshot/prescreenshot.js</file>
     <file>screenshot/utils.js</file>
+    <file>screenshot/constants.js</file>
     <file>preferences.js</file>
   </gresource>
 </gresources>

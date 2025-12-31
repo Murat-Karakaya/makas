@@ -1,13 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import { getCurrentDate, settings } from "./utils.js";
-
-// Capture mode enumeration
-const CaptureMode = {
-  SCREEN: 0,
-  WINDOW: 1,
-  AREA: 2,
-};
+import { CaptureMode } from "./constants.js";
 
 export const PreScreenshot = GObject.registerClass(
   class PreScreenshot extends Gtk.Box {

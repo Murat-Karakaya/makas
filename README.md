@@ -27,6 +27,10 @@ Open image with other applications
 
 Add Appimage and nix package builds.
 
+### QUIRKS
+
+X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
+
 ## Build and Package
 
 This project supports building as a Flatpak and Debian package (.deb).
