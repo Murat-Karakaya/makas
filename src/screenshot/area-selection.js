@@ -1,10 +1,3 @@
-/**
- * area-selection.js - Interactive area selection for screenshots
- *
- * Creates a transparent overlay window for rubber-band selection.
- * Works on any X11-based desktop environment.
- */
-
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";

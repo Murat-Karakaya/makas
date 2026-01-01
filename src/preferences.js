@@ -69,7 +69,6 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      // --- Screenshot Delay ---
       this.delayLabel = new Gtk.Label({
         label: "Default Delay (seconds):",
         halign: Gtk.Align.START,
@@ -98,7 +97,6 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      // --- Include Pointer ---
       this.pointerLabel = new Gtk.Label({
         label: "Include Pointer:",
         halign: Gtk.Align.START,
@@ -145,7 +143,6 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(this.lastModeCheck, 2, row, 1, 1);
       row++;
 
-      // --- Window Wait ---
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
@@ -165,7 +162,6 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(this.waitSpinner, 1, row, 2, 1);
       row++;
 
-      // --- Capture Backend ---
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
@@ -233,8 +229,8 @@ export const PreferencesWindow = GObject.registerClass(
       const shellAvailable = hasShellScreenshot();
 
       if (!shellAvailable) {
-        // This kind hoop is made to prevent the combo box from being sensitive
-        // otherwise it will remain sensitive for some reason.
+        // This kind of hoop is made to prevent the combo box from being
+        // sensitive otherwise it will remain sensitive for some reason.
         this.backendCombo.connect('realize', () => {
           this.backendCombo.set_sensitive(false);
         });

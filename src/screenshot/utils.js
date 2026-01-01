@@ -185,8 +185,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
     const pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
     GLib.unlink(tmpFilename);
 
-    // If we hijacked area capture for cursor, we need to crop now
-    if (captureMode === CaptureMode.AREA && includePointer && pixbuf) {
+    if (captureMode === CaptureMode.AREA && includePointer) {
       const cropped = pixbuf.new_subpixbuf(
         params.x,
         params.y,

@@ -51,7 +51,6 @@ export const ScreenshotWindow = GObject.registerClass(
       toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR);
       this.main_box.add(toolbar);
 
-      // Menu button with dropdown
       const menuToolItem = new Gtk.ToolItem({
         visible: true,
       });
@@ -69,7 +68,6 @@ export const ScreenshotWindow = GObject.registerClass(
         }),
       );
 
-      // Create popover menu
       const popover = new Gtk.Popover();
       const popoverBox = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
@@ -95,7 +93,6 @@ export const ScreenshotWindow = GObject.registerClass(
       menuToolItem.add(menuButton);
       toolbar.insert(menuToolItem, 0);
 
-      // --- Page 1: Screenshot ---
       const screenshotPage = new ScreenshotPage();
       screenshotPage.show_all();
       this.main_box.add(screenshotPage);

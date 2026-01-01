@@ -92,8 +92,6 @@ export const PreScreenshot = GObject.registerClass(
       optionsFrame.add(optionsGrid);
       this.add(optionsFrame);
 
-
-      // === File Section ===
       const fileFrame = new Gtk.Frame({ label: "Save Location" });
       const fileGrid = new Gtk.Grid({
         row_spacing: 8,
@@ -131,7 +129,6 @@ export const PreScreenshot = GObject.registerClass(
       fileFrame.add(fileGrid);
       this.add(fileFrame);
 
-      // === Action Buttons ===
       const buttonBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 12,
