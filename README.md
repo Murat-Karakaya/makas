@@ -10,12 +10,7 @@ I never confirmed that if the shell DBus is unavailable, the x11 backend will be
 
 ### FIXME: 
 
-It's better to take Screenshot after the window animation is done. 
-What we are doing here is just waiting for a bunch of miliseconds to hope the animation will be done by then.
-
 Warn the user about how for the settings to take effect, they need to restart the app.
-
-Either disable show pointer when area mode is selected or make it work.
 
 ### TO DO: 
 
@@ -27,9 +22,11 @@ Open image with other applications
 
 Add Appimage and nix package builds.
 
-### QUIRKS
+### WON'T FIX
 
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
+
+It's better to take Screenshot after the window animation is done. But I didn't find a way to determine that.
 
 ## Build and Package
 

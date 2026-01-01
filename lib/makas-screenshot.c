@@ -314,6 +314,37 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
 
   int crop_height = inner_rect.y - frame_rect.y + inner_rect.height;
 
+  /* Hacky Fix: Trim pitch black (#000000) top part (usually not part of
+   * titlebar) */
+  guchar *pixels = gdk_pixbuf_get_pixels(frame_pixbuf);
+  int rowstride = gdk_pixbuf_get_rowstride(frame_pixbuf);
+  int n_channels = gdk_pixbuf_get_n_channels(frame_pixbuf);
+  int trim_top = 0;
+
+  for (int y = 0; y < crop_height; y++) {
+    gboolean is_black_row = TRUE;
+    for (int x = crop_x; x < crop_x + crop_width; x++) {
+      guchar *p = pixels + (crop_y + y) * rowstride + x * n_channels;
+      if (p[0] != 0 || p[1] != 0 || p[2] != 0) {
+        is_black_row = FALSE;
+        break;
+      }
+    }
+    if (is_black_row) {
+      trim_top++;
+    } else {
+      break;
+    }
+  }
+
+  /* Safety: Don't crop everything */
+  if (trim_top >= crop_height) {
+    trim_top = crop_height > 0 ? crop_height - 1 : 0;
+  }
+
+  crop_y += trim_top;
+  crop_height -= trim_top;
+
   screenshot = gdk_pixbuf_new_subpixbuf(frame_pixbuf, crop_x, crop_y,
                                         crop_width, crop_height);
   screenshot = gdk_pixbuf_copy(screenshot);
