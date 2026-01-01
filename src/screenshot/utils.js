@@ -150,7 +150,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
         method = "Screenshot";
         dbusParams = new GLib.Variant("(bbs)", [
           true, // include_pointer
-          false, // flash - False to avoid flashing the entire screen
+          false, // disabled because this one would've flashed the entire screen
           tmpFilename,
         ]);
       } else {
@@ -191,6 +191,24 @@ export async function captureWithShell(includePointer, captureMode, params) {
         params.y,
         params.width,
         params.height
+      );
+
+      connection.call(
+        serviceNameGnome,
+        objectPathGnome,
+        interfaceNameGnome,
+        "FlashArea",
+        new GLib.Variant("(iiii)", [
+          params.x,
+          params.y,
+          params.width,
+          params.height
+        ]),
+        null,
+        Gio.DBusCallFlags.NONE,
+        -1,
+        null,
+        null
       );
       return cropped.copy();
     }

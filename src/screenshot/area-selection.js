@@ -192,7 +192,6 @@ export function selectWindow() {
       window.destroy();
       GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
         if (!aborted) {
-          // Return click coordinates - the C library will find the window
           resolve({
             clickX: Math.round(x),
             clickY: Math.round(y),

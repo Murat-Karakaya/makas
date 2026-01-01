@@ -13,6 +13,7 @@ import {
   captureWithShell,
 } from "./utils.js";
 import { PreScreenshot } from "./prescreenshot.js";
+import { flashRect } from "./flash.js";
 import { PostScreenshot } from "./postscreenshot.js";
 import { CaptureMode } from "./constants.js";
 
@@ -175,6 +176,7 @@ export const ScreenshotPage = GObject.registerClass(
             rootWindow.get_width(),
             rootWindow.get_height(),
           );
+          flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
           if (includePointer) {
             compositeCursor(pixbuf, 0, 0);
           }
@@ -188,6 +190,8 @@ export const ScreenshotPage = GObject.registerClass(
 
             if (result) {
               pixbuf = result.pixbuf;
+              flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
+
               if (includePointer) {
                 compositeCursor(pixbuf, result.offsetX, result.offsetY);
               }
@@ -203,6 +207,12 @@ export const ScreenshotPage = GObject.registerClass(
               selectionResult.y,
               selectionResult.width,
               selectionResult.height,
+            );
+            flashRect(
+              selectionResult.x,
+              selectionResult.y,
+              selectionResult.width,
+              selectionResult.height
             );
             if (includePointer) {
               compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
