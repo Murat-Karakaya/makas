@@ -46,12 +46,11 @@ export const ScreenshotPage = GObject.registerClass(
 
     onBackFromPost() {
       this.stack.set_visible_child_name("pre");
-      this.preScreenshot.updateFilename();
       this.preScreenshot.setStatus("Ready");
       this.lastPixbuf = null;
     }
 
-    async onTakeScreenshot({ captureMode, delay, includePointer, folder, filename }) {
+    async onTakeScreenshot({ captureMode, delay, includePointer }) {
       const app = Gio.Application.get_default();
       if (app) {
         app.hold();
@@ -103,8 +102,6 @@ export const ScreenshotPage = GObject.registerClass(
         await this.performCapture(selectionResult, {
           captureMode,
           includePointer,
-          folder,
-          filename,
         });
       } catch (e) {
         print(`Screenshot error during flow: ${e.message}`);

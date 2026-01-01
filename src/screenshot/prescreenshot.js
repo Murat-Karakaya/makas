@@ -92,43 +92,6 @@ export const PreScreenshot = GObject.registerClass(
       optionsFrame.add(optionsGrid);
       this.add(optionsFrame);
 
-      const fileFrame = new Gtk.Frame({ label: "Save Location" });
-      const fileGrid = new Gtk.Grid({
-        row_spacing: 8,
-        column_spacing: 12,
-        margin_top: 8,
-        margin_bottom: 8,
-        margin_start: 12,
-        margin_end: 12,
-      });
-
-      const folderLabel = new Gtk.Label({
-        label: "Folder:",
-        halign: Gtk.Align.START,
-      });
-      this.folderBtn = new Gtk.FileChooserButton({
-        title: "Select Folder",
-        action: Gtk.FileChooserAction.SELECT_FOLDER,
-        width_chars: 30,
-      });
-
-      const nameLabel = new Gtk.Label({
-        label: "Filename:",
-        halign: Gtk.Align.START,
-      });
-      this.filenameEntry = new Gtk.Entry({
-        text: `Screenshot-${getCurrentDate()}.png`,
-        placeholder_text: "screenshot.png",
-        width_chars: 30,
-      });
-
-      fileGrid.attach(folderLabel, 0, 0, 1, 1);
-      fileGrid.attach(this.folderBtn, 1, 0, 1, 1);
-      fileGrid.attach(nameLabel, 0, 1, 1, 1);
-      fileGrid.attach(this.filenameEntry, 1, 1, 1, 1);
-      fileFrame.add(fileGrid);
-      this.add(fileFrame);
-
       const buttonBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 12,
@@ -156,18 +119,12 @@ export const PreScreenshot = GObject.registerClass(
           captureMode: this.captureMode,
           delay: this.delaySpinner.get_value_as_int(),
           includePointer: this.pointerSwitch.get_active(),
-          folder: this.folderBtn.get_filename(),
-          filename: this.filenameEntry.get_text(),
         }),
       );
     }
 
     setStatus(text) {
       this.statusLabel.set_text(text);
-    }
-
-    updateFilename() {
-      this.filenameEntry.set_text(`Screenshot-${getCurrentDate()}.png`);
     }
 
     syncValues() {
@@ -179,14 +136,6 @@ export const PreScreenshot = GObject.registerClass(
       this.pointerSwitch.connect("notify::active", () => {
         if (settings.get_boolean("last-include-pointer")) {
           settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
-        }
-      });
-      this.folderBtn.connect("file-set", () => {
-        if (settings.get_boolean("last-screenshot-save-folder")) {
-          const folder = this.folderBtn.get_filename();
-          if (folder) {
-            settings.set_string("screenshot-save-folder", folder);
-          }
         }
       });
 
@@ -212,8 +161,6 @@ export const PreScreenshot = GObject.registerClass(
 
     setUpValues() {
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
-      this.folderBtn.set_current_folder(settings.get_string("screenshot-save-folder"));
-
 
       switch (settings.get_int("screenshot-mode")) {
         case CaptureMode.WINDOW:
