@@ -61,16 +61,12 @@ export const ScreenshotPage = GObject.registerClass(
 
       const topLevel = this.get_toplevel();
 
-      if (topLevel && topLevel.hide) {
-        print("Screenshot: Hiding window");
-        topLevel.hide();
-      }
-
       try {
         // Wait for window to hide
         const windowWait = settings.get_int("window-wait");
-        if (windowWait > delay * 1000) {
-          await wait(windowWait);
+        if (windowWait > delay * 100) {
+          topLevel.hide();
+          await wait(windowWait * 10);
         }
 
         let selectionResult = null;
@@ -98,8 +94,10 @@ export const ScreenshotPage = GObject.registerClass(
           }
         }
 
-        if (windowWait < delay * 1000) {
-          await this.startDelay(delay);
+        if (windowWait < delay * 100) {
+          await this.startDelay(delay * 100 - windowWait, windowWait);
+          topLevel.hide();
+          await wait(windowWait * 10);
         }
 
         await this.performCapture(selectionResult, {
@@ -113,32 +111,31 @@ export const ScreenshotPage = GObject.registerClass(
         this.preScreenshot.setStatus(`Error: ${e.message}`);
       } finally {
         print("Screenshot: Restoring window");
-        if (topLevel && topLevel.show) {
-          topLevel.show();
-          topLevel.present();
-        }
+        topLevel.show();
+        topLevel.present();
         if (app) app.release();
       }
     }
 
-    async startDelay(delay) {
-      print(`Screenshot: Delay phase, delay=${delay}`);
-      this.preScreenshot.setStatus(`Capturing in ${delay}s...`);
+    async startDelay(delay, windowWait) {
+      print(`Waiting... ${(delay + windowWait) / 100}s`);
+      this.preScreenshot.setStatus(`Capturing in ${(delay + windowWait) / 100}s...`);
 
       if (delay <= 0) return;
 
       let remaining = delay;
       return new Promise((resolve) => {
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 10, () => {
           remaining--;
-          if (remaining > 0) {
-            this.preScreenshot.setStatus(`Capturing in ${remaining}s...`);
-            print(`Screenshot: Waiting... ${remaining}`);
-            return GLib.SOURCE_CONTINUE;
-          } else {
+          if ((remaining + windowWait) % 100 === 0) {
+            this.preScreenshot.setStatus(`Capturing in ${(remaining + windowWait) / 100}s...`);
+            print(`Waiting... ${(remaining + windowWait) / 100}s`);
+          }
+          if (remaining <= 0) {
             resolve();
             return GLib.SOURCE_REMOVE;
           }
+          return GLib.SOURCE_CONTINUE;
         });
       });
     }
