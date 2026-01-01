@@ -216,9 +216,9 @@ export const ScreenshotPage = GObject.registerClass(
       }
 
       this.lastPixbuf = pixbuf;
-
       this.postScreenshot.setImage(pixbuf);
       this.stack.set_visible_child_name("post");
+      this.preScreenshot.afterScreenShoot();
     }
   },
 );

@@ -1,6 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GObject from "gi://GObject";
+import GLib from "gi://GLib";
 import { getCurrentDate, getDestinationPath, settings } from "./utils.js";
 
 export const PostScreenshot = GObject.registerClass(
@@ -53,24 +54,24 @@ export const PostScreenshot = GObject.registerClass(
       this.add(topBar);
 
       // DrawingArea for auto-scaling image
-      this._drawingArea = new Gtk.DrawingArea();
-      this._drawingArea.set_vexpand(true);
-      this._drawingArea.set_hexpand(true);
-      this._drawingArea.connect("draw", (widget, cr) => this.onDraw(widget, cr));
-      this.add(this._drawingArea);
+      this.drawingArea = new Gtk.DrawingArea();
+      this.drawingArea.set_vexpand(true);
+      this.drawingArea.set_hexpand(true);
+      this.drawingArea.connect("draw", (widget, cr) => this.onDraw(widget, cr));
+      this.add(this.drawingArea);
 
-      this._statusLabel = new Gtk.Label({
+      this.statusLabel = new Gtk.Label({
         label: "",
         halign: Gtk.Align.CENTER,
         margin_top: 8,
       });
-      this.add(this._statusLabel);
+      this.add(this.statusLabel);
     }
 
     setImage(pixbuf) {
       this.pixbuf = pixbuf;
-      this._drawingArea.queue_draw();
-      this._statusLabel.set_text("");
+      this.drawingArea.queue_draw();
+      this.statusLabel.set_text("");
     }
 
     onDraw(widget, cr) {
@@ -108,9 +109,16 @@ export const PostScreenshot = GObject.registerClass(
       if (filepath) {
         try {
           this.pixbuf.savev(filepath, "png", [], []);
-          this._statusLabel.set_text(`Saved to: ${filepath}`);
-        } catch (e) {
-          this._statusLabel.set_text(`Save failed: ${e.message}`);
+          this.statusLabel.set_text(`Saved to: ${filepath}`);
+        } catch {
+          try {
+            const folder = GLib.get_home_dir();
+            const filepath = getDestinationPath({ folder, filename });
+            this.pixbuf.savev(filepath, "png", [], []);
+            this.statusLabel.set_text(`Saved to: ${filepath}`);
+          } catch (e) {
+            this.statusLabel.set_text(`Save failed: ${e.message}`);
+          }
         }
       }
     }
@@ -137,9 +145,9 @@ export const PostScreenshot = GObject.registerClass(
           if (filepath) {
             try {
               this.pixbuf.savev(filepath, "png", [], []);
-              this._statusLabel.set_text(`Saved to: ${filepath}`);
+              this.statusLabel.set_text(`Saved to: ${filepath}`);
             } catch (e) {
-              this._statusLabel.set_text(`Save failed: ${e.message}`);
+              this.statusLabel.set_text(`Save failed: ${e.message}`);
             }
           }
         }
@@ -151,7 +159,7 @@ export const PostScreenshot = GObject.registerClass(
 
     onCopyToClipboard() {
       if (!this.pixbuf) {
-        this._statusLabel.set_text("No screenshot to copy");
+        this.statusLabel.set_text("No screenshot to copy");
         return;
       }
 
@@ -160,7 +168,7 @@ export const PostScreenshot = GObject.registerClass(
       clipboard.set_image(this.pixbuf);
       clipboard.store();
 
-      this._statusLabel.set_text("Copied to clipboard");
+      this.statusLabel.set_text("Copied to clipboard");
     }
   },
 );

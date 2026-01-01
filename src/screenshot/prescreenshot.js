@@ -114,13 +114,19 @@ export const PreScreenshot = GObject.registerClass(
       });
       this.add(this.statusLabel);
 
-      this.shootBtn.connect("clicked", () =>
+      this.shootBtn.connect("clicked", () => {
         this.callbacks.onTakeScreenshot({
           captureMode: this.captureMode,
           delay: this.delaySpinner.get_value_as_int(),
           includePointer: this.pointerSwitch.get_active(),
-        }),
-      );
+        });
+
+        this.shootBtn.set_sensitive(false);
+      });
+    }
+
+    afterScreenShoot() {
+      this.shootBtn.set_sensitive(true);
     }
 
     setStatus(text) {
