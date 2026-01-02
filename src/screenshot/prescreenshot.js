@@ -1,18 +1,12 @@
 import Gtk from "gi://Gtk?version=3.0";
-import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import { CaptureMode } from "./constants.js";
-import { selectArea, selectWindow } from "./area-selection.js";
-import {
-  compositeCursor,
-  settings,
-  wait,
-  captureWindowWithXShape,
-  captureWithShell,
-} from "./utils.js";
-import { flashRect } from "./flash.js";
+import { selectArea } from "./popupWindows/area-selection.js";
+import { selectWindow } from "./popupWindows/selectWindow.js";
+import { settings, wait } from "./utils.js";
+import { performCapture } from "./performCapture.js";
 
 export const PreScreenshot = GObject.registerClass(
   class PreScreenshot extends Gtk.Box {
@@ -246,7 +240,7 @@ export const PreScreenshot = GObject.registerClass(
           await wait(windowWait * 10);
         }
 
-        const pixbuf = await this.performCapture(selectionResult, {
+        const pixbuf = await performCapture(selectionResult, {
           captureMode,
           includePointer,
         });
@@ -284,77 +278,6 @@ export const PreScreenshot = GObject.registerClass(
           return GLib.SOURCE_CONTINUE;
         });
       });
-    }
-
-    async performCapture(
-      selectionResult,
-      { captureMode, includePointer },
-    ) {
-      print("Screenshot: Capturing...");
-      let pixbuf = null;
-
-      if (settings.get_int("capture-backend") === 0) {
-        pixbuf = await captureWithShell(includePointer, captureMode, selectionResult);
-
-        if (pixbuf) return pixbuf;
-        print("Screenshot: Shell D-Bus capture failed, falling back to X11");
-      }
-
-      switch (captureMode) {
-        case CaptureMode.SCREEN:
-          const rootWindow = Gdk.get_default_root_window();
-          pixbuf = Gdk.pixbuf_get_from_window(
-            rootWindow,
-            0,
-            0,
-            rootWindow.get_width(),
-            rootWindow.get_height(),
-          );
-          flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
-          if (includePointer) {
-            compositeCursor(pixbuf, 0, 0);
-          }
-          break;
-        case CaptureMode.WINDOW:
-          if (selectionResult && selectionResult.clickX !== undefined) {
-            const result = captureWindowWithXShape(
-              selectionResult.clickX,
-              selectionResult.clickY
-            );
-
-            if (result) {
-              pixbuf = result.pixbuf;
-              flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
-
-              if (includePointer) {
-                compositeCursor(pixbuf, result.offsetX, result.offsetY);
-              }
-            }
-          }
-          break;
-        case CaptureMode.AREA:
-          if (selectionResult) {
-            const rootWindow = Gdk.get_default_root_window();
-            pixbuf = Gdk.pixbuf_get_from_window(
-              rootWindow,
-              selectionResult.x,
-              selectionResult.y,
-              selectionResult.width,
-              selectionResult.height,
-            );
-            flashRect(
-              selectionResult.x,
-              selectionResult.y,
-              selectionResult.width,
-              selectionResult.height
-            );
-            if (includePointer) {
-              compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
-            }
-          }
-          break;
-      }
-      return pixbuf;
     }
 
     completeScreenShot(pixbuf) {

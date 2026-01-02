@@ -4,12 +4,20 @@
     <file>main.js</file>
     <file>window.js</file>
     <file>screenshot/screenshot.js</file>
-    <file>screenshot/area-selection.js</file>
+
+    <file>screenshot/popupWindows/area-selection.js</file>
+    <file>screenshot/popupWindows/selectWindow.js</file>
+    <file>screenshot/popupWindows/flash.js</file>
+
     <file>screenshot/postscreenshot.js</file>
     <file>screenshot/prescreenshot.js</file>
     <file>screenshot/utils.js</file>
+    <file>screenshot/performCapture.js</file>
+
+    <file>screenshot/captureMethods/captureX11.js</file>
+    <file>screenshot/captureMethods/captureShell.js</file>
+
     <file>screenshot/constants.js</file>
-    <file>screenshot/flash.js</file>
     <file>preferences.js</file>
   </gresource>
 </gresources>
