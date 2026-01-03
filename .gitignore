@@ -7,3 +7,5 @@ repo
 pkg-deb
 compile_commands.json
 .clangd
+grim
+slurp

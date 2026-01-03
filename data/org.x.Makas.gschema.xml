@@ -51,7 +51,7 @@
 		<key name="capture-backend" type="i">
 			<default>0</default>
 			<summary>Capture backend</summary>
-			<description>The backend used for capturing (0 for Shell, 1 for X11)</description>
+			<description>The backend used for capturing (0 for Shell, 1 for X11, 2 for Grim)</description>
 		</key>
 	</schema>
 </schemalist>

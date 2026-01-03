@@ -172,6 +172,7 @@ export const PreferencesWindow = GObject.registerClass(
       this.backendCombo = new Gtk.ComboBoxText();
       this.backendCombo.append_text("Shell (Wayland/X11)");
       this.backendCombo.append_text("X11 (Legacy)");
+      this.backendCombo.append_text("Wayland (Grim)");
 
       grid.attach(this.backendLabel, 0, row, 1, 1);
       grid.attach(this.backendCombo, 1, row, 2, 1);
