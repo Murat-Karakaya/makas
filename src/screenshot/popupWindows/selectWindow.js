@@ -48,8 +48,11 @@ export function selectWindow() {
             return true;
         });
 
+        const seat = display.get_default_seat();
+
         window.connect("button-press-event", (widget, event) => {
             const [, x, y] = event.get_root_coords();
+            seat.ungrab();
             window.destroy();
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
                 if (!aborted) {
@@ -68,6 +71,7 @@ export function selectWindow() {
         window.connect("key-press-event", (widget, event) => {
             if (event.get_keyval()[1] === Gdk.KEY_Escape) {
                 aborted = true;
+                seat.ungrab();
                 window.destroy();
                 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
                     resolve(null);
@@ -80,7 +84,6 @@ export function selectWindow() {
 
         window.show();
         const gdkWindow = window.get_window();
-        const seat = display.get_default_seat();
         const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
         seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
     });

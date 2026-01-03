@@ -47,7 +47,8 @@ export GI_TYPELIB_PATH="${BUILD_DIR}/lib:${GI_TYPELIB_PATH}"
 # Add Wayland env if requested
 if [ "$USE_WAYLAND" = true ]; then
     echo "Enabling Wayland display..."
-    export WAYLAND_DISPLAY=wayland-1
+    export WAYLAND_DISPLAY=wayland-2
+    export GDK_BACKEND=wayland
 fi
 
 # Run application

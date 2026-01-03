@@ -1,5 +1,5 @@
 import GLib from "gi://GLib";
-import Gio from "gi://Gio";
+import GioUnix from "gi://GioUnix";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
 
@@ -18,8 +18,6 @@ export async function captureWithGrim(includePointer, captureMode, params) {
         const geometry = `${params.x},${params.y} ${params.width}x${params.height}`;
         argv.push("-g", geometry);
     }
-
-    // Output to stdout
     argv.push("-");
 
     try {
@@ -34,44 +32,30 @@ export async function captureWithGrim(includePointer, captureMode, params) {
         if (!success) {
             throw new Error("Failed to spawn grim");
         }
-
-        // Close unused pipes
         GLib.close(stdin);
         GLib.close(stderr); // We might want to read stderr if it fails, but for now ignoring it.
-
-        const stream = new Gio.UnixInputStream({ fd: stdout, close_fd: true });
+        const stream = new GioUnix.InputStream({ fd: stdout, close_fd: true });
 
         // Use PixbufLoader to load from stream
         const loader = new GdkPixbuf.PixbufLoader();
 
         return new Promise((resolve, reject) => {
-            const buf = new Uint8Array(4096);
-
-            const readNextChunk = () => {
-                stream.read_bytes_async(4096, 0, null, (source, res) => {
-                    try {
-                        const bytes = source.read_bytes_finish(res);
-                        if (bytes.get_size() > 0) {
-                            loader.write(bytes.get_data());
-                            readNextChunk();
-                        } else {
-                            // EOF
-                            loader.close();
-                            const pixbuf = loader.get_pixbuf();
-                            GLib.spawn_close_pid(pid);
-                            resolve(pixbuf);
-                        }
-                    } catch (e) {
-                        try {
-                            loader.close();
-                        } catch (_) { }
-                        GLib.spawn_close_pid(pid);
-                        reject(e);
-                    }
-                });
-            };
-
-            readNextChunk();
+            try {
+                let bytes;
+                while ((bytes = stream.read_bytes(4096, null)) && bytes.get_size() > 0) {
+                    loader.write(bytes.get_data());
+                }
+                loader.close();
+                const pixbuf = loader.get_pixbuf();
+                GLib.spawn_close_pid(pid);
+                resolve(pixbuf);
+            } catch (e) {
+                try {
+                    loader.close();
+                } catch (_) { }
+                GLib.spawn_close_pid(pid);
+                reject(e);
+            }
         });
 
     } catch (e) {

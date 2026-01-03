@@ -97,6 +97,8 @@ export function selectArea() {
       return true;
     });
 
+    const seat = display.get_default_seat();
+
     window.connect("button-release-event", (widget, event) => {
       if (!data.buttonPressed) return true;
       const [, currentX, currentY] = event.get_root_coords();
@@ -105,6 +107,7 @@ export function selectArea() {
       data.rect.x = Math.min(data.startX, currentX);
       data.rect.y = Math.min(data.startY, currentY);
       if (data.rect.width < 5 || data.rect.height < 5) data.aborted = true;
+      seat.ungrab();
       window.destroy();
       return true;
     });
@@ -112,6 +115,7 @@ export function selectArea() {
     window.connect("key-press-event", (widget, event) => {
       if (event.get_keyval()[1] === Gdk.KEY_Escape) {
         data.aborted = true;
+        seat.ungrab();
         window.destroy();
         return true;
       }
@@ -136,7 +140,6 @@ export function selectArea() {
 
     window.show();
     const gdkWindow = window.get_window();
-    const seat = display.get_default_seat();
     const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
     seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
   });
