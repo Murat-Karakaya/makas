@@ -140,96 +140,39 @@ export const PreScreenshot = GObject.registerClass(
       });
     }
 
-    setStatus(text) {
-      this.statusLabel.set_text(text);
-    }
-
-    syncValues() {
-      this.delaySpinner.connect("value-changed", () => {
-        if (settings.get_boolean("last-screenshot-delay")) {
-          settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
-        }
-      });
-      this.pointerSwitch.connect("notify::active", () => {
-        if (settings.get_boolean("last-include-pointer")) {
-          settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
-        }
-      });
-
-      this.screenRadio.connect("toggled", () => {
-        if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.SCREEN);
-        }
-      });
-      this.windowRadio.connect("toggled", () => {
-        if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.WINDOW);
-        }
-      });
-      this.areaRadio.connect("toggled", () => {
-        if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.AREA);
-        }
-      });
-    }
-
-    setUpValues() {
-      this.setStatus("Ready");
-      this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
-      this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
-      this.captureMode = settings.get_string("screenshot-mode")
-    }
-
     async onTakeScreenshot( captureMode, delay, includePointer , isHideWindow, captureBackendValue) {
       
       console.log(captureBackendValue, CaptureBackend.X11)
       
       const app = Gio.Application.get_default();
-      if (app) {
-        app.hold();
-      } else {
-        print("Screenshot: WARNING - App not found via get_default()");
-      }
+      app.hold();
 
       const topLevel = this.get_toplevel();
 
       try {
         // Wait for window to hide
         const windowWait = settings.get_int("window-wait");
-        if (windowWait > delay * 100) {
-          isHideWindow && topLevel.hide();
-          await wait(windowWait * 10);
-        }
+        
+        if (delay * 100 > windowWait) await this.startDelay(delay * 100 - windowWait, windowWait);
+        if (isHideWindow) topLevel.hide();
+        await wait(windowWait * 10);
 
-        let selectionResult = null;
-        print(`Screenshot: Selection phase, mode=${captureMode}`);
+        let selectionResult = { clickX: 0, clickY: 0 };
+        print(`Selection phase, mode=${captureMode}`);
 
-        if (captureMode === CaptureMode.AREA) {
-          selectionResult = await selectArea();
-          if (!selectionResult) {
-            print("Screenshot: Area selection cancelled");
-            this.setStatus("Capture cancelled");
-            return;
-          }
-        } else if (captureMode === CaptureMode.WINDOW) {
-          if (captureBackendValue === CaptureBackend.X11) {
+        switch (true) {
+          case captureMode === CaptureMode.AREA:
+            selectionResult = await selectArea();
+            if (!selectionResult) return this.setStatus("Capture cancelled");
+            break;
+          case captureMode === CaptureMode.WINDOW && captureBackendValue === CaptureBackend.X11:
             selectionResult = await selectWindow();
-            if (!selectionResult) {
-              print("Screenshot: Window selection cancelled");
-              this.setStatus("Capture cancelled");
-              return;
-            }
-          } else {
-            // Shell backend takes the active window automatically
-            selectionResult = { clickX: 0, clickY: 0 }; // Just to trigger the logic
-          }
+            if (!selectionResult) return this.setStatus("Capture cancelled");
+            break;
         }
 
         if (windowWait < delay * 100) {
-          await this.startDelay(delay * 100 - windowWait, windowWait);
+          
           isHideWindow && topLevel.hide();
           await wait(windowWait * 10);
         }
@@ -274,6 +217,61 @@ export const PreScreenshot = GObject.registerClass(
           return GLib.SOURCE_CONTINUE;
         });
       });
+    }
+    
+    setStatus(text) {
+      this.statusLabel.set_text(text);
+    }
+
+    syncValues() {
+      this.delaySpinner.connect("value-changed", () => {
+        if (settings.get_boolean("last-screenshot-delay")) {
+          settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
+        }
+      });
+      this.pointerSwitch.connect("notify::active", () => {
+        if (settings.get_boolean("last-include-pointer")) {
+          settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
+        }
+      });
+
+      this.screenRadio.connect("toggled", () => {
+        if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_string("screenshot-mode", CaptureMode.SCREEN);
+        }
+      });
+      this.windowRadio.connect("toggled", () => {
+        if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_string("screenshot-mode", CaptureMode.WINDOW);
+        }
+      });
+      this.areaRadio.connect("toggled", () => {
+        if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
+        if (settings.get_boolean("last-screenshot-mode")) {
+          settings.set_string("screenshot-mode", CaptureMode.AREA);
+        }
+      });
+    }
+
+    setUpValues() {
+      this.setStatus("Ready");
+      this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
+      this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
+      this.captureMode = settings.get_string("screenshot-mode")
+      
+      switch (this.captureMode) {
+        case CaptureMode.SCREEN:
+          this.screenRadio.set_active(true);
+          break;
+        case CaptureMode.WINDOW:
+          this.windowRadio.set_active(true);
+          break;
+        case CaptureMode.AREA:
+          this.areaRadio.set_active(true);
+          break;
+      }
     }
 
     completeScreenShot(pixbuf) {

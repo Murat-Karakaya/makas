@@ -219,10 +219,7 @@ export const PreferencesWindow = GObject.registerClass(
             settings.set_string(key, folderPath);
             print(`${key} set to: ${folderPath}`);
           }
-        } else {
-          print("File selection cancelled.");
         }
-
         this.fileChooser.destroy();
       });
 

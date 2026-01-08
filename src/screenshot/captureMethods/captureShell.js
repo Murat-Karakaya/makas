@@ -49,17 +49,17 @@ export async function captureWithShell(includePointer, captureMode, params) {
                     false, // disabled because this one would've flashed the entire screen
                     tmpFilename,
                 ]);
-            } else {
-                method = "ScreenshotArea";
-                dbusParams = new GLib.Variant("(iiiibs)", [
-                    params.x,
-                    params.y,
-                    params.width,
-                    params.height,
-                    true, // flash
-                    tmpFilename,
-                ]);
+                break;
             }
+            method = "ScreenshotArea";
+            dbusParams = new GLib.Variant("(iiiibs)", [
+                params.x,
+                params.y,
+                params.width,
+                params.height,
+                true, // flash
+                tmpFilename,
+            ]);
             break;
         default:
             throw new Error("Invalid screenshot mode. Please report this issue to the developer.");
