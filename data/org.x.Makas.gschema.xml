@@ -48,10 +48,15 @@
 			<description>Number of seconds to wait for the window to close before taking the screenshot</description>
 		</key>
 
-		<key name="capture-backend" type="i">
-			<default>0</default>
-			<summary>Capture backend</summary>
-			<description>The backend used for capturing (0 for Shell, 1 for X11, 2 for Grim)</description>
+		<key name="capture-backend" type="s">
+			<default>'SHELL'</default>
+			<summary>Backend used for capturing screenshots</summary>
+			<description>The backend used for capturing screenshots (SHELL, X11, GRIM)</description>
+		</key>
+		<key name="hide-window" type="b">
+			<default>true</default>
+			<summary>Hide window at capture</summary>
+			<description>Wether to hide window at screen capture (true for hiding and false for not hiding)</description>
 		</key>
 	</schema>
 </schemalist>

@@ -3,3 +3,10 @@ export const CaptureMode = {
     WINDOW: "WINDOW",
     AREA: "AREA",
 };
+
+
+export const CaptureBackend = {
+    X11: "X11",
+    GRIM: "GRIM",
+    SHELL: "SHELL",
+};

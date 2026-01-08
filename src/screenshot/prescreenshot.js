@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import { CaptureMode } from "./constants.js";
+import { CaptureMode, CaptureBackend } from "./constants.js";
 import { selectArea } from "./popupWindows/area-selection.js";
 import { selectWindow } from "./popupWindows/selectWindow.js";
 import { settings, wait } from "./utils.js";
@@ -103,7 +103,7 @@ export const PreScreenshot = GObject.registerClass(
         margin_top: 8,
       });
 
-      this.cancelBtn = new Gtk.Button({ label: "Cancel" });
+      //this.cancelBtn = new Gtk.Button({ label: "Cancel" });
 
       //buttonBox.pack_start(this.cancelBtn, false, false, 0);
 
@@ -123,11 +123,18 @@ export const PreScreenshot = GObject.registerClass(
       this.add(this.statusLabel);
 
       this.shootBtn.connect("clicked", () => {
-        this.onTakeScreenshot({
-          captureMode: this.captureMode,
-          delay: this.delaySpinner.get_value_as_int(),
-          includePointer: this.pointerSwitch.get_active(),
-        });
+        
+        const captureBackendValue = settings.get_string("capture-backend")
+        
+        const isWindowHideNedeed = captureBackendValue !== CaptureBackend.X11 && settings.get_int("screenshot-mode") === 0;
+        
+        this.onTakeScreenshot(
+          this.captureMode,
+          this.delaySpinner.get_value_as_int(),
+          this.pointerSwitch.get_active(),
+          settings.get_boolean("hide-window") || isWindowHideNedeed,
+          captureBackendValue,
+        );
 
         this.shootBtn.set_sensitive(false);
       });
@@ -191,7 +198,10 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    async onTakeScreenshot({ captureMode, delay, includePointer }) {
+    async onTakeScreenshot( captureMode, delay, includePointer , isHideWindow, captureBackendValue) {
+      
+      console.log(captureBackendValue, CaptureBackend.X11)
+      
       const app = Gio.Application.get_default();
       if (app) {
         app.hold();
@@ -205,7 +215,7 @@ export const PreScreenshot = GObject.registerClass(
         // Wait for window to hide
         const windowWait = settings.get_int("window-wait");
         if (windowWait > delay * 100) {
-          topLevel.hide();
+          isHideWindow && topLevel.hide();
           await wait(windowWait * 10);
         }
 
@@ -220,8 +230,7 @@ export const PreScreenshot = GObject.registerClass(
             return;
           }
         } else if (captureMode === CaptureMode.WINDOW) {
-          const backend = settings.get_int("capture-backend");
-          if (backend === 1) { // X11
+          if (captureBackendValue === CaptureBackend.X11) {
             selectionResult = await selectWindow();
             if (!selectionResult) {
               print("Screenshot: Window selection cancelled");
@@ -236,11 +245,11 @@ export const PreScreenshot = GObject.registerClass(
 
         if (windowWait < delay * 100) {
           await this.startDelay(delay * 100 - windowWait, windowWait);
-          topLevel.hide();
+          isHideWindow && topLevel.hide();
           await wait(windowWait * 10);
         }
 
-        const pixbuf = await performCapture(selectionResult, {
+        const pixbuf = await performCapture(selectionResult, captureBackendValue, {
           captureMode,
           includePointer,
         });
@@ -250,9 +259,11 @@ export const PreScreenshot = GObject.registerClass(
         print(`Screenshot error during flow: ${e.message}`);
         this.setStatus(`Error: ${e.message}`);
       } finally {
-        topLevel.show();
-        topLevel.present();
-        if (app) app.release();
+        if (isHideWindow) {
+          topLevel.show();
+          topLevel.present();
+          if (app) app.release()
+        };
         this.shootBtn.set_sensitive(true);
       }
     }

@@ -7,11 +7,6 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 
 import { ScreenshotWindow } from './window.js';
-import { settings, hasShellScreenshot } from './screenshot/utils.js';
-
-if (!hasShellScreenshot()) {
-    settings.set_int('capture-backend', 1);
-}
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {

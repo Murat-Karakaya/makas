@@ -37,7 +37,7 @@ export const PreferencesWindow = GObject.registerClass(
 
       let row = 0;
 
-      this.screenshotLabel = new Gtk.Label({
+      const screenshotLabel = new Gtk.Label({
         label: "Default Screenshot Folder:",
         halign: Gtk.Align.START,
       });
@@ -48,7 +48,7 @@ export const PreferencesWindow = GObject.registerClass(
       });
       this.screenshotFolderButton = new Gtk.Button({ label: "Browse" });
 
-      grid.attach(this.screenshotLabel, 0, row, 1, 1);
+      grid.attach(screenshotLabel, 0, row, 1, 1);
       grid.attach(this.screenshotPathLabel, 1, row, 1, 1);
       grid.attach(this.screenshotFolderButton, 2, row, 1, 1);
       row++;
@@ -69,7 +69,7 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      this.delayLabel = new Gtk.Label({
+      const delayLabel = new Gtk.Label({
         label: "Default Delay (seconds):",
         halign: Gtk.Align.START,
       });
@@ -81,7 +81,7 @@ export const PreferencesWindow = GObject.registerClass(
         }),
       });
 
-      grid.attach(this.delayLabel, 0, row, 1, 1);
+      grid.attach(delayLabel, 0, row, 1, 1);
       grid.attach(this.delaySpinner, 1, row, 2, 1);
       row++;
 
@@ -97,7 +97,7 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      this.pointerLabel = new Gtk.Label({
+      const pointerLabel = new Gtk.Label({
         label: "Include Pointer:",
         halign: Gtk.Align.START,
       });
@@ -105,7 +105,7 @@ export const PreferencesWindow = GObject.registerClass(
         halign: Gtk.Align.START,
       });
 
-      grid.attach(this.pointerLabel, 0, row, 1, 1);
+      grid.attach(pointerLabel, 0, row, 1, 1);
       grid.attach(this.pointerSwitch, 1, row, 2, 1);
       row++;
 
@@ -122,7 +122,7 @@ export const PreferencesWindow = GObject.registerClass(
       row++;
 
       // --- Screenshot Mode ---
-      this.modeLabel = new Gtk.Label({
+      const modeLabel = new Gtk.Label({
         label: "Default Mode:",
         halign: Gtk.Align.START,
       });
@@ -131,7 +131,7 @@ export const PreferencesWindow = GObject.registerClass(
       this.modeCombo.append_text("Window");
       this.modeCombo.append_text("Area");
 
-      grid.attach(this.modeLabel, 0, row, 1, 1);
+      grid.attach(modeLabel, 0, row, 1, 1);
       grid.attach(this.modeCombo, 1, row, 2, 1);
       row++;
 
@@ -146,7 +146,7 @@ export const PreferencesWindow = GObject.registerClass(
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      this.waitLabel = new Gtk.Label({
+      const waitLabel = new Gtk.Label({
         label: "Window Transition Wait (deciseconds):",
         halign: Gtk.Align.START,
       });
@@ -158,24 +158,37 @@ export const PreferencesWindow = GObject.registerClass(
         }),
       });
 
-      grid.attach(this.waitLabel, 0, row, 1, 1);
+      grid.attach(waitLabel, 0, row, 1, 1);
       grid.attach(this.waitSpinner, 1, row, 2, 1);
       row++;
 
       grid.attach(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL }), 0, row, 3, 1);
       row++;
 
-      this.backendLabel = new Gtk.Label({
+      const backendLabel = new Gtk.Label({
         label: "Capture Backend:",
         halign: Gtk.Align.START,
       });
       this.backendCombo = new Gtk.ComboBoxText();
-      this.backendCombo.append_text("Shell (Wayland/X11)");
-      this.backendCombo.append_text("X11 (Legacy)");
-      this.backendCombo.append_text("Wayland (Grim)");
+      this.backendCombo.append("SHELL", "Shell (GNOME/Cinnamon)");
+      this.backendCombo.append("X11", "X11");
+      this.backendCombo.append("GRIM", "Wayland (Grim)");
 
-      grid.attach(this.backendLabel, 0, row, 1, 1);
+      grid.attach(backendLabel, 0, row, 1, 1);
       grid.attach(this.backendCombo, 1, row, 2, 1);
+      row++;
+
+      this.isHideWindow = new Gtk.Switch({
+        halign: Gtk.Align.START,
+      });
+
+      const isHideWindowLabel = new Gtk.Label({
+        label: "Hide window at capture:",
+        halign: Gtk.Align.START,
+      });
+      
+      grid.attach(isHideWindowLabel, 0, row, 1, 1);
+      grid.attach(this.isHideWindow, 1, row, 2, 1);
       row++;
 
 
@@ -226,10 +239,10 @@ export const PreferencesWindow = GObject.registerClass(
       settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
+      
+      settings.bind("hide-window", this.isHideWindow, "active", Gio.SettingsBindFlags.DEFAULT);
 
-      const shellAvailable = hasShellScreenshot();
-
-      if (!shellAvailable) {
+      if (!hasShellScreenshot()) {
         // This kind of hoop is made to prevent the combo box from being
         // sensitive otherwise it will remain sensitive for some reason.
         this.backendCombo.connect('realize', () => {
@@ -237,7 +250,7 @@ export const PreferencesWindow = GObject.registerClass(
         });
         this.backendCombo.set_tooltip_text("GNOME Shell screenshot service not found. X11 backend is mandatory.");
       }
-      settings.bind("capture-backend", this.backendCombo, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("capture-backend", this.backendCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);
     }
