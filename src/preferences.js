@@ -2,6 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
+import { CaptureBackend, CaptureMode } from "./screenshot/constants.js"
 import { hasShellScreenshot, settings } from "./screenshot/utils.js";
 
 export const PreferencesWindow = GObject.registerClass(
@@ -127,9 +128,9 @@ export const PreferencesWindow = GObject.registerClass(
         halign: Gtk.Align.START,
       });
       this.modeCombo = new Gtk.ComboBoxText();
-      this.modeCombo.append_text("Screen");
-      this.modeCombo.append_text("Window");
-      this.modeCombo.append_text("Area");
+      this.modeCombo.append(CaptureMode.SCREEN , "Screen");
+      this.modeCombo.append(CaptureMode.WINDOW, "Window");
+      this.modeCombo.append(CaptureMode.AREA, "Area");
 
       grid.attach(modeLabel, 0, row, 1, 1);
       grid.attach(this.modeCombo, 1, row, 2, 1);
@@ -170,9 +171,9 @@ export const PreferencesWindow = GObject.registerClass(
         halign: Gtk.Align.START,
       });
       this.backendCombo = new Gtk.ComboBoxText();
-      this.backendCombo.append("SHELL", "Shell (GNOME/Cinnamon)");
-      this.backendCombo.append("X11", "X11");
-      this.backendCombo.append("GRIM", "Wayland (Grim)");
+      this.backendCombo.append(CaptureBackend.SHELL, "Shell (GNOME/Cinnamon)");
+      this.backendCombo.append(CaptureBackend.X11, "X11");
+      this.backendCombo.append(CaptureBackend.GRIM, "Wayland (Grim)");
 
       grid.attach(backendLabel, 0, row, 1, 1);
       grid.attach(this.backendCombo, 1, row, 2, 1);
@@ -233,7 +234,7 @@ export const PreferencesWindow = GObject.registerClass(
       settings.bind("screenshot-delay", this.delaySpinner, "value", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-screenshot-mode", this.lastModeCheck, "active", Gio.SettingsBindFlags.DEFAULT);
-      settings.bind("screenshot-mode", this.modeCombo, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("screenshot-mode", this.modeCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-include-pointer", this.lastPointerCheck, "active", Gio.SettingsBindFlags.DEFAULT);
       settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);

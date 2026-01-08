@@ -21,8 +21,8 @@
 			<summary>is last delay option</summary>
 			<description>Wether to remember the last used option for screenshot delay</description>
 		</key>
-		<key name="screenshot-mode" type="i">
-			<default>0</default>
+		<key name="screenshot-mode" type="s">
+			<default>'SCREEN'</default>
 			<summary>Screenshot mode</summary>
 			<description>Default option selected for screenshot mode</description>
 		</key>

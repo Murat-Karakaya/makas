@@ -126,7 +126,7 @@ export const PreScreenshot = GObject.registerClass(
         
         const captureBackendValue = settings.get_string("capture-backend")
         
-        const isWindowHideNedeed = captureBackendValue !== CaptureBackend.X11 && settings.get_int("screenshot-mode") === 0;
+        const isWindowHideNedeed = captureBackendValue !== CaptureBackend.X11 && this.captureMode === CaptureMode.WINDOW;
         
         this.onTakeScreenshot(
           this.captureMode,
@@ -159,19 +159,19 @@ export const PreScreenshot = GObject.registerClass(
       this.screenRadio.connect("toggled", () => {
         if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
         if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_int("screenshot-mode", CaptureMode.SCREEN);
+          settings.set_string("screenshot-mode", CaptureMode.SCREEN);
         }
       });
       this.windowRadio.connect("toggled", () => {
         if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
         if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_int("screenshot-mode", CaptureMode.WINDOW);
+          settings.set_string("screenshot-mode", CaptureMode.WINDOW);
         }
       });
       this.areaRadio.connect("toggled", () => {
         if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
         if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_int("screenshot-mode", CaptureMode.AREA);
+          settings.set_string("screenshot-mode", CaptureMode.AREA);
         }
       });
     }
@@ -179,23 +179,8 @@ export const PreScreenshot = GObject.registerClass(
     setUpValues() {
       this.setStatus("Ready");
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
-
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
-
-      switch (settings.get_int("screenshot-mode")) {
-        case 1:
-          this.windowRadio.set_active(true);
-          this.captureMode = CaptureMode.WINDOW;
-          break;
-        case 2:
-          this.areaRadio.set_active(true);
-          this.captureMode = CaptureMode.AREA;
-          break;
-        default:
-          this.screenRadio.set_active(true);
-          this.captureMode = CaptureMode.SCREEN;
-          break;
-      }
+      this.captureMode = settings.get_string("screenshot-mode")
     }
 
     async onTakeScreenshot( captureMode, delay, includePointer , isHideWindow, captureBackendValue) {
