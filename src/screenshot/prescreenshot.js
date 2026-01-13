@@ -142,8 +142,6 @@ export const PreScreenshot = GObject.registerClass(
 
     async onTakeScreenshot( captureMode, delay, includePointer , isHideWindow, captureBackendValue) {
       
-      console.log(captureBackendValue, CaptureBackend.X11)
-      
       const app = Gio.Application.get_default();
       app.hold();
 

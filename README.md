@@ -12,6 +12,8 @@ I never confirmed that if the shell DBus is unavailable, the x11 backend will be
 
 Warn the user about how for the settings to take effect, they need to restart the app.
 
+Remove window screenshot option if the backend doesn't supports it
+
 ### TO DO: 
 
 Text recognition
@@ -21,6 +23,10 @@ Free select (Might never be added)
 Open image with other applications
 
 Add Appimage and nix package builds.
+
+Add images to screenshot mode options
+
+Automatically select screenshot backend
 
 ### WON'T FIX
 

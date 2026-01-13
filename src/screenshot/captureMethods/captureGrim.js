@@ -5,7 +5,7 @@ import { CaptureMode } from "../constants.js";
 
 export async function captureWithGrim(includePointer, captureMode, params) {
     if (captureMode === CaptureMode.WINDOW) {
-        throw new Error("Grim backend: Window capture mode is not supported. Please use X11 or Shell backend for window capture.");
+        throw new Error("Window capture isn't supported in Grim Backend. Please use a different backend for window capture.");
     }
 
     let argv = ["grim"];

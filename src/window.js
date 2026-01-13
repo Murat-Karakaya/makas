@@ -33,8 +33,6 @@ export const ScreenshotWindow = GObject.registerClass(
       super({
         application,
         title: "Makas",
-        default_width: 500,
-        default_height: 400,
       });
 
       // Main Box
