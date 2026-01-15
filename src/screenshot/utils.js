@@ -1,6 +1,7 @@
 import GLib from "gi://GLib";
 import MakasScreenshot from "gi://MakasScreenshot";
 import Gio from "gi://Gio";
+import { CaptureBackend } from "./constants.js";
 
 let screenshotHelper = null;
 /**
@@ -19,29 +20,69 @@ export function getScreenshotHelper() {
  * @returns {boolean}
  */
 export function hasShellScreenshot() {
-  const serviceNameGnome = "org.gnome.Shell.Screenshot";
+  const serviceName = "org.gnome.Shell.Screenshot";
+  const objectPath = "/org/gnome/Shell/Screenshot";
 
-  const connection = Gio.DBus.session;
   try {
-    // We try to call a method that we know exists but with invalid arguments
-    // to see if the interface itself is responsive, or we can just check names.
-    // However, checking for the name on the bus is more reliable for "availability".
+    const connection = Gio.DBus.session;
     const result = connection.call_sync(
-      "org.freedesktop.DBus",
-      "/org/freedesktop/DBus",
-      "org.freedesktop.DBus",
-      "GetNameOwner",
-      new GLib.Variant("(s)", [serviceNameGnome]),
+      serviceName,
+      objectPath,
+      "org.freedesktop.DBus.Introspectable",
+      "Introspect",
+      null,
       null,
       Gio.DBusCallFlags.NONE,
       -1,
-      null,
+      null
     );
-    return !!result;
+
+    const xml = result.deep_unpack()[0];
+    return xml.includes('method name="Screenshot"');
   } catch (e) {
     return false;
   }
 }
+
+/**
+ * Check if Grim (Wayland wlroots) screenshot is available.
+ * @returns {boolean}
+ */
+export function hasGrimScreenshot() {
+  const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
+  if (!waylandDisplay) return false;
+
+  const grimPath = GLib.find_program_in_path("grim");
+  if (!grimPath) return false;
+
+  try {
+    return MakasScreenshot.utils_has_wlroots();
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Check if X11 screenshot is available.
+ * @returns {boolean}
+ */
+export function hasX11Screenshot() {
+  const display = GLib.getenv("DISPLAY");
+  const xdgSessionType = GLib.getenv("XDG_SESSION_TYPE");
+  return !!display || xdgSessionType === "x11";
+}
+
+/**
+ * Array of available capture backends on the current system.
+ * Ordered by preference.
+ */
+export const availableBackends = (() => {
+  const backends = [];
+  if (hasShellScreenshot()) backends.push(CaptureBackend.SHELL);
+  if (hasX11Screenshot()) backends.push(CaptureBackend.X11);
+  if (hasGrimScreenshot()) backends.push(CaptureBackend.GRIM);
+  return backends;
+})();
 
 
 export const getCurrentDate = () => {

@@ -11,19 +11,22 @@ gtk_dep = dependency('gtk+-3.0')
 x11_dep = dependency('x11')
 xext_dep = dependency('xext')
 xcomposite_dep = dependency('xcomposite')
+dl_dep = meson.get_compiler('c').find_library('dl')
 
 lib_sources = [
   'makas-screenshot.c',
+  'makas-utils.c',
 ]
 
 lib_headers = [
   'makas-screenshot.h',
+  'makas-utils.h',
 ]
 
 # Build shared library
 libmakas_screenshot = shared_library('makas-screenshot',
   lib_sources,
-  dependencies: [glib_dep, gobject_dep, gdk_dep, gdk_pixbuf_dep, gtk_dep, x11_dep, xext_dep, xcomposite_dep],
+  dependencies: [glib_dep, gobject_dep, gdk_dep, gdk_pixbuf_dep, gtk_dep, x11_dep, xext_dep, xcomposite_dep, dl_dep],
   install: true,
   install_dir: get_option('libdir'),
 )

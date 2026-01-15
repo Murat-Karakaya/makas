@@ -3,7 +3,13 @@ import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
 import { CaptureBackend, CaptureMode } from "./screenshot/constants.js"
-import { hasShellScreenshot, settings } from "./screenshot/utils.js";
+import {
+  hasShellScreenshot,
+  hasGrimScreenshot,
+  hasX11Screenshot,
+  availableBackends,
+  settings
+} from "./screenshot/utils.js";
 
 export const PreferencesWindow = GObject.registerClass(
   {
@@ -128,7 +134,7 @@ export const PreferencesWindow = GObject.registerClass(
         halign: Gtk.Align.START,
       });
       this.modeCombo = new Gtk.ComboBoxText();
-      this.modeCombo.append(CaptureMode.SCREEN , "Screen");
+      this.modeCombo.append(CaptureMode.SCREEN, "Screen");
       this.modeCombo.append(CaptureMode.WINDOW, "Window");
       this.modeCombo.append(CaptureMode.AREA, "Area");
 
@@ -170,10 +176,38 @@ export const PreferencesWindow = GObject.registerClass(
         label: "Capture Backend:",
         halign: Gtk.Align.START,
       });
-      this.backendCombo = new Gtk.ComboBoxText();
-      this.backendCombo.append(CaptureBackend.SHELL, "Shell (GNOME/Cinnamon)");
-      this.backendCombo.append(CaptureBackend.X11, "X11");
-      this.backendCombo.append(CaptureBackend.GRIM, "Wayland (Grim)");
+
+      this.backendStore = new Gtk.ListStore();
+      this.backendStore.set_column_types([
+        GObject.TYPE_STRING,  // ID
+        GObject.TYPE_STRING,  // Label
+        GObject.TYPE_BOOLEAN  // Sensitive
+      ]);
+
+      this.backendCombo = new Gtk.ComboBox({
+        model: this.backendStore,
+        id_column: 0,
+      });
+
+      const renderer = new Gtk.CellRendererText();
+      this.backendCombo.pack_start(renderer, true);
+      this.backendCombo.add_attribute(renderer, "text", 1);
+      this.backendCombo.add_attribute(renderer, "sensitive", 2);
+
+      const backendData = [
+        [CaptureBackend.SHELL, "Shell (GNOME/Cinnamon)", hasShellScreenshot()],
+        [CaptureBackend.X11, "X11", hasX11Screenshot()],
+        [CaptureBackend.GRIM, "Wayland (Grim)", hasGrimScreenshot()],
+      ];
+
+      for (const [id, label, available] of backendData) {
+        const iter = this.backendStore.insert(-1);
+        this.backendStore.set(iter, [0, 1, 2], [id, label, available]);
+
+        if (available && this.backendCombo.get_active() === -1) {
+          this.backendCombo.set_active_iter(iter);
+        }
+      }
 
       grid.attach(backendLabel, 0, row, 1, 1);
       grid.attach(this.backendCombo, 1, row, 2, 1);
@@ -187,7 +221,7 @@ export const PreferencesWindow = GObject.registerClass(
         label: "Hide window at capture:",
         halign: Gtk.Align.START,
       });
-      
+
       grid.attach(isHideWindowLabel, 0, row, 1, 1);
       grid.attach(this.isHideWindow, 1, row, 2, 1);
       row++;
@@ -237,17 +271,9 @@ export const PreferencesWindow = GObject.registerClass(
       settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
-      
+
       settings.bind("hide-window", this.isHideWindow, "active", Gio.SettingsBindFlags.DEFAULT);
 
-      if (!hasShellScreenshot()) {
-        // This kind of hoop is made to prevent the combo box from being
-        // sensitive otherwise it will remain sensitive for some reason.
-        this.backendCombo.connect('realize', () => {
-          this.backendCombo.set_sensitive(false);
-        });
-        this.backendCombo.set_tooltip_text("GNOME Shell screenshot service not found. X11 backend is mandatory.");
-      }
       settings.bind("capture-backend", this.backendCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);
