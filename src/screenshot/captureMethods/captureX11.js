@@ -17,10 +17,11 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
                 rootWindow.get_width(),
                 rootWindow.get_height(),
             );
-            flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
             if (includePointer) {
                 compositeCursor(pixbuf, 0, 0);
             }
+
+            flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
             break;
         case CaptureMode.WINDOW:
             if (selectionResult && selectionResult.clickX !== undefined) {
@@ -31,11 +32,11 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
 
                 if (result) {
                     pixbuf = result.pixbuf;
-                    flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
-
                     if (includePointer) {
                         compositeCursor(pixbuf, result.offsetX, result.offsetY);
                     }
+
+                    flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
                 }
             }
             break;
@@ -49,15 +50,16 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
                     selectionResult.width,
                     selectionResult.height,
                 );
+                if (includePointer) {
+                    compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
+                }
+
                 flashRect(
                     selectionResult.x,
                     selectionResult.y,
                     selectionResult.width,
                     selectionResult.height
                 );
-                if (includePointer) {
-                    compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
-                }
             }
             break;
     }

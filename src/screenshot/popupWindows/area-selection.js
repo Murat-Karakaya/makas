@@ -38,7 +38,7 @@ export function selectArea() {
       totalHeight = Math.max(totalHeight, geom.y + geom.height);
     }
     window.set_default_size(totalWidth, totalHeight);
-    window.move(0, 0);
+    window.fullscreen();
 
     if (screen.is_composited() && visual) {
       window.set_visual(visual);

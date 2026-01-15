@@ -16,8 +16,6 @@ Remove window screenshot option if the backend doesn't supports it
 
 When falling back to shell backend for window capture, make sure it always hides the main window.
 
-There has been a case where the screenshot returned a white screen. Meaning the flash was taken before the screenshot capture. 
-
 ### TO DO: 
 
 Add an option to disable the flash.
@@ -39,6 +37,8 @@ Automatically select screenshot backend
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
 
 It's better to take Screenshot after the window animation is done. But I didn't find a way to determine that.
+
+FreeDesktop will allways flash the entire screenshot. 
 
 ## Build and Package
 

@@ -1,6 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Cairo from "cairo";
+import { wait } from "../utils.js";
 
 /**
  * Flash a rectangular region on the screen with a simple white overlay.
@@ -9,13 +10,16 @@ import Cairo from "cairo";
  * @param {number} width
  * @param {number} height
  */
-export function flashRect(x, y, width, height) {
+export async function flashRect(x, y, width, height) {
+    await wait(100); // wait to avoid lag in the main window an a possible race condition with the screenshot
+
     const win = new Gtk.Window({
         type: Gtk.WindowType.POPUP,
         decorated: false,
     });
 
     win.set_keep_above(true);
+    win.fullscreen(); // Flash the enitre screen in a tiling window manager
     win.move(x, y);
     win.set_default_size(width, height);
 
