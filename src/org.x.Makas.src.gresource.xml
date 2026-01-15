@@ -16,6 +16,8 @@
 
     <file>screenshot/captureMethods/captureX11.js</file>
     <file>screenshot/captureMethods/captureShell.js</file>
+    <file>screenshot/captureMethods/captureGrim.js</file>
+    <file>screenshot/captureMethods/capturePortal.js</file>
 
     <file>screenshot/constants.js</file>
     <file>preferences.js</file>

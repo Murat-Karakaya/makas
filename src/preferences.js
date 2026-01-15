@@ -7,6 +7,7 @@ import {
   hasShellScreenshot,
   hasGrimScreenshot,
   hasX11Screenshot,
+  hasPortalScreenshot,
   settings
 } from "./screenshot/utils.js";
 
@@ -218,6 +219,7 @@ export const PreferencesWindow = GObject.registerClass(
         [CaptureBackend.SHELL, "Shell (GNOME/Cinnamon)", hasShellScreenshot()],
         [CaptureBackend.X11, "X11", hasX11Screenshot()],
         [CaptureBackend.GRIM, "Wayland (Grim)", hasGrimScreenshot()],
+        [CaptureBackend.PORTAL, "FreeDesktop Portal", hasPortalScreenshot()],
       ];
 
       for (const [id, backendLabel, available] of backendData) {

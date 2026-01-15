@@ -14,7 +14,13 @@ Warn the user about how for the settings to take effect, they need to restart th
 
 Remove window screenshot option if the backend doesn't supports it
 
+When falling back to shell backend for window capture, make sure it always hides the main window.
+
+There has been a case where the screenshot returned a white screen. Meaning the flash was taken before the screenshot capture. 
+
 ### TO DO: 
+
+Add an option to disable the flash.
 
 Text recognition
 

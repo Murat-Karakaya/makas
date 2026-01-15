@@ -1,13 +1,15 @@
 import { captureWithX11 } from "./captureMethods/captureX11.js";
 import { captureWithShell } from "./captureMethods/captureShell.js";
 import { captureWithGrim } from "./captureMethods/captureGrim.js";
+import { captureWithPortal } from "./captureMethods/capturePortal.js";
 import { CaptureBackend } from "./constants.js";
 import { isBackendAvailable } from "./utils.js";
 
 const backends = {
   [CaptureBackend.SHELL]: captureWithShell,
   [CaptureBackend.GRIM]: captureWithGrim,
-  [CaptureBackend.X11]: captureWithX11
+  [CaptureBackend.X11]: captureWithX11,
+  [CaptureBackend.PORTAL]: captureWithPortal,
 }
 
 export async function performCapture(
@@ -20,7 +22,7 @@ export async function performCapture(
   } catch (e) {
     console.error(`Backend ${captureBackendValue} failed: ${e.message}`);
 
-    const backendNames = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM];
+    const backendNames = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM, CaptureBackend.PORTAL];
     for (const b of backendNames) {
       if (b === captureBackendValue) continue; // Already checked
       if (isBackendAvailable(b)) {

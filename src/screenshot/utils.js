@@ -71,6 +71,35 @@ export function hasX11Screenshot() {
 }
 
 /**
+ * Check if FreeDesktop Portal screenshot is available.
+ * @returns {boolean}
+ */
+export function hasPortalScreenshot() {
+  const serviceName = "org.freedesktop.portal.Desktop";
+  const objectPath = "/org/freedesktop/portal/desktop";
+
+  try {
+    const connection = Gio.DBus.session;
+    const result = connection.call_sync(
+      serviceName,
+      objectPath,
+      "org.freedesktop.DBus.Introspectable",
+      "Introspect",
+      null,
+      null,
+      Gio.DBusCallFlags.NONE,
+      -1,
+      null
+    );
+
+    const xml = result.deep_unpack()[0];
+    return xml.includes('interface name="org.freedesktop.portal.Screenshot"');
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Check if a specific backend is available on the current system.
  * @param {string} backend 
  * @returns {boolean}
@@ -83,6 +112,8 @@ export function isBackendAvailable(backend) {
       return hasX11Screenshot();
     case CaptureBackend.GRIM:
       return hasGrimScreenshot();
+    case CaptureBackend.PORTAL:
+      return hasPortalScreenshot();
     default:
       return false;
   }
