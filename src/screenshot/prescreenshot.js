@@ -123,11 +123,11 @@ export const PreScreenshot = GObject.registerClass(
       this.add(this.statusLabel);
 
       this.shootBtn.connect("clicked", () => {
-        
-        const captureBackendValue = settings.get_string("capture-backend")
-        
+
+        const captureBackendValue = settings.get_string("capture-backend-auto")
+
         const isWindowHideNedeed = captureBackendValue !== CaptureBackend.X11 && this.captureMode === CaptureMode.WINDOW;
-        
+
         this.onTakeScreenshot(
           this.captureMode,
           this.delaySpinner.get_value_as_int(),
@@ -140,8 +140,8 @@ export const PreScreenshot = GObject.registerClass(
       });
     }
 
-    async onTakeScreenshot( captureMode, delay, includePointer , isHideWindow, captureBackendValue) {
-      
+    async onTakeScreenshot(captureMode, delay, includePointer, isHideWindow, captureBackendValue) {
+
       const app = Gio.Application.get_default();
       app.hold();
 
@@ -150,7 +150,7 @@ export const PreScreenshot = GObject.registerClass(
       try {
         // Wait for window to hide
         const windowWait = settings.get_int("window-wait");
-        
+
         if (delay * 100 > windowWait) await this.startDelay(delay * 100 - windowWait, windowWait);
         if (isHideWindow) topLevel.hide();
         await wait(windowWait * 10);
@@ -170,7 +170,7 @@ export const PreScreenshot = GObject.registerClass(
         }
 
         if (windowWait < delay * 100) {
-          
+
           isHideWindow && topLevel.hide();
           await wait(windowWait * 10);
         }
@@ -216,7 +216,7 @@ export const PreScreenshot = GObject.registerClass(
         });
       });
     }
-    
+
     setStatus(text) {
       this.statusLabel.set_text(text);
     }
@@ -258,7 +258,7 @@ export const PreScreenshot = GObject.registerClass(
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
       this.captureMode = settings.get_string("screenshot-mode")
-      
+
       switch (this.captureMode) {
         case CaptureMode.SCREEN:
           this.screenRadio.set_active(true);

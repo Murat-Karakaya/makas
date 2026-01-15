@@ -67,23 +67,26 @@ export function hasGrimScreenshot() {
  * @returns {boolean}
  */
 export function hasX11Screenshot() {
-  const display = GLib.getenv("DISPLAY");
-  const xdgSessionType = GLib.getenv("XDG_SESSION_TYPE");
-  return !!display || xdgSessionType === "x11";
+  return GLib.getenv("XDG_SESSION_TYPE") === "x11";
 }
 
 /**
- * Array of available capture backends on the current system.
- * Ordered by preference.
+ * Check if a specific backend is available on the current system.
+ * @param {string} backend 
+ * @returns {boolean}
  */
-export const availableBackends = (() => {
-  const backends = [];
-  if (hasShellScreenshot()) backends.push(CaptureBackend.SHELL);
-  if (hasX11Screenshot()) backends.push(CaptureBackend.X11);
-  if (hasGrimScreenshot()) backends.push(CaptureBackend.GRIM);
-  return backends;
-})();
-
+export function isBackendAvailable(backend) {
+  switch (backend) {
+    case CaptureBackend.SHELL:
+      return hasShellScreenshot();
+    case CaptureBackend.X11:
+      return hasX11Screenshot();
+    case CaptureBackend.GRIM:
+      return hasGrimScreenshot();
+    default:
+      return false;
+  }
+}
 
 export const getCurrentDate = () => {
   const date = new Date();

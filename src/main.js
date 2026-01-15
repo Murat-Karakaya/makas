@@ -7,6 +7,31 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 
 import { ScreenshotWindow } from './window.js';
+import { CaptureBackend } from './screenshot/constants.js';
+import { settings, isBackendAvailable } from './screenshot/utils.js';
+
+(() => {
+    const preferred = settings.get_string("capture-backend");
+
+    // Try preferred first
+    if (isBackendAvailable(preferred)) {
+        settings.set_string("capture-backend-auto", preferred);
+        return;
+    }
+
+    // Fallback order: X11 -> SHELL -> GRIM
+    const backends = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM];
+    for (const b of backends) {
+        if (b === preferred) continue; // Already checked
+        if (isBackendAvailable(b)) {
+            settings.set_string("capture-backend-auto", b);
+            print(`[Makas] Preferred backend '${preferred}' unavailable. Falling back to '${b}'.`);
+            return;
+        }
+    }
+    print(`[Makas] WARNING: No working capture backend found! Falling back to X11.`);
+    settings.set_string("capture-backend-auto", CaptureBackend.X11); // Hope xWayland is available
+})();
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {

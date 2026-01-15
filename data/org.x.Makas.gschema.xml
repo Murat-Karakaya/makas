@@ -50,8 +50,13 @@
 
 		<key name="capture-backend" type="s">
 			<default>'SHELL'</default>
-			<summary>Backend used for capturing screenshots</summary>
-			<description>The backend used for capturing screenshots (SHELL, X11, GRIM)</description>
+			<summary>Backend preferred by the user</summary>
+			<description>The backend preferred by the user for capturing screenshots (SHELL, X11, GRIM)</description>
+		</key>
+		<key name="capture-backend-auto" type="s">
+			<default>'SHELL'</default>
+			<summary>Actually used backend</summary>
+			<description>The backend that is actually used for capturing screenshots, automatically determined based on availability.</description>
 		</key>
 		<key name="hide-window" type="b">
 			<default>true</default>
