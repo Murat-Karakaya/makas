@@ -55,6 +55,8 @@ export function hasGrimScreenshot() {
   const grimPath = GLib.find_program_in_path("grim");
   if (!grimPath) return false;
 
+  return true;
+
   try {
     return MakasScreenshot.utils_has_wlroots();
   } catch (e) {

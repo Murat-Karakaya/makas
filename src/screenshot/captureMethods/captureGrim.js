@@ -14,10 +14,11 @@ export async function captureWithGrim(includePointer, captureMode, params) {
         argv.push("-c");
     }
 
+    /* Commented out. Because freezing screen is implemented instead.
     if (captureMode === CaptureMode.AREA) {
         const geometry = `${params.x},${params.y} ${params.width}x${params.height}`;
         argv.push("-g", geometry);
-    }
+    } */
     argv.push("-");
 
     try {

@@ -7,9 +7,15 @@ import cairo from "gi://cairo";
  * Show an area selection overlay and return the selected rectangle.
  * @returns {Promise<{x, y, width, height}|null>}
  */
-export function selectArea() {
+export function selectArea(bgPixbuf) {
   return new Promise((resolve) => {
     print("Selection: selectArea called");
+    if (!bgPixbuf) {
+      print("Selection: No background pixbuf provided!");
+    }
+    /** @type {cairo.Surface} */
+    let bgSurface = null;
+
     const data = {
       rect: { x: 0, y: 0, width: 0, height: 0 },
       buttonPressed: false,
@@ -53,22 +59,58 @@ export function selectArea() {
     );
 
     window.connect("draw", (widget, cr) => {
-      cr.setOperator(cairo.Operator.SOURCE);
-      cr.setSourceRGBA(0, 0, 0, 0.3);
-      cr.paint();
-      if (data.buttonPressed && data.rect.width > 0 && data.rect.height > 0) {
+      // 1. Draw the static screenshot background
+      if (!bgSurface && bgPixbuf) {
+        bgSurface = Gdk.cairo_surface_create_from_pixbuf(
+          bgPixbuf,
+          0,
+          widget.get_window()
+        );
+      }
+
+      if (bgSurface) {
+        cr.setSourceSurface(bgSurface, 0, 0);
+        cr.paint();
+      } else {
+        // Fallback if no image (shouldn't happen in new flow)
+        cr.setSourceRGBA(0, 0, 0, 0.3);
+        cr.paint();
+      }
+
+      // 2. Determine selection rect
+      let selX = data.rect.x;
+      let selY = data.rect.y;
+      let selW = data.rect.width;
+      let selH = data.rect.height;
+
+
+      // 3. Draw dim overlay with "hole" for selection
+      cr.setOperator(cairo.Operator.OVER);
+      cr.setSourceRGBA(0, 0, 0, 0.4);
+
+      // Define the "hole" path
+      // Full screen rect
+      cr.rectangle(0, 0, widget.get_allocated_width(), widget.get_allocated_height());
+
+      // Subtract selection rect (winding rule)
+      if (selW > 0 && selH > 0) {
+        cr.rectangle(selX + selW, selY, -selW, selH); // Clockwise vs Counter-clockwise
+      }
+
+      cr.fill();
+
+      // 4. Draw selection border
+      if (data.buttonPressed && selW > 0 && selH > 0) {
         const style = widget.get_style_context();
         style.save();
         style.add_class(Gtk.STYLE_CLASS_RUBBERBAND);
-        cr.setOperator(cairo.Operator.SOURCE);
-        cr.setSourceRGBA(0, 0, 0, 0.1);
-        cr.rectangle(data.rect.x, data.rect.y, data.rect.width, data.rect.height);
-        cr.fill();
+
         cr.setOperator(cairo.Operator.OVER);
         cr.setSourceRGBA(0.2, 0.6, 1.0, 0.8);
         cr.setLineWidth(2);
-        cr.rectangle(data.rect.x, data.rect.y, data.rect.width, data.rect.height);
+        cr.rectangle(selX, selY, selW, selH);
         cr.stroke();
+
         style.restore();
       }
       return true;

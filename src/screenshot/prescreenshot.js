@@ -7,6 +7,7 @@ import { selectArea } from "./popupWindows/area-selection.js";
 import { selectWindow } from "./popupWindows/selectWindow.js";
 import { settings, wait } from "./utils.js";
 import { performCapture } from "./performCapture.js";
+import { flashRect } from "./popupWindows/flash.js";
 
 export const PreScreenshot = GObject.registerClass(
   class PreScreenshot extends Gtk.Box {
@@ -158,27 +159,49 @@ export const PreScreenshot = GObject.registerClass(
         let selectionResult = { clickX: 0, clickY: 0 };
         print(`Selection phase, mode=${captureMode}`);
 
-        switch (true) {
-          case captureMode === CaptureMode.AREA:
-            selectionResult = await selectArea();
-            if (!selectionResult) return this.setStatus("Capture cancelled");
-            break;
-          case captureMode === CaptureMode.WINDOW && captureBackendValue === CaptureBackend.X11:
+
+        let pixbuf;
+        if (captureMode === CaptureMode.AREA) {
+          const screenPixbuf = await performCapture(
+            null, // No selection rect needed for full screen
+            captureBackendValue,
+            {
+              captureMode,
+              includePointer,
+            }
+          );
+
+          if (!screenPixbuf) {
+            return this.setStatus("Screen capture failed");
+          }
+
+          selectionResult = await selectArea(screenPixbuf);
+          if (!selectionResult) return this.setStatus("Capture cancelled");
+
+          pixbuf = screenPixbuf.new_subpixbuf(
+            selectionResult.x,
+            selectionResult.y,
+            selectionResult.width,
+            selectionResult.height
+          );
+
+          flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
+        } else {
+          if (captureMode === CaptureMode.WINDOW && captureBackendValue === CaptureBackend.X11) {
             selectionResult = await selectWindow();
             if (!selectionResult) return this.setStatus("Capture cancelled");
-            break;
+          }
+
+          if (windowWait < delay * 100) {
+            isHideWindow && topLevel.hide();
+            await wait(windowWait * 10);
+          }
+
+          pixbuf = await performCapture(selectionResult, captureBackendValue, {
+            captureMode,
+            includePointer,
+          });
         }
-
-        if (windowWait < delay * 100) {
-
-          isHideWindow && topLevel.hide();
-          await wait(windowWait * 10);
-        }
-
-        const pixbuf = await performCapture(selectionResult, captureBackendValue, {
-          captureMode,
-          includePointer,
-        });
 
         this.completeScreenShot(pixbuf);
       } catch (e) {

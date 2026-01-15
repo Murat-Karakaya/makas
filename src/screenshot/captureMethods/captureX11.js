@@ -1,14 +1,13 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
-import { flashRect } from "../popupWindows/flash.js";
 import { getScreenshotHelper } from "../utils.js";
 
 
 export function captureWithX11(includePointer, captureMode, selectionResult) {
     let pixbuf;
     switch (captureMode) {
-        case CaptureMode.SCREEN:
+        case CaptureMode.SCREEN: {
             const rootWindow = Gdk.get_default_root_window();
             pixbuf = Gdk.pixbuf_get_from_window(
                 rootWindow,
@@ -23,7 +22,8 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
 
             flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
             break;
-        case CaptureMode.WINDOW:
+        }
+        case CaptureMode.WINDOW: {
             if (selectionResult && selectionResult.clickX !== undefined) {
                 const result = captureWindowWithXShape(
                     selectionResult.clickX,
@@ -40,6 +40,8 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
                 }
             }
             break;
+        }
+        /* Commented out. Because freezing screen is implemented instead.
         case CaptureMode.AREA:
             if (selectionResult) {
                 const rootWindow = Gdk.get_default_root_window();
@@ -53,15 +55,23 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
                 if (includePointer) {
                     compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
                 }
-
-                flashRect(
-                    selectionResult.x,
-                    selectionResult.y,
-                    selectionResult.width,
-                    selectionResult.height
-                );
             }
             break;
+        */
+        case CaptureMode.AREA: {
+            const rootWindow = Gdk.get_default_root_window();
+            pixbuf = Gdk.pixbuf_get_from_window(
+                rootWindow,
+                0,
+                0,
+                rootWindow.get_width(),
+                rootWindow.get_height(),
+            );
+            if (includePointer) {
+                compositeCursor(pixbuf, 0, 0);
+            }
+            break;
+        }
     }
     return pixbuf;
 }

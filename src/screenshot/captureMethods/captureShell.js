@@ -4,7 +4,7 @@ import Gio from "gi://Gio";
 import { CaptureMode } from "../constants.js";
 import { getCurrentDate } from "../utils.js";
 
-export async function captureWithShell(includePointer, captureMode, params) {
+export async function captureWithShell(includePointer, captureMode, selectionResults) {
     const serviceNameGnome = "org.gnome.Shell.Screenshot";
     const interfaceNameGnome = serviceNameGnome;
     const objectPathGnome = "/org/gnome/Shell/Screenshot";
@@ -39,6 +39,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
                 tmpFilename,
             ]);
             break;
+        /* Commented out. Because freezing screen is implemented instead.
         case CaptureMode.AREA:
             if (includePointer) {
                 // SCREENSHOT_AREA doesn't support cursor in Shell.
@@ -61,6 +62,16 @@ export async function captureWithShell(includePointer, captureMode, params) {
                 tmpFilename,
             ]);
             break;
+
+        */
+        case CaptureMode.AREA:
+            method = "Screenshot";
+            dbusParams = new GLib.Variant("(bbs)", [
+                true, // include_pointer
+                false, // disabled because this one would've flashed the entire screen
+                tmpFilename,
+            ]);
+            break;
         default:
             throw new Error("Invalid screenshot mode. Please report this issue to the developer.");
     }
@@ -80,6 +91,8 @@ export async function captureWithShell(includePointer, captureMode, params) {
 
         const pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
         GLib.unlink(tmpFilename);
+
+        /* Commented out. Because freezing screen is implemented instead.
 
         if (captureMode === CaptureMode.AREA && includePointer) {
             const cropped = pixbuf.new_subpixbuf(
@@ -107,7 +120,7 @@ export async function captureWithShell(includePointer, captureMode, params) {
                 null
             );
             return cropped.copy();
-        }
+        } */
 
         return pixbuf;
     } catch (e) {

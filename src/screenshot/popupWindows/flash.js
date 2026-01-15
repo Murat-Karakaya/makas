@@ -19,7 +19,7 @@ export async function flashRect(x, y, width, height) {
     });
 
     win.set_keep_above(true);
-    win.fullscreen(); // Flash the enitre screen in a tiling window manager
+    win.fullscreen(); // Flash the entire screen in a tiling window manager
     win.move(x, y);
     win.set_default_size(width, height);
 
@@ -41,7 +41,7 @@ export async function flashRect(x, y, width, height) {
 
     win.show_all();
 
-    const duration = 500;
+    const duration = 300;
     const fps = 60;
     const interval = 1000 / fps;
     const steps = duration / interval;

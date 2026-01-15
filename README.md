@@ -20,6 +20,8 @@ When falling back to shell backend for window capture, make sure it always hides
 
 Add an option to disable the flash.
 
+Last used options should only be saved once the values are actuallt used
+
 Text recognition
 
 Free select (Might never be added)
@@ -29,8 +31,6 @@ Open image with other applications
 Add Appimage and nix package builds.
 
 Add images to screenshot mode options
-
-Automatically select screenshot backend
 
 ### WON'T FIX
 
