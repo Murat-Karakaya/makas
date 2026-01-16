@@ -18,9 +18,11 @@ When falling back to shell backend for window capture, make sure it always hides
 
 Fix GRIM check
 
+The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
+
 ### TO DO: 
 
-Add an option to disable the flash.
+Implement a cancel button when delay is active.
 
 Last used options should only be saved once the values are actuallt used
 

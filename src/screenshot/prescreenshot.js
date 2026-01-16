@@ -4,7 +4,6 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import { CaptureMode, CaptureBackend } from "./constants.js";
 import { selectArea } from "./popupWindows/area-selection.js";
-import { selectWindow } from "./popupWindows/selectWindow.js";
 import { settings, wait, showScreenshotNotification } from "./utils.js";
 import { performCapture } from "./performCapture.js";
 import { flashRect } from "./popupWindows/flash.js";
@@ -149,12 +148,18 @@ export const PreScreenshot = GObject.registerClass(
       const topLevel = this.get_toplevel();
 
       try {
-        // Wait for window to hide
         const windowWait = settings.get_int("window-wait");
 
         if (delay * 100 > windowWait) await this.startDelay(delay * 100 - windowWait, windowWait);
-        if (isHideWindow) topLevel.hide();
-        await wait(windowWait * 10);
+
+        if (isHideWindow) {
+          topLevel.hide();
+          if (captureMode !== CaptureMode.WINDOW) {
+            await wait(windowWait * 10); // Wait for window to hide
+          }
+        }
+
+        if (delay * 100 > windowWait) await wait(windowWait * 10); // Wait for window to hide
 
         let selectionResult = { clickX: 0, clickY: 0 };
         print(`Selection phase, mode=${captureMode}`);
@@ -162,14 +167,7 @@ export const PreScreenshot = GObject.registerClass(
 
         let pixbuf;
         if (captureMode === CaptureMode.AREA) {
-          const screenPixbuf = await performCapture(
-            null, // No selection rect needed for full screen
-            captureBackendValue,
-            {
-              captureMode,
-              includePointer,
-            }
-          );
+          const screenPixbuf = await performCapture(captureBackendValue, { captureMode, includePointer });
 
           if (!screenPixbuf) {
             return this.setStatus("Screen capture failed");
@@ -187,16 +185,7 @@ export const PreScreenshot = GObject.registerClass(
 
           flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
         } else {
-
-          if (windowWait < delay * 100) {
-            isHideWindow && topLevel.hide();
-            await wait(windowWait * 10);
-          }
-
-          pixbuf = await performCapture(captureBackendValue, {
-            captureMode,
-            includePointer,
-          });
+          pixbuf = await performCapture(captureBackendValue, { captureMode, includePointer });
         }
 
         showScreenshotNotification(app);
