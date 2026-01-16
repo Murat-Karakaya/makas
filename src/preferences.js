@@ -216,7 +216,7 @@ export const PreferencesWindow = GObject.registerClass(
       this.backendCombo.add_attribute(renderer, "sensitive", 2);
 
       const backendData = [
-        [CaptureBackend.SHELL, "Shell (GNOME/Cinnamon)", hasShellScreenshot()],
+        [CaptureBackend.SHELL, "Shell (Cinnamon)", hasShellScreenshot()],
         [CaptureBackend.X11, "X11", hasX11Screenshot()],
         [CaptureBackend.GRIM, "Wayland (Grim)", hasGrimScreenshot()],
         [CaptureBackend.PORTAL, "FreeDesktop Portal", hasPortalScreenshot()],

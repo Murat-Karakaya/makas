@@ -20,8 +20,8 @@ export function getScreenshotHelper() {
  * @returns {boolean}
  */
 export function hasShellScreenshot() {
-  const serviceName = "org.gnome.Shell.Screenshot";
-  const objectPath = "/org/gnome/Shell/Screenshot";
+  const serviceName = "org.Cinnamon";
+  const objectPath = "/org/Cinnamon";
 
   try {
     const connection = Gio.DBus.session;
