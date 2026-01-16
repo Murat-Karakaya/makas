@@ -1,7 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";
-import cairo from "gi://cairo";
+import Cairo from "cairo";
 
 /**
  * Show window selection cursor and return click position.
@@ -42,9 +42,35 @@ export function selectWindow() {
         );
 
         window.connect("draw", (widget, cr) => {
-            cr.setOperator(cairo.Operator.SOURCE);
-            cr.setSourceRGBA(0, 0, 0, 0.01);
-            cr.paint();
+            const width = widget.get_allocated_width();
+            const height = widget.get_allocated_height();
+
+            if (screen.is_composited() && visual) {
+                // Tint the screen
+                cr.setOperator(Cairo.Operator.SOURCE);
+                cr.setSourceRGBA(0, 0, 0, 0.4);
+                cr.paint();
+
+                // Draw a thinner red border frame
+                cr.setOperator(Cairo.Operator.OVER);
+                cr.setSourceRGBA(1, 0, 0, 0.8); // Bright red, semi-transparent
+                cr.setLineWidth(2);
+                cr.rectangle(1, 1, width - 2, height - 2);
+                cr.stroke();
+            } else {
+                // Clear to fully transparent
+                cr.setOperator(Cairo.Operator.SOURCE);
+                cr.setSourceRGBA(0, 0, 0, 0);
+                cr.paint();
+
+                // Draw a visible 10px red border frame
+                cr.setOperator(Cairo.Operator.OVER);
+                cr.setSourceRGBA(1, 0, 0, 0.8); // Bright red, semi-transparent
+                cr.setLineWidth(4);
+                cr.rectangle(2, 2, width - 4, height - 4);
+                cr.stroke();
+            }
+
             return true;
         });
 
@@ -84,6 +110,20 @@ export function selectWindow() {
 
         window.show();
         const gdkWindow = window.get_window();
+
+        if (!(screen.is_composited() && visual)) {
+            try {
+                // Shape the window to make only the outline visible
+                const region = new Cairo.Region();
+                region.unionRectangle({ x: 0, y: 0, width: totalWidth, height: totalHeight });
+                region.subtractRectangle({ x: 4, y: 4, width: totalWidth - 8, height: totalHeight - 8 });
+
+                gdkWindow.shape_combine_region(region, 0, 0);
+            } catch (e) {
+                print("Failed to shape window:", e);
+            }
+        }
+
         const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
         seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
     });

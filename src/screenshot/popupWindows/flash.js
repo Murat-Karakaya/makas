@@ -60,9 +60,12 @@ export async function flashRect(x, y, width, height) {
         // "Cheese Flash" Formula:
         // Starts at 1.0 when t=0, decays to 0.0 as t approaches 1.
         // Using (1 - t)^3 creates a very sharp start with a long, thinning tail.
-        const newOpacity = Math.pow(1 - t, 3);
-
-        win.set_opacity(newOpacity);
+        if (visual && screen.is_composited()) {
+            const newOpacity = Math.pow(1 - t, 3);
+            win.set_opacity(newOpacity);
+        } else {
+            win.set_opacity(1);
+        }
 
         currentStep++;
         return GLib.SOURCE_CONTINUE;

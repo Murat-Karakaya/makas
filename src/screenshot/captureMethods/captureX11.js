@@ -2,6 +2,7 @@ import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
 import { getScreenshotHelper } from "../utils.js";
+import { flashRect } from "../popupWindows/flash.js";
 
 
 export function captureWithX11(includePointer, captureMode, selectionResult) {
