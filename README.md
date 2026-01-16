@@ -3,16 +3,9 @@
 
 ## Roadmap
 
-
-### TEST:
-
-I never confirmed that if the shell DBus is unavailable, the x11 backend will be enforced.
-
 ### FIXME: 
 
-Warn the user about how for the settings to take effect, they need to restart the app.
-
-Remove window screenshot option if the backend doesn't supports it
+Remove options that the backend doesn't support.
 
 When falling back to shell backend for window capture, make sure it always hides the main window.
 
@@ -34,7 +27,9 @@ Open image with other applications
 
 Add Appimage and nix package builds.
 
-Add images to screenshot mode options
+Add icons to screenshot mode options
+
+Warn the user about how for the settings to take effect, they need to restart the app.
 
 ### WON'T FIX
 
@@ -42,7 +37,7 @@ X11 backend will only composite cursor as left pointer. This also seems to be th
 
 It's better to take Screenshot after the window animation is done. But I didn't find a way to determine that.
 
-FreeDesktop will allways flash the entire screenshot. 
+FreeDesktop will allways flash the entire screenshot in cinnamon.
 
 ## Build and Package
 
