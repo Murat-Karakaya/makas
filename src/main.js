@@ -20,7 +20,7 @@ import { settings, isBackendAvailable } from './screenshot/utils.js';
     }
 
     // Fallback order: X11 -> SHELL -> GRIM
-    const backends = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM];
+    const backends = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM, CaptureBackend.PORTAL];
     for (const b of backends) {
         if (b === preferred) continue; // Already checked
         if (isBackendAvailable(b)) {
