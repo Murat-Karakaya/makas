@@ -42,6 +42,17 @@ export const ScreenRecorderApp = GObject.registerClass(
             });
         }
 
+        vfunc_startup() {
+            super.vfunc_startup();
+
+            // Register action for disabling notifications from notification button
+            const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
+            disableNotificationsAction.connect('activate', () => {
+                settings.set_boolean('show-notification', false);
+            });
+            this.add_action(disableNotificationsAction);
+        }
+
         vfunc_activate() {
             let win = this.active_window;
             if (!win) {

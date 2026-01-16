@@ -16,6 +16,8 @@ Remove window screenshot option if the backend doesn't supports it
 
 When falling back to shell backend for window capture, make sure it always hides the main window.
 
+Fix GRIM check
+
 ### TO DO: 
 
 Add an option to disable the flash.

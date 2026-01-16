@@ -13,12 +13,11 @@ const backends = {
 }
 
 export async function performCapture(
-  selectionResult,
   captureBackendValue,
   { captureMode, includePointer },
 ) {
   try {
-    return await backends[captureBackendValue](includePointer, captureMode, selectionResult);
+    return await backends[captureBackendValue](includePointer, captureMode);
   } catch (e) {
     console.error(`Backend ${captureBackendValue} failed: ${e.message}`);
 
@@ -28,13 +27,13 @@ export async function performCapture(
       if (isBackendAvailable(b)) {
         console.log(`Falling back to ${b}`);
         try {
-          return await backends[b](includePointer, captureMode, selectionResult);
+          return await backends[b](includePointer, captureMode);
         } catch (error) {
           console.error(`Backend ${b} failed: ${error.message}`);
         }
       }
     }
 
-    return null;
+    throw new Error("Capture failed. More info can be found in the logs.");
   }
 }

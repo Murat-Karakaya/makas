@@ -12,10 +12,9 @@ const PORTAL_SCREENSHOT_INTERFACE = "org.freedesktop.portal.Screenshot";
  * Works in sandboxed environments and most desktop environments.
  * @param {boolean} includePointer - Whether to include mouse cursor (not supported by Portal, ignored)
  * @param {string} captureMode - The capture mode (SCREEN, WINDOW, AREA)
- * @param {object} params - Parameters for area capture (x, y, width, height), (ignored)
  * @returns {Promise<GdkPixbuf.Pixbuf|null>}
  */
-export async function captureWithPortal(includePointer, captureMode, params) {
+export async function captureWithPortal(includePointer, captureMode) {
     if (captureMode === CaptureMode.WINDOW) {
         throw new Error("Window capture isn't supported in Portal Backend. Please use a different backend for window capture.");
     }
@@ -67,17 +66,6 @@ export async function captureWithPortal(includePointer, captureMode, params) {
                     } catch (e) {
                         // Ignore cleanup errors
                     }
-
-                    /* Commented out. Because freezing screen is implemented instead.
-
-                    if (captureMode === CaptureMode.AREA && params) {
-                        pixbuf = pixbuf.new_subpixbuf(
-                            params.x,
-                            params.y,
-                            params.width,
-                            params.height
-                        );
-                    } */
 
                     resolve(pixbuf);
                 } catch (e) {

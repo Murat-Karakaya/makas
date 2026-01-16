@@ -154,3 +154,22 @@ export function wait(ms) {
 export const settings = new Gio.Settings({
   schema_id: "org.x.Makas",
 });
+
+export function showScreenshotNotification(app) {
+  if (!settings.get_boolean("show-notification")) {
+    return;
+  }
+
+  const notification = new Gio.Notification();
+  notification.set_title("Screenshot Captured");
+  notification.set_body("Click to view the screenshot");
+  notification.set_priority(Gio.NotificationPriority.NORMAL);
+
+  // Default action: activate the app (focus window)
+  notification.set_default_action("app.activate");
+
+  // Add action to disable notifications
+  notification.add_button("Disable Screenshot Notifications", "app.disable-notifications");
+
+  app.send_notification("screenshot-captured", notification);
+}

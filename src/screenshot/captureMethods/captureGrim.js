@@ -2,8 +2,9 @@ import GLib from "gi://GLib";
 import GioUnix from "gi://GioUnix";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
+import { flashRect } from "../popupWindows/flash.js";
 
-export async function captureWithGrim(includePointer, captureMode, params) {
+export async function captureWithGrim(includePointer, captureMode) {
     if (captureMode === CaptureMode.WINDOW) {
         throw new Error("Window capture isn't supported in Grim Backend. Please use a different backend for window capture.");
     }
@@ -14,11 +15,6 @@ export async function captureWithGrim(includePointer, captureMode, params) {
         argv.push("-c");
     }
 
-    /* Commented out. Because freezing screen is implemented instead.
-    if (captureMode === CaptureMode.AREA) {
-        const geometry = `${params.x},${params.y} ${params.width}x${params.height}`;
-        argv.push("-g", geometry);
-    } */
     argv.push("-");
 
     try {
@@ -49,6 +45,7 @@ export async function captureWithGrim(includePointer, captureMode, params) {
                 loader.close();
                 const pixbuf = loader.get_pixbuf();
                 GLib.spawn_close_pid(pid);
+                flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
                 resolve(pixbuf);
             } catch (e) {
                 try {

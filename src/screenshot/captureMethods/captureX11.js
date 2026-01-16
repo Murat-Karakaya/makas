@@ -3,9 +3,10 @@ import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
 import { getScreenshotHelper } from "../utils.js";
 import { flashRect } from "../popupWindows/flash.js";
+import { selectWindow } from "../popupWindows/selectWindow.js";
 
 
-export function captureWithX11(includePointer, captureMode, selectionResult) {
+export async function captureWithX11(includePointer, captureMode) {
     let pixbuf;
     switch (captureMode) {
         case CaptureMode.SCREEN: {
@@ -25,6 +26,8 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
             break;
         }
         case CaptureMode.WINDOW: {
+            const selectionResult = await selectWindow();
+
             if (selectionResult && selectionResult.clickX !== undefined) {
                 const result = captureWindowWithXShape(
                     selectionResult.clickX,
@@ -42,23 +45,6 @@ export function captureWithX11(includePointer, captureMode, selectionResult) {
             }
             break;
         }
-        /* Commented out. Because freezing screen is implemented instead.
-        case CaptureMode.AREA:
-            if (selectionResult) {
-                const rootWindow = Gdk.get_default_root_window();
-                pixbuf = Gdk.pixbuf_get_from_window(
-                    rootWindow,
-                    selectionResult.x,
-                    selectionResult.y,
-                    selectionResult.width,
-                    selectionResult.height,
-                );
-                if (includePointer) {
-                    compositeCursor(pixbuf, selectionResult.x, selectionResult.y);
-                }
-            }
-            break;
-        */
         case CaptureMode.AREA: {
             const rootWindow = Gdk.get_default_root_window();
             pixbuf = Gdk.pixbuf_get_from_window(

@@ -63,5 +63,15 @@
 			<summary>Hide window at capture</summary>
 			<description>Wether to hide window at screen capture (true for hiding and false for not hiding)</description>
 		</key>
+		<key name="enable-flash" type="b">
+			<default>false</default>
+			<summary>Enable flash effect</summary>
+			<description>Whether to show a flash effect when taking a screenshot</description>
+		</key>
+		<key name="show-notification" type="b">
+			<default>true</default>
+			<summary>Show notification after screenshot</summary>
+			<description>Whether to show a desktop notification after taking a screenshot</description>
+		</key>
 	</schema>
 </schemalist>

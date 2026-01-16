@@ -5,7 +5,7 @@ import GObject from "gi://GObject";
 import { CaptureMode, CaptureBackend } from "./constants.js";
 import { selectArea } from "./popupWindows/area-selection.js";
 import { selectWindow } from "./popupWindows/selectWindow.js";
-import { settings, wait } from "./utils.js";
+import { settings, wait, showScreenshotNotification } from "./utils.js";
 import { performCapture } from "./performCapture.js";
 import { flashRect } from "./popupWindows/flash.js";
 
@@ -187,22 +187,19 @@ export const PreScreenshot = GObject.registerClass(
 
           flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
         } else {
-          if (captureMode === CaptureMode.WINDOW && captureBackendValue === CaptureBackend.X11) {
-            selectionResult = await selectWindow();
-            if (!selectionResult) return this.setStatus("Capture cancelled");
-          }
 
           if (windowWait < delay * 100) {
             isHideWindow && topLevel.hide();
             await wait(windowWait * 10);
           }
 
-          pixbuf = await performCapture(selectionResult, captureBackendValue, {
+          pixbuf = await performCapture(captureBackendValue, {
             captureMode,
             includePointer,
           });
         }
 
+        showScreenshotNotification(app);
         this.completeScreenShot(pixbuf);
       } catch (e) {
         print(`Screenshot error during flow: ${e.message}`);

@@ -64,6 +64,10 @@ export const PreferencesWindow = GObject.registerClass(
       this._buildBackendSection();
       this._addSeparator();
       this._buildHideWindowSection();
+      this._addSeparator();
+      this._buildFlashSection();
+      this._addSeparator();
+      this._buildNotificationSection();
 
       contentArea.show_all();
     }
@@ -247,6 +251,36 @@ export const PreferencesWindow = GObject.registerClass(
       this._currentRow++;
     }
 
+    _buildFlashSection() {
+      const label = new Gtk.Label({
+        label: "Enable flash effect:",
+        halign: Gtk.Align.START,
+      });
+
+      this.flashSwitch = new Gtk.Switch({
+        halign: Gtk.Align.START,
+      });
+
+      this._grid.attach(label, 0, this._currentRow, 1, 1);
+      this._grid.attach(this.flashSwitch, 1, this._currentRow, 2, 1);
+      this._currentRow++;
+    }
+
+    _buildNotificationSection() {
+      const label = new Gtk.Label({
+        label: "Show notification after capture:",
+        halign: Gtk.Align.START,
+      });
+
+      this.notificationSwitch = new Gtk.Switch({
+        halign: Gtk.Align.START,
+      });
+
+      this._grid.attach(label, 0, this._currentRow, 1, 1);
+      this._grid.attach(this.notificationSwitch, 1, this._currentRow, 2, 1);
+      this._currentRow++;
+    }
+
     _addSeparator() {
       const separator = new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL });
       this._grid.attach(separator, 0, this._currentRow, 3, 1);
@@ -266,6 +300,9 @@ export const PreferencesWindow = GObject.registerClass(
       settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("hide-window", this.isHideWindow, "active", Gio.SettingsBindFlags.DEFAULT);
+
+      settings.bind("enable-flash", this.flashSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+      settings.bind("show-notification", this.notificationSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
 
       settings.bind("capture-backend-auto", this.backendCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
 

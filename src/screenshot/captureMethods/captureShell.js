@@ -4,8 +4,11 @@ import Gio from "gi://Gio";
 import { CaptureMode } from "../constants.js";
 import { getCurrentDate } from "../utils.js";
 import { wait } from "../utils.js";
+import { settings } from "../utils.js";
 
-export async function captureWithShell(includePointer, captureMode, selectionResults) {
+const flashEnabled = settings.get_boolean("enable-flash");
+
+export async function captureWithShell(includePointer, captureMode) {
     const serviceName = "org.Cinnamon";
     const interfaceName = "org.Cinnamon";
     const objectPath = "/org/Cinnamon";
@@ -27,7 +30,7 @@ export async function captureWithShell(includePointer, captureMode, selectionRes
             method = "Screenshot";
             dbusParams = new GLib.Variant("(bbs)", [
                 includePointer,
-                true, // flash
+                flashEnabled,
                 tmpFilename,
             ]);
             break;
@@ -36,35 +39,10 @@ export async function captureWithShell(includePointer, captureMode, selectionRes
             dbusParams = new GLib.Variant("(bbbs)", [
                 true, // include_decorations
                 includePointer,
-                true, // flash
+                flashEnabled, // flash
                 tmpFilename,
             ]);
             break;
-        /* Commented out. Because freezing screen is implemented instead.
-        case CaptureMode.AREA:
-            if (includePointer) {
-                // SCREENSHOT_AREA doesn't support cursor in Shell.
-                // We capture SCREEN (0) instead, then crop.
-                method = "Screenshot";
-                dbusParams = new GLib.Variant("(bbs)", [
-                    true, // include_pointer
-                    false, // disabled because this one would've flashed the entire screen
-                    tmpFilename,
-                ]);
-                break;
-            }
-            method = "ScreenshotArea";
-            dbusParams = new GLib.Variant("(iiiibs)", [
-                params.x,
-                params.y,
-                params.width,
-                params.height,
-                true, // flash
-                tmpFilename,
-            ]);
-            break;
-
-        */
         case CaptureMode.AREA:
             method = "Screenshot";
             dbusParams = new GLib.Variant("(bbs)", [
@@ -107,34 +85,4 @@ export async function captureWithShell(includePointer, captureMode, selectionRes
         throw new Error("Shell screenshot failed");
     }
     return pixbuf;
-
-    /* Commented out. Because freezing screen is implemented instead.
-
-    if (captureMode === CaptureMode.AREA && includePointer) {
-        const cropped = pixbuf.new_subpixbuf(
-            params.x,
-            params.y,
-            params.width,
-            params.height
-        );
-
-        connection.call(
-            serviceNameGnome,
-            objectPathGnome,
-            interfaceNameGnome,
-            "FlashArea",
-            new GLib.Variant("(iiii)", [
-                params.x,
-                params.y,
-                params.width,
-                params.height
-            ]),
-            null,
-            Gio.DBusCallFlags.NONE,
-            -1,
-            null,
-            null
-        );
-        return cropped.copy();
-    } */
 }
