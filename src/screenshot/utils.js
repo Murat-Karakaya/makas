@@ -15,11 +15,21 @@ export function getScreenshotHelper() {
   return screenshotHelper;
 }
 
+const methodAvailablity = {
+  shell: null,
+  x11: null,
+  grim: null,
+  portal: null,
+};
+
 /**
  * Check if the Shell screenshot interface is available.
  * @returns {boolean}
  */
 export function hasShellScreenshot() {
+  if (methodAvailablity.shell !== null) {
+    return methodAvailablity.shell;
+  }
   const serviceName = "org.Cinnamon";
   const objectPath = "/org/Cinnamon";
 
@@ -38,9 +48,9 @@ export function hasShellScreenshot() {
     );
 
     const xml = result.deep_unpack()[0];
-    return xml.includes('method name="Screenshot"');
+    return methodAvailablity.shell = xml.includes('method name="Screenshot"');
   } catch (e) {
-    return false;
+    return methodAvailablity.shell = false;
   }
 }
 
@@ -49,18 +59,21 @@ export function hasShellScreenshot() {
  * @returns {boolean}
  */
 export function hasGrimScreenshot() {
+  if (methodAvailablity.grim !== null) {
+    return methodAvailablity.grim;
+  }
   const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
-  if (!waylandDisplay) return false;
+  if (!waylandDisplay) return methodAvailablity.grim = false;
 
   const grimPath = GLib.find_program_in_path("grim");
-  if (!grimPath) return false;
+  if (!grimPath) return methodAvailablity.grim = false;
 
-  return true;
+  return methodAvailablity.grim = true;
 
   try {
-    return MakasScreenshot.utils_has_wlroots();
+    return methodAvailablity.grim = MakasScreenshot.utils_has_wlroots();
   } catch (e) {
-    return false;
+    return methodAvailablity.grim = false;
   }
 }
 
@@ -69,7 +82,10 @@ export function hasGrimScreenshot() {
  * @returns {boolean}
  */
 export function hasX11Screenshot() {
-  return GLib.getenv("XDG_SESSION_TYPE") === "x11";
+  if (methodAvailablity.x11 !== null) {
+    return methodAvailablity.x11;
+  }
+  return methodAvailablity.x11 = GLib.getenv("XDG_SESSION_TYPE") === "x11";
 }
 
 /**
@@ -77,6 +93,9 @@ export function hasX11Screenshot() {
  * @returns {boolean}
  */
 export function hasPortalScreenshot() {
+  if (methodAvailablity.portal !== null) {
+    return methodAvailablity.portal;
+  }
   const serviceName = "org.freedesktop.portal.Desktop";
   const objectPath = "/org/freedesktop/portal/desktop";
 
@@ -95,9 +114,9 @@ export function hasPortalScreenshot() {
     );
 
     const xml = result.deep_unpack()[0];
-    return xml.includes('interface name="org.freedesktop.portal.Screenshot"');
+    return methodAvailablity.portal = xml.includes('interface name="org.freedesktop.portal.Screenshot"');
   } catch (e) {
-    return false;
+    return methodAvailablity.portal = false;
   }
 }
 
