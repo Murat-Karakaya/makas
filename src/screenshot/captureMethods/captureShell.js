@@ -3,7 +3,6 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import { CaptureMode } from "../constants.js";
 import { getCurrentDate } from "../utils.js";
-import { wait } from "../utils.js";
 import { settings } from "../utils.js";
 
 const flashEnabled = settings.get_boolean("enable-flash");
@@ -55,7 +54,7 @@ export async function captureWithShell(includePointer, captureMode) {
             throw new Error("Invalid screenshot mode. Please report this issue to the developer.");
     }
 
-    await connection.call(
+    connection.call_sync(
         serviceName,
         objectPath,
         interfaceName,
@@ -64,25 +63,15 @@ export async function captureWithShell(includePointer, captureMode) {
         null,
         Gio.DBusCallFlags.NONE,
         -1,
-        null,
         null
     );
 
-    let pixbuf;
-
-    for (let i = 0; i < 30; i++) { // This kind of shitshow is sadly mandatory.
-        try {
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
-            break
-        } catch (error) {
-            await wait(100);
-        }
-    }
-
+    const pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
     GLib.unlink(tmpFilename);
 
-    if (!pixbuf) {
-        throw new Error("Shell screenshot failed");
+    if (pixbuf === null) {
+        throw new Error("Pixbuf is null");
     }
+
     return pixbuf;
 }

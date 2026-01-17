@@ -59,7 +59,7 @@ export const PreScreenshot = GObject.registerClass(
 
         const captureBackendValue = settings.get_string("capture-backend-auto")
 
-        const isWindowHideNedeed = captureBackendValue !== CaptureBackend.X11 && this.captureMode === CaptureMode.WINDOW;
+        const isWindowHideNedeed = captureBackendValue === CaptureBackend.SHELL && this.captureMode === CaptureMode.WINDOW;
 
         this.onTakeScreenshot(
           this.captureMode,
@@ -87,7 +87,7 @@ export const PreScreenshot = GObject.registerClass(
 
         if (isHideWindow) {
           topLevel.hide();
-          if (captureMode !== CaptureMode.WINDOW) {
+          if (captureMode === CaptureMode.WINDOW) {
             await wait(windowWait * 10); // Wait for window to hide
           }
         }
