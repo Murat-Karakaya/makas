@@ -15,8 +15,6 @@ The backend selection and determination logic should be all async. They cause th
 
 Implement a cancel button when delay is active.
 
-Last used options should only be saved once the values are actuallt used
-
 Text recognition
 
 Free select (Might never be added)
@@ -31,7 +29,7 @@ Warn the user about how for the settings to take effect, they need to restart th
 
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
 
-It's better to take Screenshot after the window animation is done. But I didn't find a way to determine that.
+It's better to take Screenshot after the window animation is done. But I couldn't find a way to determine that.
 
 FreeDesktop will allways flash the entire screenshot in cinnamon.
 
