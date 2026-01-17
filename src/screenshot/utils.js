@@ -27,31 +27,9 @@ const methodAvailablity = {
  * @returns {boolean}
  */
 export function hasShellScreenshot() {
-  if (methodAvailablity.shell !== null) {
-    return methodAvailablity.shell;
-  }
-  const serviceName = "org.Cinnamon";
-  const objectPath = "/org/Cinnamon";
-
-  try {
-    const connection = Gio.DBus.session;
-    const result = connection.call_sync(
-      serviceName,
-      objectPath,
-      "org.freedesktop.DBus.Introspectable",
-      "Introspect",
-      null,
-      null,
-      Gio.DBusCallFlags.NONE,
-      -1,
-      null
-    );
-
-    const xml = result.deep_unpack()[0];
-    return methodAvailablity.shell = xml.includes('method name="Screenshot"');
-  } catch (e) {
-    return methodAvailablity.shell = false;
-  }
+  if (methodAvailablity.shell !== null) return methodAvailablity.shell;
+  const currentDesktop = GLib.getenv("XDG_CURRENT_DESKTOP");
+  return methodAvailablity.shell = currentDesktop !== null && currentDesktop.includes("Cinnamon");
 }
 
 /**
@@ -59,9 +37,7 @@ export function hasShellScreenshot() {
  * @returns {boolean}
  */
 export function hasGrimScreenshot() {
-  if (methodAvailablity.grim !== null) {
-    return methodAvailablity.grim;
-  }
+  if (methodAvailablity.grim !== null) return methodAvailablity.grim;
   const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
   if (!waylandDisplay) return methodAvailablity.grim = false;
 
@@ -82,9 +58,7 @@ export function hasGrimScreenshot() {
  * @returns {boolean}
  */
 export function hasX11Screenshot() {
-  if (methodAvailablity.x11 !== null) {
-    return methodAvailablity.x11;
-  }
+  if (methodAvailablity.x11 !== null) return methodAvailablity.x11;
   return methodAvailablity.x11 = GLib.getenv("XDG_SESSION_TYPE") === "x11";
 }
 
@@ -93,9 +67,7 @@ export function hasX11Screenshot() {
  * @returns {boolean}
  */
 export function hasPortalScreenshot() {
-  if (methodAvailablity.portal !== null) {
-    return methodAvailablity.portal;
-  }
+  if (methodAvailablity.portal !== null) return methodAvailablity.portal;
   const serviceName = "org.freedesktop.portal.Desktop";
   const objectPath = "/org/freedesktop/portal/desktop";
 

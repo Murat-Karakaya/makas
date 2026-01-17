@@ -9,9 +9,9 @@ import { settings } from "../utils.js";
 const flashEnabled = settings.get_boolean("enable-flash");
 
 export async function captureWithShell(includePointer, captureMode) {
-    const serviceName = "org.Cinnamon";
-    const interfaceName = "org.Cinnamon";
-    const objectPath = "/org/Cinnamon";
+    const serviceName = "org.gnome.Shell.Screenshot";
+    const interfaceName = serviceName;
+    const objectPath = "/org/gnome/Shell/Screenshot";
 
     const cacheDir = GLib.get_user_cache_dir();
     const makasCache = GLib.build_filenamev([cacheDir, "makas"]);
