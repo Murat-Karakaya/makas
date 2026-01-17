@@ -5,8 +5,6 @@
 
 ### FIXME: 
 
-Remove options that the backend doesn't support.
-
 When falling back to shell backend for window capture, make sure it always hides the main window.
 
 Fix GRIM check
@@ -26,8 +24,6 @@ Free select (Might never be added)
 Open image with other applications
 
 Add Appimage and nix package builds.
-
-Add icons to screenshot mode options
 
 Warn the user about how for the settings to take effect, they need to restart the app.
 
