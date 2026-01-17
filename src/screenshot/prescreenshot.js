@@ -22,7 +22,6 @@ export const PreScreenshot = GObject.registerClass(
 
       this.buildUI();
       this.setUpValues();
-      this.syncValues();
     }
 
     buildUI() {
@@ -36,15 +35,20 @@ export const PreScreenshot = GObject.registerClass(
       this.windowRadio = builder.get_object("window");
       this.areaRadio = builder.get_object("area");
 
+      this.screenRadio.connect("toggled", () => {
+        if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
+      });
+      this.windowRadio.connect("toggled", () => {
+        if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
+      });
+      this.areaRadio.connect("toggled", () => {
+        if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
+      });
+
       this.delaySpinner = builder.get_object("spinbutton1");
       this.pointerSwitch = builder.get_object("switch1");
       this.shootBtn = builder.get_object("shootBtn");
       this.statusLabel = builder.get_object("statusLabel");
-
-
-      this.screenImage = builder.get_object("screenImage");
-      this.windowImage = builder.get_object("windowImage");
-      this.areaImage = builder.get_object("areaImage");
 
       // Set adjustment for the spin button as it might be missing in UI
       this.delaySpinner.set_adjustment(new Gtk.Adjustment({
@@ -163,38 +167,6 @@ export const PreScreenshot = GObject.registerClass(
       this.statusLabel.set_text(text);
     }
 
-    syncValues() {
-      this.delaySpinner.connect("value-changed", () => {
-        if (settings.get_boolean("last-screenshot-delay")) {
-          settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
-        }
-      });
-      this.pointerSwitch.connect("notify::active", () => {
-        if (settings.get_boolean("last-include-pointer")) {
-          settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
-        }
-      });
-
-      this.screenRadio.connect("toggled", () => {
-        if (this.screenRadio.get_active()) this.captureMode = CaptureMode.SCREEN;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.SCREEN);
-        }
-      });
-      this.windowRadio.connect("toggled", () => {
-        if (this.windowRadio.get_active()) this.captureMode = CaptureMode.WINDOW;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.WINDOW);
-        }
-      });
-      this.areaRadio.connect("toggled", () => {
-        if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
-        if (settings.get_boolean("last-screenshot-mode")) {
-          settings.set_string("screenshot-mode", CaptureMode.AREA);
-        }
-      });
-    }
-
     setUpValues() {
       this.setStatus("Ready");
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
@@ -215,8 +187,21 @@ export const PreScreenshot = GObject.registerClass(
     }
 
     completeScreenShot(pixbuf) {
+      this.syncValues();
       this.setUpPostScreenshot(pixbuf);
       this.setUpValues();
+    }
+
+    syncValues() {
+      if (settings.get_boolean("last-screenshot-delay")) {
+        settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
+      }
+      if (settings.get_boolean("last-include-pointer")) {
+        settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
+      }
+      if (settings.get_boolean("last-screenshot-mode")) {
+        settings.set_string("screenshot-mode", this.captureMode);
+      }
     }
 
   },
