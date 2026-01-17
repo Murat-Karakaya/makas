@@ -45,6 +45,9 @@ export const ScreenRecorderApp = GObject.registerClass(
         vfunc_startup() {
             super.vfunc_startup();
 
+            // Add resource path for icons to let GTK find our bundled icons
+            Gtk.IconTheme.get_default().add_resource_path("/com/github/Murat-Karakaya/Makas/icons");
+
             // Register action for disabling notifications from notification button
             const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
             disableNotificationsAction.connect('activate', () => {

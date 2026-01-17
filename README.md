@@ -67,7 +67,8 @@ To run the app in development mode:
 ## Credits
 
 The open source codebase of the gnome-screenshot has significantly helped the making of this project.
-This project is not exactly a fork of gnome-screenshot, but it has been inspired by it.
+This project is not exactly a fork of gnome-screenshot, but it has been inspired by it. Some images and 
+functions has been used from gnome-screenshot.
 
 
 ## License

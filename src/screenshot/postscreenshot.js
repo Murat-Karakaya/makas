@@ -61,9 +61,10 @@ export const PostScreenshot = GObject.registerClass(
       this.add(this.drawingArea);
 
       this.statusLabel = new Gtk.Label({
-        label: "",
         halign: Gtk.Align.CENTER,
         margin_top: 8,
+        selectable: true,
+        wrap: true,
       });
       this.add(this.statusLabel);
     }
@@ -146,6 +147,9 @@ export const PostScreenshot = GObject.registerClass(
             try {
               this.pixbuf.savev(filepath, "png", [], []);
               this.statusLabel.set_text(`Saved to: ${filepath}`);
+              if (settings.get_boolean("last-screenshot-save-folder")) {
+                settings.set_string("screenshot-save-folder", filepath);
+              }
             } catch (e) {
               this.statusLabel.set_text(`Save failed: ${e.message}`);
             }

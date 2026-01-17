@@ -43,4 +43,8 @@ configure_file(
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )
 
+install_data('ui/prescreenshot.ui',
+  install_dir: get_option('datadir') / 'org.x.Makas' / 'ui'
+)
+
 subdir('icons')

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/com/github/Murat-Karakaya/Makas">
-
+    <file alias="ui/prescreenshot.ui">../data/ui/prescreenshot.ui</file>
+    <file alias="icons/display-symbolic.svg">../data/icons/display-symbolic.svg</file>
+    <file alias="icons/window-symbolic.svg">../data/icons/window-symbolic.svg</file>
+    <file alias="icons/selection-symbolic.svg">../data/icons/selection-symbolic.svg</file>
   </gresource>
 </gresources>

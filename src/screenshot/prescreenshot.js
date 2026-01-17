@@ -13,13 +13,8 @@ export const PreScreenshot = GObject.registerClass(
     _init({ setUpPostScreenshot }) {
       super._init({
         orientation: Gtk.Orientation.VERTICAL,
-        spacing: 16,
         valign: Gtk.Align.CENTER,
         halign: Gtk.Align.CENTER,
-        margin_start: 20,
-        margin_end: 20,
-        margin_bottom: 20,
-        margin_top: 20,
       });
 
       this.setUpPostScreenshot = setUpPostScreenshot;
@@ -31,96 +26,34 @@ export const PreScreenshot = GObject.registerClass(
     }
 
     buildUI() {
-      const modeFrame = new Gtk.Frame({ label: "Capture Mode" });
-      const modeBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 12,
-        margin_top: 8,
-        margin_bottom: 8,
-        margin_start: 12,
-        margin_end: 12,
-        halign: Gtk.Align.CENTER,
-      });
+      const builder = new Gtk.Builder();
+      builder.add_from_resource("/com/github/Murat-Karakaya/Makas/ui/prescreenshot.ui");
 
-      this.screenRadio = new Gtk.RadioButton({ label: "Screen" });
-      this.windowRadio = new Gtk.RadioButton({
-        label: "Window",
-        group: this.screenRadio,
-      });
-      this.areaRadio = new Gtk.RadioButton({
-        label: "Area",
-        group: this.screenRadio,
-      });
+      const mainBox = builder.get_object("main");
+      this.add(mainBox);
 
-      modeBox.pack_start(this.screenRadio, false, false, 0);
-      modeBox.pack_start(this.windowRadio, false, false, 0);
-      modeBox.pack_start(this.areaRadio, false, false, 0);
-      modeFrame.add(modeBox);
-      this.add(modeFrame);
+      this.screenRadio = builder.get_object("screen");
+      this.windowRadio = builder.get_object("window");
+      this.areaRadio = builder.get_object("area");
 
-      const optionsFrame = new Gtk.Frame({ label: "Options" });
-      const optionsGrid = new Gtk.Grid({
-        row_spacing: 8,
-        column_spacing: 12,
-        margin_top: 8,
-        margin_bottom: 8,
-        margin_start: 12,
-        margin_end: 12,
-      });
+      this.delaySpinner = builder.get_object("spinbutton1");
+      this.pointerSwitch = builder.get_object("switch1");
+      this.shootBtn = builder.get_object("shootBtn");
+      this.statusLabel = builder.get_object("statusLabel");
 
-      const delayLabel = new Gtk.Label({
-        label: "Delay (seconds):",
-        halign: Gtk.Align.START,
-      });
-      this.delaySpinner = new Gtk.SpinButton({
-        adjustment: new Gtk.Adjustment({
-          lower: 0,
-          upper: 60 * 60 * 24,
-          step_increment: 1,
-        }),
-      });
 
-      const pointerLabel = new Gtk.Label({
-        label: "Include pointer:",
-        halign: Gtk.Align.START,
-      });
-      this.pointerSwitch = new Gtk.Switch({
-        active: settings.get_boolean("include-pointer"),
-        halign: Gtk.Align.START,
-      });
+      this.screenImage = builder.get_object("screenImage");
+      this.windowImage = builder.get_object("windowImage");
+      this.areaImage = builder.get_object("areaImage");
 
-      optionsGrid.attach(delayLabel, 0, 0, 1, 1);
-      optionsGrid.attach(this.delaySpinner, 1, 0, 1, 1);
-      optionsGrid.attach(pointerLabel, 0, 1, 1, 1);
-      optionsGrid.attach(this.pointerSwitch, 1, 1, 1, 1);
-      optionsFrame.add(optionsGrid);
-      this.add(optionsFrame);
-
-      const buttonBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 12,
-        halign: Gtk.Align.CENTER,
-        margin_top: 8,
-      });
-
-      //this.cancelBtn = new Gtk.Button({ label: "Cancel" });
-
-      //buttonBox.pack_start(this.cancelBtn, false, false, 0);
-
-      this.shootBtn = new Gtk.Button({ label: "Take Screenshot" });
-      this.shootBtn
-        .get_style_context()
-        .add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION);
-
-      buttonBox.pack_start(this.shootBtn, false, false, 0);
-
-      this.add(buttonBox);
-
-      this.statusLabel = new Gtk.Label({
-        halign: Gtk.Align.CENTER,
-        margin_top: 8,
-      });
-      this.add(this.statusLabel);
+      // Set adjustment for the spin button as it might be missing in UI
+      this.delaySpinner.set_adjustment(new Gtk.Adjustment({
+        lower: 0,
+        upper: 60 * 60 * 24,
+        step_increment: 1,
+        page_increment: 10,
+        value: 0
+      }));
 
       this.shootBtn.connect("clicked", () => {
 
