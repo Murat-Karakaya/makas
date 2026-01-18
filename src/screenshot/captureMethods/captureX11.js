@@ -79,17 +79,8 @@ function compositeCursor(pixbuf, rootX, rootY) {
     const cursorPixbuf = cursor.get_image();
 
     if (!cursorPixbuf) return;
-    let hotX = 0;
-    let hotY = 0;
-    try {
-        const hotXStr = cursorPixbuf.get_option("x_hot");
-        const hotYStr = cursorPixbuf.get_option("y_hot");
-        if (hotXStr) hotX = +hotXStr; // hotX/YStr is actually a string. But the type is coerted into an int.
-        if (hotYStr) hotY = +hotYStr; // Seems fishy but you gotta live life on the edge from time to time.
-
-    } catch (e) {
-        print(e);
-    }
+    const hotX = +cursorPixbuf.get_option("x_hot");
+    const hotY = +cursorPixbuf.get_option("y_hot");
 
     const destX = x - rootX - hotX;
     const destY = y - rootY - hotY;
