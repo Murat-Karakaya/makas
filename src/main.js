@@ -5,6 +5,7 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
+import Gdk from 'gi://Gdk';
 
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
@@ -40,10 +41,16 @@ export const ScreenRecorderApp = GObject.registerClass(
                 application_id: 'org.x.Makas',
                 flags: Gio.ApplicationFlags.FLAGS_NONE
             });
+
+            // Gdk program class for Window Manager matching
+            Gdk.set_program_class('org.x.Makas');
         }
 
         vfunc_startup() {
             super.vfunc_startup();
+
+            // Explicitly set default icon for all windows
+            Gtk.Window.set_default_icon_name('org.x.Makas');
 
             // Add resource path for icons to let GTK find our bundled icons
             Gtk.IconTheme.get_default().add_resource_path("/com/github/Murat-Karakaya/Makas/icons");
@@ -54,6 +61,13 @@ export const ScreenRecorderApp = GObject.registerClass(
                 settings.set_boolean('show-notification', false);
             });
             this.add_action(disableNotificationsAction);
+
+            // Explicitly register activate action for notifications
+            const activateAction = new Gio.SimpleAction({ name: 'activate' });
+            activateAction.connect('activate', () => {
+                this.activate();
+            });
+            this.add_action(activateAction);
         }
 
         vfunc_activate() {

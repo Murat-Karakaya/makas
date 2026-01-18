@@ -156,7 +156,7 @@ export function showScreenshotNotification(app) {
 
   const notification = new Gio.Notification();
   notification.set_title("Screenshot Captured");
-  notification.set_body("Click to view the screenshot");
+  notification.set_body("Your screenshot has been captured successfully.");
   notification.set_priority(Gio.NotificationPriority.NORMAL);
 
   // Default action: activate the app (focus window)

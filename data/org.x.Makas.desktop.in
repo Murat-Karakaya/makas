@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Makas
-Exec=org.x.Makas
+Exec=makas
 Icon=org.x.Makas
 StartupWMClass=org.x.Makas
 Terminal=false
