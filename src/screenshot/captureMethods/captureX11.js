@@ -66,51 +66,55 @@ export async function captureWithX11({ includePointer, captureMode }) {
 
 
 function compositeCursor(pixbuf, rootX, rootY) {
-    const display = Gdk.Display.get_default();
-    const seat = display.get_default_seat();
-    const pointer = seat.get_pointer();
+    try {
+        const display = Gdk.Display.get_default();
+        const seat = display.get_default_seat();
+        const pointer = seat.get_pointer();
 
-    const [_, x, y] = pointer.get_position();
+        const [_, x, y] = pointer.get_position();
 
-    // Create cursor to get its image
-    // Note: This creates a standard arrow cursor. Getting the *actual* current cursor image 
-    // is quite complex
-    const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.LEFT_PTR);
-    const cursorPixbuf = cursor.get_image();
+        // Create cursor to get its image
+        // Note: This creates a standard arrow cursor. Getting the *actual* current cursor image 
+        // is quite complex
+        const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.LEFT_PTR);
+        const cursorPixbuf = cursor.get_image();
 
-    if (!cursorPixbuf) return;
-    const hotX = +cursorPixbuf.get_option("x_hot");
-    const hotY = +cursorPixbuf.get_option("y_hot");
+        if (!cursorPixbuf) return;
+        const hotX = +cursorPixbuf.get_option("x_hot");
+        const hotY = +cursorPixbuf.get_option("y_hot");
 
-    const destX = x - rootX - hotX;
-    const destY = y - rootY - hotY;
+        const destX = x - rootX - hotX;
+        const destY = y - rootY - hotY;
 
-    const pbWidth = pixbuf.get_width();
-    const pbHeight = pixbuf.get_height();
-    const curWidth = cursorPixbuf.get_width();
-    const curHeight = cursorPixbuf.get_height();
+        const pbWidth = pixbuf.get_width();
+        const pbHeight = pixbuf.get_height();
+        const curWidth = cursorPixbuf.get_width();
+        const curHeight = cursorPixbuf.get_height();
 
-    const interX = Math.max(0, destX);
-    const interY = Math.max(0, destY);
-    const interRight = Math.min(pbWidth, destX + curWidth);
-    const interBottom = Math.min(pbHeight, destY + curHeight);
-    const interW = interRight - interX;
-    const interH = interBottom - interY;
+        const interX = Math.max(0, destX);
+        const interY = Math.max(0, destY);
+        const interRight = Math.min(pbWidth, destX + curWidth);
+        const interBottom = Math.min(pbHeight, destY + curHeight);
+        const interW = interRight - interX;
+        const interH = interBottom - interY;
 
-    if (interW > 0 && interH > 0) {
-        cursorPixbuf.composite(
-            pixbuf,
-            interX,
-            interY,
-            interW,
-            interH,
-            destX,
-            destY,
-            1.0,
-            1.0,
-            GdkPixbuf.InterpType.BILINEAR,
-            255
-        );
+        if (interW > 0 && interH > 0) {
+            cursorPixbuf.composite(
+                pixbuf,
+                interX,
+                interY,
+                interW,
+                interH,
+                destX,
+                destY,
+                1.0,
+                1.0,
+                GdkPixbuf.InterpType.BILINEAR,
+                255
+            );
+        }
+    } catch (e) {
+        print(`Cursor not implemented: ${e}`);
     }
 }
 
