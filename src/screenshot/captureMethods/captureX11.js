@@ -28,20 +28,19 @@ export async function captureWithX11({ includePointer, captureMode }) {
         case CaptureMode.WINDOW: {
             const selectionResult = await selectWindow();
 
-            if (selectionResult && selectionResult.clickX !== undefined) {
-                const result = captureWindowWithXShape(
-                    selectionResult.clickX,
-                    selectionResult.clickY
-                );
+            if (!selectionResult) return null;
 
-                if (!result) return null;
-                pixbuf = result.pixbuf;
-                if (includePointer) {
-                    compositeCursor(pixbuf, result.offsetX, result.offsetY);
-                }
-
-                flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
+            const result = captureWindowWithXShape(
+                selectionResult.clickX,
+                selectionResult.clickY
+            );
+            if (!result) break;
+            pixbuf = result.pixbuf;
+            if (includePointer) {
+                compositeCursor(pixbuf, result.offsetX, result.offsetY);
             }
+
+            flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
             break;
         }
         case CaptureMode.AREA: {

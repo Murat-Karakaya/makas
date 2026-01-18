@@ -5,9 +5,9 @@
 
 ### FIXME: 
 
-Fix GRIM check
-
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
+
+Notifications don't work as expected on GNOME.
 
 ### TO DO: 
 
