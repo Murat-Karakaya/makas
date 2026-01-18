@@ -7,14 +7,7 @@ const PORTAL_BUS_NAME = "org.freedesktop.portal.Desktop";
 const PORTAL_OBJECT_PATH = "/org/freedesktop/portal/desktop";
 const PORTAL_SCREENSHOT_INTERFACE = "org.freedesktop.portal.Screenshot";
 
-/**
- * Capture screenshot using FreeDesktop Portal D-Bus API.
- * Works in sandboxed environments and most desktop environments.
- * @param {boolean} includePointer - Whether to include mouse cursor (not supported by Portal, ignored)
- * @param {string} captureMode - The capture mode (SCREEN, WINDOW, AREA)
- * @returns {Promise<GdkPixbuf.Pixbuf|null>}
- */
-export async function captureWithPortal(includePointer, captureMode) {
+export async function captureWithPortal({ captureMode }) {
     if (captureMode === CaptureMode.WINDOW) {
         throw new Error("Window capture isn't supported in Portal Backend. Please use a different backend for window capture.");
     }
@@ -44,17 +37,18 @@ export async function captureWithPortal(includePointer, captureMode) {
                     const [responseCode, results] = parameters.deep_unpack();
 
                     if (responseCode !== 0) {
-                        resolve(null);
+                        reject(new Error("Not allowed to take screenshot"));
                         return;
                     }
 
-                    const uri = results["uri"];
-                    if (!uri) {
+                    const uri = results?.uri;
+
+                    const uriString = uri?.unpack?.() ?? uri;
+
+                    if (!uriString) {
                         reject(new Error("Portal returned no URI"));
                         return;
                     }
-
-                    const uriString = uri.unpack ? uri.unpack() : uri;
 
                     const file = Gio.File.new_for_uri(uriString);
                     const path = file.get_path();

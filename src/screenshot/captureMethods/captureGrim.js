@@ -4,7 +4,7 @@ import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
 import { flashRect } from "../popupWindows/flash.js";
 
-export async function captureWithGrim(includePointer, captureMode) {
+export async function captureWithGrim({ includePointer, captureMode }) {
     if (captureMode === CaptureMode.WINDOW) {
         throw new Error("Window capture isn't supported in Grim Backend. Please use a different backend for window capture.");
     }

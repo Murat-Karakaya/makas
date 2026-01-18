@@ -2,12 +2,11 @@ import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import { CaptureMode } from "../constants.js";
-import { getCurrentDate } from "../utils.js";
-import { settings } from "../utils.js";
+import { getCurrentDate, settings, wait } from "../utils.js";
 
 const flashEnabled = settings.get_boolean("enable-flash");
 
-export async function captureWithShell(includePointer, captureMode) {
+export async function captureWithShell({ includePointer, captureMode, topLevel }) {
     const serviceName = "org.gnome.Shell.Screenshot";
     const interfaceName = serviceName;
     const objectPath = "/org/gnome/Shell/Screenshot";
@@ -34,11 +33,15 @@ export async function captureWithShell(includePointer, captureMode) {
             ]);
             break;
         case CaptureMode.WINDOW:
+            if (topLevel.get_visible()) {
+                topLevel.hide(); // Top level will always be shown after capture is finished @prescreenshot.js
+                await wait(settings.get_int("window-wait") * 10); // Wait for window to hide
+            }
             method = "ScreenshotWindow";
             dbusParams = new GLib.Variant("(bbbs)", [
                 true, // include_decorations
                 includePointer,
-                flashEnabled, // flash
+                flashEnabled,
                 tmpFilename,
             ]);
             break;
@@ -69,9 +72,6 @@ export async function captureWithShell(includePointer, captureMode) {
     const pixbuf = GdkPixbuf.Pixbuf.new_from_file(tmpFilename);
     GLib.unlink(tmpFilename);
 
-    if (pixbuf === null) {
-        throw new Error("Pixbuf is null");
-    }
-
+    if (!pixbuf) throw new Error("Pixbuf is null");
     return pixbuf;
 }

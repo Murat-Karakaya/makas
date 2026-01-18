@@ -5,19 +5,17 @@
 
 ### FIXME: 
 
-When falling back to shell backend for window capture, make sure it always hides the main window.
-
 Fix GRIM check
 
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
+
+Fix the fact that when area election is active, the user can drag to screen edges and the selection will go out of bounds.
 
 ### TO DO: 
 
 Implement a cancel button when delay is active.
 
 Text recognition
-
-Free select (Might never be added)
 
 Open image with other applications
 
@@ -32,6 +30,8 @@ X11 backend will only composite cursor as left pointer. This also seems to be th
 It's better to take Screenshot after the window animation is done. But I couldn't find a way to determine that.
 
 FreeDesktop will allways flash the entire screenshot in cinnamon.
+
+Free select won't be implemented.
 
 ## Build and Package
 

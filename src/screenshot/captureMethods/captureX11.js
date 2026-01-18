@@ -6,7 +6,7 @@ import { flashRect } from "../popupWindows/flash.js";
 import { selectWindow } from "../popupWindows/selectWindow.js";
 
 
-export async function captureWithX11(includePointer, captureMode) {
+export async function captureWithX11({ includePointer, captureMode }) {
     let pixbuf;
     switch (captureMode) {
         case CaptureMode.SCREEN: {
@@ -34,14 +34,13 @@ export async function captureWithX11(includePointer, captureMode) {
                     selectionResult.clickY
                 );
 
-                if (result) {
-                    pixbuf = result.pixbuf;
-                    if (includePointer) {
-                        compositeCursor(pixbuf, result.offsetX, result.offsetY);
-                    }
-
-                    flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
+                if (!result) return null;
+                pixbuf = result.pixbuf;
+                if (includePointer) {
+                    compositeCursor(pixbuf, result.offsetX, result.offsetY);
                 }
+
+                flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
             }
             break;
         }
@@ -60,6 +59,8 @@ export async function captureWithX11(includePointer, captureMode) {
             break;
         }
     }
+
+    if (!pixbuf) throw new Error("Pixbuf is null");
     return pixbuf;
 }
 

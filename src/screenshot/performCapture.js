@@ -14,20 +14,20 @@ const backends = {
 
 export async function performCapture(
   captureBackendValue,
-  { captureMode, includePointer },
+  props,
 ) {
   try {
-    return await backends[captureBackendValue](includePointer, captureMode);
+    console.log("performCapture called", captureBackendValue, props);
+    return await backends[captureBackendValue](props);
   } catch (e) {
     console.error(`Backend ${captureBackendValue} failed: ${e.message}`);
 
-    const backendNames = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM, CaptureBackend.PORTAL];
-    for (const b of backendNames) {
+    for (const b in backends) {
       if (b === captureBackendValue) continue; // Already checked
       if (isBackendAvailable(b)) {
         console.log(`Falling back to ${b}`);
         try {
-          return await backends[b](includePointer, captureMode);
+          return await backends[b](props);
         } catch (error) {
           console.error(`Backend ${b} failed: ${error.message}`);
         }

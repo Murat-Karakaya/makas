@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import { CaptureMode, CaptureBackend } from "./constants.js";
+import { CaptureMode } from "./constants.js";
 import { selectArea } from "./popupWindows/area-selection.js";
 import { settings, wait, showScreenshotNotification } from "./utils.js";
 import { performCapture } from "./performCapture.js";
@@ -59,30 +59,18 @@ export const PreScreenshot = GObject.registerClass(
         value: 0
       }));
 
-      this.shootBtn.connect("clicked", () => {
-
-        const captureBackendValue = settings.get_string("capture-backend-auto")
-
-        const isWindowHideNedeed = captureBackendValue === CaptureBackend.SHELL && this.captureMode === CaptureMode.WINDOW;
-
-        this.onTakeScreenshot(
-          this.captureMode,
-          this.delaySpinner.get_value_as_int(),
-          this.pointerSwitch.get_active(),
-          settings.get_boolean("hide-window") || isWindowHideNedeed,
-          captureBackendValue,
-        );
-
-        this.shootBtn.set_sensitive(false);
-      });
+      this.shootBtn.connect("clicked", () => this.onTakeScreenshot());
     }
 
-    async onTakeScreenshot(captureMode, delay, includePointer, isHideWindow, captureBackendValue) {
+    async onTakeScreenshot() {
+      this.shootBtn.set_sensitive(false);
 
-      const app = Gio.Application.get_default();
-      app.hold();
-
+      const delay = this.delaySpinner.get_value_as_int()
+      const includePointer = this.pointerSwitch.get_active();
+      const captureBackendValue = settings.get_string("capture-backend-auto")
+      const isHideWindow = settings.get_boolean("hide-window");
       const topLevel = this.get_toplevel();
+      const captureMode = this.captureMode;
 
       try {
         const windowWait = settings.get_int("window-wait");
@@ -91,9 +79,7 @@ export const PreScreenshot = GObject.registerClass(
 
         if (isHideWindow) {
           topLevel.hide();
-          if (captureMode === CaptureMode.WINDOW) {
-            await wait(windowWait * 10); // Wait for window to hide
-          }
+          await wait(windowWait * 10); // Wait for window to hide
         }
 
         if (delay * 100 > windowWait) await wait(windowWait * 10); // Wait for window to hide
@@ -104,14 +90,16 @@ export const PreScreenshot = GObject.registerClass(
 
         let pixbuf;
         if (captureMode === CaptureMode.AREA) {
-          const screenPixbuf = await performCapture(captureBackendValue, { captureMode, includePointer });
+          const screenPixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
 
           if (!screenPixbuf) {
-            return this.setStatus("Screen capture failed");
+            throw new Error("Area capture failed");
           }
 
           selectionResult = await selectArea(screenPixbuf);
-          if (!selectionResult) return this.setStatus("Capture cancelled");
+          if (!selectionResult) {
+            return this.setStatus("Capture cancelled");
+          }
 
           pixbuf = screenPixbuf.new_subpixbuf(
             selectionResult.x,
@@ -122,19 +110,23 @@ export const PreScreenshot = GObject.registerClass(
 
           flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
         } else {
-          pixbuf = await performCapture(captureBackendValue, { captureMode, includePointer });
+          pixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
         }
 
+        if (!pixbuf) {
+          return this.setStatus("Capture cancelled");
+        }
+
+        const app = Gio.Application.get_default();
         showScreenshotNotification(app);
-        this.completeScreenShot(pixbuf);
+        this.transitionToPostScreenshot(pixbuf);
       } catch (e) {
-        print(`Screenshot error during flow: ${e.message}`);
-        this.setStatus(`Error: ${e.message}`);
+        print(`${e.message}`);
+        this.setStatus(`${e.message}`);
       } finally {
-        if (isHideWindow) {
+        if (!topLevel.get_visible()) { // Don't depend on isHideWindow. Some screen capture methods hide the window automatically.
           topLevel.show();
           topLevel.present();
-          if (app) app.release()
         };
         this.shootBtn.set_sensitive(true);
       }
@@ -186,7 +178,7 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    completeScreenShot(pixbuf) {
+    transitionToPostScreenshot(pixbuf) {
       this.syncValues();
       this.setUpPostScreenshot(pixbuf);
       this.setUpValues();
