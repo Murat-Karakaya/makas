@@ -38,17 +38,20 @@ export function hasShellScreenshot() {
  */
 export function hasGrimScreenshot() {
   if (methodAvailablity.grim !== null) return methodAvailablity.grim;
+
+  console.log("Checking Grim availability...");
   const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
   if (!waylandDisplay) return methodAvailablity.grim = false;
+  console.log("Wayland display found");
 
   const grimPath = GLib.find_program_in_path("grim");
   if (!grimPath) return methodAvailablity.grim = false;
-
-  return methodAvailablity.grim = true;
+  console.log("Grim found");
 
   try {
-    return methodAvailablity.grim = MakasScreenshot.utils_has_wlroots();
+    return methodAvailablity.grim = MakasScreenshot.utils_is_grim_supported();
   } catch (e) {
+    console.error("Failed to check Grim availability:", e);
     return methodAvailablity.grim = false;
   }
 }

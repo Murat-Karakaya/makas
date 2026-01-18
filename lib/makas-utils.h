@@ -6,13 +6,14 @@
 G_BEGIN_DECLS
 
 /**
- * makas_utils_has_wlroots:
+ * makas_utils_is_grim_supported:
  *
- * Checks if the current session supports wlroots-compatible Wayland protocols.
+ * Checks if the current session supports the necessary protocols for
+ * grim to capture screenshots (e.g. wl_shm, screencopy, etc.).
  *
- * Returns: TRUE if wlroots is supported, FALSE otherwise.
+ * Returns: TRUE if supported, FALSE otherwise.
  */
-gboolean makas_utils_has_wlroots(void);
+gboolean makas_utils_is_grim_supported(void);
 
 G_END_DECLS
 
