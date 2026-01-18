@@ -101,11 +101,15 @@ export const PreScreenshot = GObject.registerClass(
             return this.setStatus("Capture cancelled");
           }
 
+          console.log(selectionResult);
+          console.log(screenPixbuf.get_width());
+          console.log(screenPixbuf.get_height());
+
           pixbuf = screenPixbuf.new_subpixbuf(
-            selectionResult.x,
-            selectionResult.y,
-            selectionResult.width,
-            selectionResult.height
+            Math.max(0, selectionResult.x), // These two
+            Math.max(0, selectionResult.y), // Actually fix a bug
+            Math.min(screenPixbuf.get_width(), selectionResult.width),  // These two
+            Math.min(screenPixbuf.get_height(), selectionResult.height) // Are currently a sanity check
           );
 
           flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);

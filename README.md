@@ -9,8 +9,6 @@ Fix GRIM check
 
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
 
-Fix the fact that when area election is active, the user can drag to screen edges and the selection will go out of bounds.
-
 ### TO DO: 
 
 Implement a cancel button when delay is active.
@@ -22,6 +20,8 @@ Open image with other applications
 Add Appimage and nix package builds.
 
 Warn the user about how for the settings to take effect, they need to restart the app.
+
+Review area selection logic. There might be a performance issue.
 
 ### WON'T FIX
 

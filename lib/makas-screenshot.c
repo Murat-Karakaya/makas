@@ -6,6 +6,7 @@
 #include <X11/extensions/shape.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#include <stdio.h>
 
 struct _MakasScreenshot {
   GObject parent_instance;
@@ -320,8 +321,10 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
   int rowstride = gdk_pixbuf_get_rowstride(frame_pixbuf);
   int n_channels = gdk_pixbuf_get_n_channels(frame_pixbuf);
   int trim_top = 0;
+  int max_trim_top =
+      MAX(0, inner_rect.y - frame_rect.y); // Never trim the inner rectangle
 
-  for (int y = 0; y < crop_height; y++) {
+  for (int y = 0; y < max_trim_top; y++) {
     gboolean is_black_row = TRUE;
     for (int x = crop_x; x < crop_x + crop_width; x++) {
       guchar *p = pixels + (crop_y + y) * rowstride + x * n_channels;
@@ -335,11 +338,6 @@ GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
     } else {
       break;
     }
-  }
-
-  /* Safety: Don't crop everything */
-  if (trim_top >= crop_height) {
-    trim_top = crop_height > 0 ? crop_height - 1 : 0;
   }
 
   crop_y += trim_top;
