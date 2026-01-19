@@ -3,13 +3,13 @@
     "runtime": "org.gnome.Platform",
     "runtime-version": "48",
     "sdk": "org.gnome.Sdk",
-    "command": "com.github.murat.karakaya.Makas",
+    "command": "makas",
     "finish-args": [
-        "--share=network",
         "--share=ipc",
-        "--socket=x11",
+        "--socket=fallback-x11",
+        "--socket=wayland",
         "--device=dri",
-        "--filesystem=xdg-pictures:rw"
+        "--filesystem=xdg-pictures:w"
     ],
     "cleanup": [
         "/lib/pkgconfig",
@@ -17,7 +17,9 @@
         "/share/doc",
         "/share/gtk-doc",
         "/share/man",
+        "/share/info",
         "/share/pkgconfig",
+        "/include",
         "*.la",
         "*.a"
     ],
@@ -28,8 +30,8 @@
             "buildsystem": "meson",
             "sources": [
                 {
-                    "type": "dir",
-                    "path": "."
+                    "type": "git",
+                    "url": "https://github.com/Murat-Karakaya/makas.git"
                 }
             ]
         }
