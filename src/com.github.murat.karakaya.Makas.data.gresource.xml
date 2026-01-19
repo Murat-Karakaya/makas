@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/com/github/Murat-Karakaya/Makas">
+  <gresource prefix="/com/github/murat/karakaya/Makas">
     <file preprocess="xml-stripblanks">screenshot/prescreenshot/prescreenshot.ui</file>
   </gresource>
 </gresources>

@@ -26,7 +26,7 @@ export const PreScreenshot = GObject.registerClass(
 
     buildUI() {
       const builder = new Gtk.Builder();
-      builder.add_from_resource("/com/github/Murat-Karakaya/Makas/screenshot/prescreenshot/prescreenshot.ui");
+      builder.add_from_resource("/com/github/murat/karakaya/Makas/screenshot/prescreenshot/prescreenshot.ui");
 
       const mainBox = builder.get_object("main");
       this.add(mainBox);
