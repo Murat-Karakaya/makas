@@ -30,8 +30,8 @@ if [ "$SKIP_BUILD" = false ]; then
 
     # Compile resources
     echo "Compiling resources..."
-    glib-compile-resources --target=src/src.gresource --sourcedir=src src/org.x.Makas.src.gresource.xml
-    glib-compile-resources --target=src/data.gresource --sourcedir=src src/org.x.Makas.data.gresource.xml
+    glib-compile-resources --target=src/src.gresource --sourcedir=src src/com.github.murat.karakaya.Makas.src.gresource.xml
+    glib-compile-resources --target=src/data.gresource --sourcedir=src src/com.github.murat.karakaya.Makas.data.gresource.xml
 
     # Compile schemas
     echo "Compiling schemas..."

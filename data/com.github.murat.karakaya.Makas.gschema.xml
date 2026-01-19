@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="Makas">
-	<schema id="org.x.Makas" path="/com/github/Murat-Karakaya/Makas/">
+	<schema id="com.github.murat.karakaya.Makas" path="/com/github/Murat-Karakaya/Makas/">
 		<key name="screenshot-save-folder" type="s">
 			<default>'~/Pictures/Screenshots'</default>
 			<summary>Default folder for screenshot</summary>

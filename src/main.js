@@ -38,19 +38,19 @@ export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {
         _init() {
             super._init({
-                application_id: 'org.x.Makas',
+                application_id: 'com.github.murat.karakaya.Makas',
                 flags: Gio.ApplicationFlags.FLAGS_NONE
             });
 
             // Gdk program class for Window Manager matching
-            Gdk.set_program_class('org.x.Makas');
+            Gdk.set_program_class('com.github.murat.karakaya.Makas');
         }
 
         vfunc_startup() {
             super.vfunc_startup();
 
             // Explicitly set default icon for all windows
-            Gtk.Window.set_default_icon_name('org.x.Makas');
+            Gtk.Window.set_default_icon_name('com.github.murat.karakaya.Makas');
 
             // Add resource path for icons to let GTK find our bundled icons
             Gtk.IconTheme.get_default().add_resource_path("/com/github/Murat-Karakaya/Makas/icons");

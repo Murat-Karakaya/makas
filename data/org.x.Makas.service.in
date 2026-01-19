@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.x.Makas
-Exec=@bindir@/org.x.Makas --gapplication-service

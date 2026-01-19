@@ -40,7 +40,7 @@ This project supports building as a Flatpak and Debian package (.deb).
 ### 1. Flatpak
 You need `flatpak-builder` installed.
 ```bash
-flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir org.x.Makas.json
+flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.github.murat.karakaya.Makas.json
 ```
 
 ### 2. Debian Package (.deb)

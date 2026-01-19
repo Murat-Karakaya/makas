@@ -1,9 +1,9 @@
 {
-    "id": "org.x.Makas",
+    "id": "com.github.murat.karakaya.Makas",
     "runtime": "org.gnome.Platform",
     "runtime-version": "48",
     "sdk": "org.gnome.Sdk",
-    "command": "org.x.Makas",
+    "command": "com.github.murat.karakaya.Makas",
     "finish-args": [
         "--share=network",
         "--share=ipc",

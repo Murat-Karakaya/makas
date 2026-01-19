@@ -146,7 +146,7 @@ export function wait(ms) {
 
 
 export const settings = new Gio.Settings({
-  schema_id: "org.x.Makas",
+  schema_id: "com.github.murat.karakaya.Makas",
 });
 
 export function showScreenshotNotification(app) {

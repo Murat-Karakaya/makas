@@ -1,6 +1,6 @@
 desktop_file = i18n.merge_file(
-        input: 'org.x.Makas.desktop.in',
-       output: 'org.x.Makas.desktop',
+        input: 'com.github.murat.karakaya.Makas.desktop.in',
+       output: 'com.github.murat.karakaya.Makas.desktop',
          type: 'desktop',
        po_dir: '../po',
       install: true,
@@ -13,8 +13,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-        input: 'org.x.Makas.metainfo.xml.in',
-       output: 'org.x.Makas.metainfo.xml',
+        input: 'com.github.murat.karakaya.Makas.metainfo.xml.in',
+       output: 'com.github.murat.karakaya.Makas.metainfo.xml',
        po_dir: '../po',
       install: true,
   install_dir: get_option('datadir') / 'metainfo'
@@ -24,7 +24,7 @@ appstreamcli = find_program('appstreamcli', required: false, disabler: true)
 test('Validate appstream file', appstreamcli,
      args: ['validate', '--no-net', '--explain', appstream_file])
 
-install_data('org.x.Makas.gschema.xml',
+install_data('com.github.murat.karakaya.Makas.gschema.xml',
   install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
 )
 
@@ -37,14 +37,14 @@ test('Validate schema file',
 service_conf = configuration_data()
 service_conf.set('bindir', get_option('prefix') / get_option('bindir'))
 configure_file(
-  input: 'org.x.Makas.service.in',
-  output: 'org.x.Makas.service',
+  input: 'com.github.murat.karakaya.Makas.service.in',
+  output: 'com.github.murat.karakaya.Makas.service',
   configuration: service_conf,
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )
 
 install_data('ui/prescreenshot.ui',
-  install_dir: get_option('datadir') / 'org.x.Makas' / 'ui'
+  install_dir: get_option('datadir') / 'com.github.murat.karakaya.Makas' / 'ui'
 )
 
 subdir('icons')
