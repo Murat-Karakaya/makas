@@ -82,6 +82,10 @@ export const ScreenRecorderApp = GObject.registerClass(
         }
 
         vfunc_activate() {
+          
+            //const theme = Gtk.IconTheme.get_default();
+            //theme.add_resource_path("/com/github/murat/karakaya/Makas/icons");
+            
             let win = this.active_window;
             if (!win) {
                 win = new ScreenshotWindow(this);

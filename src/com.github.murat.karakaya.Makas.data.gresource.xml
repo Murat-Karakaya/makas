@@ -3,4 +3,9 @@
   <gresource prefix="/com/github/murat/karakaya/Makas">
     <file preprocess="xml-stripblanks">screenshot/prescreenshot/prescreenshot.ui</file>
   </gresource>
+  <gresource prefix="/com/github/murat/karakaya/Makas/icons/scalable/actions">
+    <file alias="selection-symbolic.svg">../data/icons/selection-symbolic.svg</file>
+    <file alias="window-symbolic.svg">../data/icons/window-symbolic.svg</file>
+    <file alias="xsi-display-symbolic.svg">../data/icons/display-symbolic.svg</file>
+  </gresource>
 </gresources>
