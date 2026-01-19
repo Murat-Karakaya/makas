@@ -1,5 +1,5 @@
 import GLib from "gi://GLib";
-import MakasScreenshot from "gi://MakasScreenshot";
+import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
 import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
 

@@ -3,6 +3,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/builddir"
+INSTALL_DIR="${BUILD_DIR}/install"
 
 # Initialize flags
 SKIP_BUILD=false
@@ -21,28 +22,31 @@ done
 shift $((OPTIND-1))
 
 if [ "$SKIP_BUILD" = false ]; then
-    # Build the C library with meson
-    echo "Building C library..."
+    echo "Building and installing..."
+    
+    # Configure with prefix to local install directory
     if [ ! -d "$BUILD_DIR" ]; then
-        meson setup "$BUILD_DIR" "$SCRIPT_DIR"
+        meson setup "$BUILD_DIR" "$SCRIPT_DIR" --prefix="$INSTALL_DIR" --libdir=lib
+    else
+        # Reconfigure if needed (optional but good practice if prefix changed, 
+        # but meson usually handles it. Explicit reconfigure is safer if switching modes)
+        meson configure "$BUILD_DIR" --prefix="$INSTALL_DIR" -Dlibdir=lib
     fi
+    
+    # Compile
     meson compile -C "$BUILD_DIR"
-
-    # Compile resources
-    echo "Compiling resources..."
-    glib-compile-resources --target=src/src.gresource --sourcedir=src src/com.github.murat.karakaya.Makas.src.gresource.xml
-    glib-compile-resources --target=src/data.gresource --sourcedir=src src/com.github.murat.karakaya.Makas.data.gresource.xml
-
-    # Compile schemas
-    echo "Compiling schemas..."
-    glib-compile-schemas data/
+    
+    # Install to the local directory
+    meson install -C "$BUILD_DIR"
 else
     echo "Skipping compilation steps..."
 fi
 
-# Set up environment for the C library
-export LD_LIBRARY_PATH="${BUILD_DIR}/lib:${LD_LIBRARY_PATH}"
-export GI_TYPELIB_PATH="${BUILD_DIR}/lib:${GI_TYPELIB_PATH}"
+# Set up environment to run from the install directory
+export XDG_DATA_DIRS="${INSTALL_DIR}/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export LD_LIBRARY_PATH="${INSTALL_DIR}/lib:${LD_LIBRARY_PATH}"
+export GI_TYPELIB_PATH="${INSTALL_DIR}/lib/girepository-1.0:${GI_TYPELIB_PATH}"
+export GSETTINGS_SCHEMA_DIR="${INSTALL_DIR}/share/glib-2.0/schemas"
 
 # Add Wayland env if requested
 if [ "$USE_WAYLAND" = true ]; then
@@ -51,6 +55,6 @@ if [ "$USE_WAYLAND" = true ]; then
     export GDK_BACKEND=wayland
 fi
 
-# Run application
+# Run the installed application wrapper
 echo "Starting application..."
-GSETTINGS_SCHEMA_DIR=data gjs -m dev_runner.js "$@"
+"${INSTALL_DIR}/bin/com.github.murat.karakaya.Makas" "$@"

@@ -5,15 +5,11 @@
 import Gtk from 'gi://Gtk?version=3.0';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
-import Gdk from 'gi://Gdk';
 
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
 import { settings, isBackendAvailable } from './screenshot/utils.js';
-/*
-pkg.initGettext();
-pkg.initFormat();
-*/
+
 (() => {
     const preferred = settings.get_string("capture-backend");
 
@@ -42,43 +38,47 @@ export const ScreenRecorderApp = GObject.registerClass(
         
         constructor() {
           super({application_id: 'com.github.murat.karakaya.Makas', flags: Gio.ApplicationFlags.DEFAULT_FLAGS});
+        }
 
-          const quit_action = new Gio.SimpleAction({name: 'quit'});
+        vfunc_startup() {
+            super.vfunc_startup();
+
+            const quit_action = new Gio.SimpleAction({name: 'quit'});
             quit_action.connect('activate', action => {
-            this.quit();
-          });
-          this.add_action(quit_action);
-          this.set_accels_for_action('app.quit', ['<primary>q']);
+                this.quit();
+            });
+            this.add_action(quit_action);
+            this.set_accels_for_action('app.quit', ['<primary>q']);
 
-          const show_about_action = new Gio.SimpleAction({name: 'about'});
-          show_about_action.connect('activate', action => {
-            let aboutParams = {
-              transient_for: this.active_window,
-              modal: true,
-              program_name: 'makas2',
-              logo_icon_name: 'com.github.murat.karakaya.Makas',
-              version: '0.1.0',
-              authors: [
-                  'Murat'
-              ],
-              copyright: '© 2026 Murat'
-            };
-            const aboutDialog = new Gtk.AboutDialog(aboutParams);
-            aboutDialog.present();
-          });
-          this.add_action(show_about_action);
-          
-          const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
-          disableNotificationsAction.connect('activate', () => {
-              settings.set_boolean('show-notification', false);
-          });
-          this.add_action(disableNotificationsAction);
-          
-          const activateAction = new Gio.SimpleAction({ name: 'activate' });
-          activateAction.connect('activate', () => {
-              this.activate();
-          });
-          this.add_action(activateAction);
+            const show_about_action = new Gio.SimpleAction({name: 'about'});
+            show_about_action.connect('activate', action => {
+                let aboutParams = {
+                    transient_for: this.active_window,
+                    modal: true,
+                    program_name: 'Makas',
+                    logo_icon_name: 'com.github.murat.karakaya.Makas',
+                    version: '0.1.0',
+                    authors: [
+                        'Murat'
+                    ],
+                    copyright: '© 2026 Murat'
+                };
+                const aboutDialog = new Gtk.AboutDialog(aboutParams);
+                aboutDialog.present();
+            });
+            this.add_action(show_about_action);
+            
+            const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
+            disableNotificationsAction.connect('activate', () => {
+                settings.set_boolean('show-notification', false);
+            });
+            this.add_action(disableNotificationsAction);
+            
+            const activateAction = new Gio.SimpleAction({ name: 'activate' });
+            activateAction.connect('activate', () => {
+                this.activate();
+            });
+            this.add_action(activateAction);
         }
 
         vfunc_activate() {
