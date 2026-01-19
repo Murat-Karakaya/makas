@@ -10,7 +10,10 @@ import Gdk from 'gi://Gdk';
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
 import { settings, isBackendAvailable } from './screenshot/utils.js';
-
+/*
+pkg.initGettext();
+pkg.initFormat();
+*/
 (() => {
     const preferred = settings.get_string("capture-backend");
 
@@ -36,38 +39,46 @@ import { settings, isBackendAvailable } from './screenshot/utils.js';
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {
-        _init() {
-            super._init({
-                application_id: 'com.github.murat.karakaya.Makas',
-                flags: Gio.ApplicationFlags.FLAGS_NONE
-            });
+        
+        constructor() {
+          super({application_id: 'com.github.murat.karakaya.Makas', flags: Gio.ApplicationFlags.DEFAULT_FLAGS});
 
-            // Gdk program class for Window Manager matching
-            Gdk.set_program_class('com.github.murat.karakaya.Makas');
-        }
+          const quit_action = new Gio.SimpleAction({name: 'quit'});
+            quit_action.connect('activate', action => {
+            this.quit();
+          });
+          this.add_action(quit_action);
+          this.set_accels_for_action('app.quit', ['<primary>q']);
 
-        vfunc_startup() {
-            super.vfunc_startup();
-
-            // Explicitly set default icon for all windows
-            Gtk.Window.set_default_icon_name('com.github.murat.karakaya.Makas');
-
-            // Add resource path for icons to let GTK find our bundled icons
-            Gtk.IconTheme.get_default().add_resource_path("/com/github/Murat-Karakaya/Makas/icons");
-
-            // Register action for disabling notifications from notification button
-            const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
-            disableNotificationsAction.connect('activate', () => {
-                settings.set_boolean('show-notification', false);
-            });
-            this.add_action(disableNotificationsAction);
-
-            // Explicitly register activate action for notifications
-            const activateAction = new Gio.SimpleAction({ name: 'activate' });
-            activateAction.connect('activate', () => {
-                this.activate();
-            });
-            this.add_action(activateAction);
+          const show_about_action = new Gio.SimpleAction({name: 'about'});
+          show_about_action.connect('activate', action => {
+            let aboutParams = {
+              transient_for: this.active_window,
+              modal: true,
+              program_name: 'makas2',
+              logo_icon_name: 'com.github.murat.karakaya.Makas',
+              version: '0.1.0',
+              authors: [
+                  'Murat'
+              ],
+              copyright: '© 2026 Murat'
+            };
+            const aboutDialog = new Gtk.AboutDialog(aboutParams);
+            aboutDialog.present();
+          });
+          this.add_action(show_about_action);
+          
+          const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
+          disableNotificationsAction.connect('activate', () => {
+              settings.set_boolean('show-notification', false);
+          });
+          this.add_action(disableNotificationsAction);
+          
+          const activateAction = new Gio.SimpleAction({ name: 'activate' });
+          activateAction.connect('activate', () => {
+              this.activate();
+          });
+          this.add_action(activateAction);
         }
 
         vfunc_activate() {

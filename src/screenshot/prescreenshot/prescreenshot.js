@@ -2,11 +2,11 @@ import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import { CaptureMode } from "./constants.js";
-import { selectArea } from "./popupWindows/area-selection.js";
-import { settings, wait, showScreenshotNotification } from "./utils.js";
-import { performCapture } from "./performCapture.js";
-import { flashRect } from "./popupWindows/flash.js";
+import { CaptureMode } from "../constants.js";
+import { selectArea } from "../popupWindows/area-selection.js";
+import { settings, wait, showScreenshotNotification } from "../utils.js";
+import { performCapture } from "../performCapture.js";
+import { flashRect } from "../popupWindows/flash.js";
 
 export const PreScreenshot = GObject.registerClass(
   class PreScreenshot extends Gtk.Box {
@@ -26,7 +26,7 @@ export const PreScreenshot = GObject.registerClass(
 
     buildUI() {
       const builder = new Gtk.Builder();
-      builder.add_from_resource("/com/github/Murat-Karakaya/Makas/ui/prescreenshot.ui");
+      builder.add_from_resource("/com/github/Murat-Karakaya/Makas/screenshot/prescreenshot/prescreenshot.ui");
 
       const mainBox = builder.get_object("main");
       this.add(mainBox);

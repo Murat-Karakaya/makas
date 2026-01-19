@@ -1,6 +1,6 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
-import { PreScreenshot } from "./prescreenshot.js";
+import { PreScreenshot } from "./prescreenshot/prescreenshot.js";
 import { PostScreenshot } from "./postscreenshot.js";
 
 export const ScreenshotPage = GObject.registerClass(
