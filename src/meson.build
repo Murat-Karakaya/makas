@@ -22,6 +22,8 @@ bin_conf.set('PACKAGE_NAME', meson.project_name())
 bin_conf.set('prefix', get_option('prefix'))
 bin_conf.set('libdir', get_option('prefix') / get_option('libdir'))
 bin_conf.set('datadir', get_option('prefix') / get_option('datadir'))
+bin_conf.set('libdir_name', get_option('libdir'))
+bin_conf.set('datadir_name', get_option('datadir'))
 bin_conf.set('resource_path', '/com/github/murat/karakaya/Makas')
 
 configure_file(
