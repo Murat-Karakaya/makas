@@ -43,6 +43,10 @@ else
 fi
 
 # Set up environment to run from the install directory
+export MAKAS_PREFIX="${INSTALL_DIR}"
+export MAKAS_LIBDIR="${INSTALL_DIR}/lib"
+export MAKAS_DATADIR="${INSTALL_DIR}/share"
+
 export XDG_DATA_DIRS="${INSTALL_DIR}/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 export LD_LIBRARY_PATH="${INSTALL_DIR}/lib:${LD_LIBRARY_PATH}"
 export GI_TYPELIB_PATH="${INSTALL_DIR}/lib/girepository-1.0:${GI_TYPELIB_PATH}"

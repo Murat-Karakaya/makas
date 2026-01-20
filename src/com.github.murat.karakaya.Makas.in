@@ -1,47 +1,16 @@
 #!@GJS@ -m
 
 import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
 import { exit, programArgs, programInvocationName } from "system";
-
-// Resolve paths dynamically relative to this script's location
-// Script location: .../bin/com.github.murat.karakaya.Makas
-const scriptPath = GLib.filename_from_uri(import.meta.url)[0];
-const binDir = GLib.path_get_dirname(scriptPath);
-const prefix = GLib.path_get_dirname(binDir);
-const libdir = GLib.build_filenamev([prefix, '@libdir_name@']);
-const datadir = GLib.build_filenamev([prefix, '@datadir_name@']);
-const pkgdatadir = GLib.build_filenamev([datadir, '@PACKAGE_NAME@']);
 
 imports.package.init({
   name: "@PACKAGE_NAME@",
   version: "@PACKAGE_VERSION@",
-  prefix: prefix,
-  libdir: libdir,
-  datadir: datadir,
+  prefix: @prefix@,
+  libdir: @libdir@,
+  datadir: @datadir@,
 });
 
-// Robust Resource Loading
-const resource = 'com.github.murat.karakaya.Makas.src.gresource'
-
-let registered = false;
-const path = GLib.build_filenamev([pkgdatadir, resource]);
-if (GLib.file_test(path, GLib.FileTest.EXISTS)) {
-    try {
-        const res = Gio.Resource.load(path);
-        Gio.resources_register(res);
-        print(`[Makas] Diag: Successfully registered resource: ${path}`);
-        registered = true;
-    } catch (e) {
-        print(`[Makas] Diag: Found but failed to register ${path}: ${e.message}`);
-    }
-} else {
-    print(`[Makas] Diag: File not found: ${path}`);
-}
-
-if (!registered) {
-    print(`[Makas] CRITICAL: No valid resource bundle found in ${pkgdatadir}`);
-}
 
 const { main } = await import("resource://@resource_path@/js/main.js");
 const exit_code = await main([programInvocationName, ...programArgs]);
