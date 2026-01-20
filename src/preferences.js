@@ -179,15 +179,15 @@ export const PreferencesWindow = GObject.registerClass(
 
     _buildWaitSection() {
       const label = new Gtk.Label({
-        label: "Window Transition Wait (deciseconds):",
+        label: "Window Transition Wait (milliseconds):",
         halign: Gtk.Align.START,
       });
 
       this.waitSpinner = new Gtk.SpinButton({
         adjustment: new Gtk.Adjustment({
           lower: 0,
-          upper: 500,
-          step_increment: 20,
+          upper: 5000,
+          step_increment: 200,
         }),
       });
 

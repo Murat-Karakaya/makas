@@ -35,22 +35,22 @@ import { settings, isBackendAvailable } from './screenshot/utils.js';
 
 export const ScreenRecorderApp = GObject.registerClass(
     class ScreenRecorderApp extends Gtk.Application {
-        
+
         constructor() {
-          super({application_id: 'com.github.murat.karakaya.Makas', flags: Gio.ApplicationFlags.DEFAULT_FLAGS});
+            super({ application_id: 'com.github.murat.karakaya.Makas', flags: Gio.ApplicationFlags.DEFAULT_FLAGS });
         }
 
         vfunc_startup() {
             super.vfunc_startup();
 
-            const quit_action = new Gio.SimpleAction({name: 'quit'});
+            const quit_action = new Gio.SimpleAction({ name: 'quit' });
             quit_action.connect('activate', action => {
                 this.quit();
             });
             this.add_action(quit_action);
             this.set_accels_for_action('app.quit', ['<primary>q']);
 
-            const show_about_action = new Gio.SimpleAction({name: 'about'});
+            const show_about_action = new Gio.SimpleAction({ name: 'about' });
             show_about_action.connect('activate', action => {
                 let aboutParams = {
                     transient_for: this.active_window,
@@ -67,13 +67,13 @@ export const ScreenRecorderApp = GObject.registerClass(
                 aboutDialog.present();
             });
             this.add_action(show_about_action);
-            
+
             const disableNotificationsAction = new Gio.SimpleAction({ name: 'disable-notifications' });
             disableNotificationsAction.connect('activate', () => {
                 settings.set_boolean('show-notification', false);
             });
             this.add_action(disableNotificationsAction);
-            
+
             const activateAction = new Gio.SimpleAction({ name: 'activate' });
             activateAction.connect('activate', () => {
                 this.activate();

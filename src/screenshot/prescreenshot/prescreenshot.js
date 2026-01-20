@@ -75,14 +75,14 @@ export const PreScreenshot = GObject.registerClass(
       try {
         const windowWait = settings.get_int("window-wait");
 
-        if (delay * 100 > windowWait) await this.startDelay(delay * 100 - windowWait, windowWait);
+        if (delay * 1000 > windowWait) await this.startDelay(delay * 1000 - windowWait, windowWait);
 
         if (isHideWindow) {
           topLevel.hide();
-          await wait(windowWait * 10); // Wait for window to hide
+          await wait(windowWait); // Wait for window to hide
         }
 
-        if (delay * 100 > windowWait) await wait(windowWait * 10); // Wait for window to hide
+        if (delay * 1000 > windowWait) await wait(windowWait); // Wait for window to hide
 
         let selectionResult = { clickX: 0, clickY: 0 };
         print(`Selection phase, mode=${captureMode}`);
@@ -136,19 +136,19 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    async startDelay(delay, windowWait) {
-      print(`Waiting... ${(delay + windowWait) / 100}s`);
-      this.setStatus(`Capturing in ${(delay + windowWait) / 100}s...`);
+    async startDelay(timer, windowWait) {
+      print(`Waiting... ${(timer + windowWait) / 1000}s`);
+      this.setStatus(`Capturing in ${(timer + windowWait) / 1000}s...`);
 
-      if (delay <= 0) return;
+      if (timer <= 0) return;
 
-      let remaining = delay;
+      let remaining = timer;
       return new Promise((resolve) => {
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 10, () => {
           remaining--;
-          if ((remaining + windowWait) % 100 === 0) {
-            this.setStatus(`Capturing in ${(remaining + windowWait) / 100}s...`);
-            print(`Waiting... ${(remaining + windowWait) / 100}s`);
+          if ((remaining + windowWait) % 1000 === 0) {
+            this.setStatus(`Capturing in ${(remaining + windowWait) / 1000}s...`);
+            print(`Waiting... ${(remaining + windowWait) / 1000}s`);
           }
           if (remaining <= 0) {
             resolve();
