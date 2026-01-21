@@ -6,6 +6,7 @@ import { CaptureMode } from "../constants.js";
 const PORTAL_BUS_NAME = "org.freedesktop.portal.Desktop";
 const PORTAL_OBJECT_PATH = "/org/freedesktop/portal/desktop";
 const PORTAL_SCREENSHOT_INTERFACE = "org.freedesktop.portal.Screenshot";
+let isAvailable = null;
 
 export async function captureWithPortal({ captureMode }) {
     if (captureMode === CaptureMode.WINDOW) {
@@ -103,4 +104,34 @@ export async function captureWithPortal({ captureMode }) {
             reject(e);
         }
     });
+}
+
+
+export function hasPortalScreenshot() {
+  if (isAvailable !== null) return isAvailable;
+
+  const serviceName = "org.freedesktop.portal.Desktop";
+  const objectPath = "/org/freedesktop/portal/desktop";
+  const interfaceName = "org.freedesktop.portal.Screenshot";
+
+  try {
+    const connection = Gio.DBus.session;
+    // We attempt to get the 'version' property of the Screenshot interface specifically
+    connection.call_sync(
+      serviceName,
+      objectPath,
+      "org.freedesktop.DBus.Properties",
+      "Get",
+      new GLib.Variant('(ss)', [interfaceName, "version"]),
+      null,
+      Gio.DBusCallFlags.NONE,
+      -1,
+      null
+    );
+
+    // If this call succeeds, the interface exists and is functional
+    return isAvailable = true;
+  } catch (e) {
+    return isAvailable = false;
+  }
 }

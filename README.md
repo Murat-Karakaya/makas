@@ -7,8 +7,6 @@
 
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
 
-Notifications don't work as expected on GNOME.
-
 ### TO DO: 
 
 Implement a cancel button when delay is active.
@@ -18,8 +16,6 @@ Text recognition
 Open image with other applications
 
 Add Appimage and nix package builds.
-
-Warn the user about how for the settings to take effect, they need to restart the app.
 
 Review area selection logic. There might be a performance issue.
 

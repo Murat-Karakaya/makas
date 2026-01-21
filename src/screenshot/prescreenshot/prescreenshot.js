@@ -20,6 +20,7 @@ export const PreScreenshot = GObject.registerClass(
       this.setUpPostScreenshot = setUpPostScreenshot;
 
       this.buildUI();
+      this.setUpValues();
       this.backendListener();
     }
 
@@ -167,11 +168,13 @@ export const PreScreenshot = GObject.registerClass(
     
     vfunc_map() {
       super.vfunc_map();
-      
+      this.setBackend(settings.get_string("capture-backend-auto"));
+    }
+    
+    setUpValues (){
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
       this.setCaptureMode(settings.get_string("screenshot-mode"));
-      this.setBackend(settings.get_string("capture-backend-auto"));
       this.setStatus("Ready");
     }
 

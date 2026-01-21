@@ -2,12 +2,9 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
-import { CaptureBackend, CaptureMode } from "./screenshot/constants.js"
+import { CaptureMode } from "./screenshot/constants.js"
 import {
-  hasShellScreenshot,
-  hasGrimScreenshot,
-  hasX11Screenshot,
-  hasPortalScreenshot,
+  backends,
   settings
 } from "./screenshot/utils.js";
 
@@ -219,12 +216,10 @@ export const PreferencesWindow = GObject.registerClass(
       this.backendCombo.add_attribute(renderer, "text", 1);
       this.backendCombo.add_attribute(renderer, "sensitive", 2);
 
-      const backendData = [
-        [CaptureBackend.SHELL, "Shell (Cinnamon)", hasShellScreenshot()],
-        [CaptureBackend.X11, "X11", hasX11Screenshot()],
-        [CaptureBackend.GRIM, "Wayland (Grim)", hasGrimScreenshot()],
-        [CaptureBackend.PORTAL, "FreeDesktop Portal", hasPortalScreenshot()],
-      ];
+      const backendData = [];
+      for (const key in backends) {
+        backendData.push([key, backends[key].label, backends[key].isAvailable()]);
+      }
 
       for (const [id, backendLabel, available] of backendData) {
         const iter = this.backendStore.insert(-1);

@@ -8,22 +8,21 @@ import GObject from 'gi://GObject';
 
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
-import { settings, isBackendAvailable } from './screenshot/utils.js';
+import { settings, backends } from './screenshot/utils.js';
 
 (() => {
     const preferred = settings.get_string("capture-backend");
 
     // Try preferred first
-    if (isBackendAvailable(preferred)) {
+    if (backends[preferred] && backends[preferred].isAvailable()) {
         settings.set_string("capture-backend-auto", preferred);
         return;
     }
 
-    // Fallback order: X11 -> SHELL -> GRIM
-    const backends = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM, CaptureBackend.PORTAL];
-    for (const b of backends) {
+    // Fallback order: Determined by keys in backends object
+    for (const b in backends) {
         if (b === preferred) continue; // Already checked
-        if (isBackendAvailable(b)) {
+        if (backends[b].isAvailable()) {
             settings.set_string("capture-backend-auto", b);
             print(`[Makas] Preferred backend '${preferred}' unavailable. Falling back to '${b}'.`);
             return;

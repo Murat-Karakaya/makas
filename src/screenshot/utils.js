@@ -2,6 +2,16 @@ import GLib from "gi://GLib";
 import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
 import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
+import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
+import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
+import { captureWithGrim, hasGrimScreenshot } from "./captureMethods/captureGrim.js";
+import { captureWithPortal, hasPortalScreenshot } from "./captureMethods/capturePortal.js";
+
+
+export const settings = new Gio.Settings({
+  schema_id: "com.github.murat.karakaya.Makas",
+});
+
 
 let screenshotHelper = null;
 /**
@@ -15,103 +25,26 @@ export function getScreenshotHelper() {
   return screenshotHelper;
 }
 
-const methodAvailablity = {
-  shell: null,
-  x11: null,
-  grim: null,
-  portal: null,
-};
-
-/**
- * Check if the Shell screenshot interface is available.
- * @returns {boolean}
- */
-export function hasShellScreenshot() {
-  if (methodAvailablity.shell !== null) return methodAvailablity.shell;
-  const currentDesktop = GLib.getenv("XDG_CURRENT_DESKTOP");
-  return methodAvailablity.shell = currentDesktop !== null && currentDesktop.includes("Cinnamon");
-}
-
-/**
- * Check if Grim (Wayland wlroots) screenshot is available.
- * @returns {boolean}
- */
-export function hasGrimScreenshot() {
-  if (methodAvailablity.grim !== null) return methodAvailablity.grim;
-
-  const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
-  if (!waylandDisplay) return methodAvailablity.grim = false;
-
-  const grimPath = GLib.find_program_in_path("grim");
-  if (!grimPath) return methodAvailablity.grim = false;
-
-  try {
-    return methodAvailablity.grim = MakasScreenshot.utils_is_grim_supported();
-  } catch (e) {
-    console.error("Failed to check Grim availability:", e);
-    return methodAvailablity.grim = false;
-  }
-}
-
-/**
- * Check if X11 screenshot is available.
- * @returns {boolean}
- */
-export function hasX11Screenshot() {
-  if (methodAvailablity.x11 !== null) return methodAvailablity.x11;
-  return methodAvailablity.x11 = GLib.getenv("XDG_SESSION_TYPE") === "x11";
-}
-
-/**
- * Check if FreeDesktop Portal screenshot is available.
- * @returns {boolean}
- */
-export function hasPortalScreenshot() {
-  if (methodAvailablity.portal !== null) return methodAvailablity.portal;
-
-  const serviceName = "org.freedesktop.portal.Desktop";
-  const objectPath = "/org/freedesktop/portal/desktop";
-  const interfaceName = "org.freedesktop.portal.Screenshot";
-
-  try {
-    const connection = Gio.DBus.session;
-    // We attempt to get the 'version' property of the Screenshot interface specifically
-    connection.call_sync(
-      serviceName,
-      objectPath,
-      "org.freedesktop.DBus.Properties",
-      "Get",
-      new GLib.Variant('(ss)', [interfaceName, "version"]),
-      null,
-      Gio.DBusCallFlags.NONE,
-      -1,
-      null
-    );
-
-    // If this call succeeds, the interface exists and is functional
-    return methodAvailablity.portal = true;
-  } catch (e) {
-    return methodAvailablity.portal = false;
-  }
-}
-
-/**
- * Check if a specific backend is available on the current system.
- * @param {string} backend 
- * @returns {boolean}
- */
-export function isBackendAvailable(backend) {
-  switch (backend) {
-    case CaptureBackend.SHELL:
-      return hasShellScreenshot();
-    case CaptureBackend.X11:
-      return hasX11Screenshot();
-    case CaptureBackend.GRIM:
-      return hasGrimScreenshot();
-    case CaptureBackend.PORTAL:
-      return hasPortalScreenshot();
-    default:
-      return false;
+export const backends = {
+  [CaptureBackend.X11]: {
+    isAvailable: hasX11Screenshot,
+    capture: captureWithX11,
+    label: "X11",
+  },
+  [CaptureBackend.SHELL]: {
+    isAvailable: hasShellScreenshot,
+    capture: captureWithShell,
+    label: "Cinnamon Shell",
+  },
+  [CaptureBackend.GRIM]: {
+    isAvailable: hasGrimScreenshot,
+    capture: captureWithGrim,
+    label: "Wayland (Grim)",
+  },
+  [CaptureBackend.PORTAL]: {
+    isAvailable: hasPortalScreenshot,
+    capture: captureWithPortal,
+    label: "FreeDesktop Portal",
   }
 }
 
@@ -144,10 +77,6 @@ export function wait(ms) {
   });
 }
 
-
-export const settings = new Gio.Settings({
-  schema_id: "com.github.murat.karakaya.Makas",
-});
 
 export function showScreenshotNotification(app) {
   if (!settings.get_boolean("show-notification")) {

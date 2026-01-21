@@ -1,10 +1,13 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
+import GLib from "gi://GLib";
 import { CaptureMode } from "../constants.js";
 import { getScreenshotHelper } from "../utils.js";
 import { flashRect } from "../popupWindows/flash.js";
 import { selectWindow } from "../popupWindows/selectWindow.js";
 
+
+let isAvailable = null;
 
 export async function captureWithX11({ includePointer, captureMode }) {
     let pixbuf;
@@ -61,6 +64,12 @@ export async function captureWithX11({ includePointer, captureMode }) {
 
     if (!pixbuf) throw new Error("Pixbuf is null");
     return pixbuf;
+}
+
+
+export function hasX11Screenshot() {
+  if (isAvailable !== null) return isAvailable;
+  return isAvailable = GLib.getenv("XDG_SESSION_TYPE") === "x11";
 }
 
 

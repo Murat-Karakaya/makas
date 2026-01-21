@@ -4,9 +4,10 @@ import Gio from "gi://Gio";
 import { CaptureMode } from "../constants.js";
 import { getCurrentDate, settings, wait } from "../utils.js";
 
-const flashEnabled = settings.get_boolean("enable-flash");
+let isAvailable = null;
 
 export async function captureWithShell({ includePointer, captureMode, topLevel }) {
+    const flashEnabled = settings.get_boolean("enable-flash");
     const serviceName = "org.gnome.Shell.Screenshot";
     const interfaceName = serviceName;
     const objectPath = "/org/gnome/Shell/Screenshot";
@@ -74,4 +75,10 @@ export async function captureWithShell({ includePointer, captureMode, topLevel }
 
     if (!pixbuf) throw new Error("Pixbuf is null");
     return pixbuf;
+}
+
+export function hasShellScreenshot() {
+  if (isAvailable !== null) return isAvailable;
+  const currentDesktop = GLib.getenv("XDG_CURRENT_DESKTOP");
+  return isAvailable = currentDesktop !== null && currentDesktop.toLowerCase().includes("cinnamon");
 }
