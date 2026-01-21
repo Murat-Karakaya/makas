@@ -9,7 +9,7 @@
     <file>screenshot/popupWindows/selectWindow.js</file>
     <file>screenshot/popupWindows/flash.js</file>
 
-    <file>screenshot/postscreenshot.js</file>
+    <file>screenshot/postscreenshot/postscreenshot.js</file>
     <file>screenshot/prescreenshot/prescreenshot.js</file>
     <file>screenshot/utils.js</file>
     <file>screenshot/performCapture.js</file>

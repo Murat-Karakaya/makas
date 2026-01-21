@@ -2,7 +2,8 @@ import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GObject from "gi://GObject";
 import GLib from "gi://GLib";
-import { getCurrentDate, getDestinationPath, settings } from "./utils.js";
+import { getCurrentDate, getDestinationPath, settings } from "../utils.js";
+import { SOURCE_PATH } from "../constants.js";
 
 export const PostScreenshot = GObject.registerClass(
   class PostScreenshot extends Gtk.Box {
@@ -22,51 +23,40 @@ export const PostScreenshot = GObject.registerClass(
     }
 
     buildUI() {
-      const topBar = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 12,
-        halign: Gtk.Align.CENTER,
-      });
+      const builder = new Gtk.Builder();
+      builder.add_from_resource(SOURCE_PATH + "/screenshot/postscreenshot/postscreenshot.ui");
 
-      const backBtn = new Gtk.Button({ label: "Back" });
+      const mainBox = builder.get_object("main");
+      this.add(mainBox);
+
+      const backBtn = builder.get_object("backBtn");
       backBtn.connect("clicked", () => {
         if (this._callbacks.onBack) {
           this._callbacks.onBack();
         }
       });
 
-      this.saveBtn = new Gtk.Button({ label: "Save" });
-      this.saveBtn.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+      this.saveBtn = builder.get_object("saveBtn");
       this.saveBtn.connect("clicked", () => this.onSave());
 
-      this.saveAsBtn = new Gtk.Button({ label: "Save As..." });
+      this.saveAsBtn = builder.get_object("saveAsBtn");
       this.saveAsBtn.connect("clicked", () => this.onSaveAs());
 
-      const copyBtn = new Gtk.Button({ label: "Copy" });
+      const copyBtn = builder.get_object("copyBtn");
       copyBtn.connect("clicked", () => {
         this.onCopyToClipboard();
       });
-
-      topBar.pack_start(backBtn, false, false, 0);
-      topBar.pack_start(this.saveBtn, false, false, 0);
-      topBar.pack_start(this.saveAsBtn, false, false, 0);
-      topBar.pack_start(copyBtn, false, false, 0);
-      this.add(topBar);
 
       // DrawingArea for auto-scaling image
       this.drawingArea = new Gtk.DrawingArea();
       this.drawingArea.set_vexpand(true);
       this.drawingArea.set_hexpand(true);
       this.drawingArea.connect("draw", (widget, cr) => this.onDraw(widget, cr));
-      this.add(this.drawingArea);
+      
+      const imageContainer = builder.get_object("imageContainer");
+      imageContainer.add(this.drawingArea);
 
-      this.statusLabel = new Gtk.Label({
-        halign: Gtk.Align.CENTER,
-        margin_top: 8,
-        selectable: true,
-        wrap: true,
-      });
-      this.add(this.statusLabel);
+      this.statusLabel = builder.get_object("statusLabel");
     }
 
     setImage(pixbuf) {
