@@ -8,22 +8,6 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 
-struct _MakasScreenshot {
-  GObject parent_instance;
-};
-
-G_DEFINE_TYPE(MakasScreenshot, makas_screenshot, G_TYPE_OBJECT);
-
-static void makas_screenshot_class_init(MakasScreenshotClass *klass) {
-  (void)klass;
-}
-
-static void makas_screenshot_init(MakasScreenshot *self) { (void)self; }
-
-MakasScreenshot *makas_screenshot_new(void) {
-  return g_object_new(MAKAS_TYPE_SCREENSHOT, NULL);
-}
-
 // find_wm_window is just a copy-pasta from gnome-screenshot (with the same
 // name)
 static Window find_wm_window(GdkWindow *window) {
@@ -250,16 +234,13 @@ static void apply_xshape_mask(GdkPixbuf *pixbuf, Display *display,
 }
 
 /* Capture window logic implemented below */
-GdkPixbuf *makas_screenshot_capture_window(MakasScreenshot *self, gint x,
-                                           gint y, gint *out_x_offset,
+GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
                                            gint *out_y_offset) {
   GdkWindow *window, *wm_window = NULL;
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
   Display *display;
   g_autoptr(GError) error = NULL;
-
-  g_return_val_if_fail(MAKAS_IS_SCREENSHOT(self), NULL);
 
   screenshot = NULL;
 

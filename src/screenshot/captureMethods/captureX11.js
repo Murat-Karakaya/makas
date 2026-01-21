@@ -7,14 +7,6 @@ import { flashRect } from "../popupWindows/flash.js";
 import { selectWindow } from "../popupWindows/selectWindow.js";
 
 
-let screenshotHelper = null;
-function getScreenshotHelper() {
-  if (!screenshotHelper) {
-    screenshotHelper = MakasScreenshot.Screenshot.new();
-  }
-  return screenshotHelper;
-}
-
 let isAvailable = null;
 
 export async function captureWithX11({ includePointer, captureMode }) {
@@ -137,9 +129,8 @@ function compositeCursor(pixbuf, rootX, rootY) {
 
 
 function captureWindowWithXShape(x, y) {
-    const helper = getScreenshotHelper();
     // GJS handles (out) arguments by returning an array: [return_val, out_arg1, out_arg2, ...]
-    const result = helper.capture_window(x, y);
+    const result = MakasScreenshot.capture_window_x11(x, y);
 
     if (!result || !result[0]) return null;
 
