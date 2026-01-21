@@ -7,6 +7,8 @@
 
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
 
+Copying to clipboard hangs the app for some bit. Something to investigate
+
 ### TO DO: 
 
 Implement a cancel button when delay is active.
