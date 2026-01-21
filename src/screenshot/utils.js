@@ -39,14 +39,11 @@ export function hasShellScreenshot() {
 export function hasGrimScreenshot() {
   if (methodAvailablity.grim !== null) return methodAvailablity.grim;
 
-  console.log("Checking Grim availability...");
   const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
   if (!waylandDisplay) return methodAvailablity.grim = false;
-  console.log("Wayland display found");
 
   const grimPath = GLib.find_program_in_path("grim");
   if (!grimPath) return methodAvailablity.grim = false;
-  console.log("Grim found");
 
   try {
     return methodAvailablity.grim = MakasScreenshot.utils_is_grim_supported();
@@ -71,25 +68,28 @@ export function hasX11Screenshot() {
  */
 export function hasPortalScreenshot() {
   if (methodAvailablity.portal !== null) return methodAvailablity.portal;
+
   const serviceName = "org.freedesktop.portal.Desktop";
   const objectPath = "/org/freedesktop/portal/desktop";
+  const interfaceName = "org.freedesktop.portal.Screenshot";
 
   try {
     const connection = Gio.DBus.session;
-    const result = connection.call_sync(
+    // We attempt to get the 'version' property of the Screenshot interface specifically
+    connection.call_sync(
       serviceName,
       objectPath,
-      "org.freedesktop.DBus.Introspectable",
-      "Introspect",
-      null,
+      "org.freedesktop.DBus.Properties",
+      "Get",
+      new GLib.Variant('(ss)', [interfaceName, "version"]),
       null,
       Gio.DBusCallFlags.NONE,
       -1,
       null
     );
 
-    const xml = result.deep_unpack()[0];
-    return methodAvailablity.portal = xml.includes('interface name="org.freedesktop.portal.Screenshot"');
+    // If this call succeeds, the interface exists and is functional
+    return methodAvailablity.portal = true;
   } catch (e) {
     return methodAvailablity.portal = false;
   }
