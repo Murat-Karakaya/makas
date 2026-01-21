@@ -1,11 +1,19 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import GLib from "gi://GLib";
+import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
 import { CaptureMode } from "../constants.js";
-import { getScreenshotHelper } from "../utils.js";
 import { flashRect } from "../popupWindows/flash.js";
 import { selectWindow } from "../popupWindows/selectWindow.js";
 
+
+let screenshotHelper = null;
+function getScreenshotHelper() {
+  if (!screenshotHelper) {
+    screenshotHelper = MakasScreenshot.Screenshot.new();
+  }
+  return screenshotHelper;
+}
 
 let isAvailable = null;
 

@@ -1,5 +1,4 @@
 import GLib from "gi://GLib";
-import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
 import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
@@ -12,18 +11,6 @@ export const settings = new Gio.Settings({
   schema_id: "com.github.murat.karakaya.Makas",
 });
 
-
-let screenshotHelper = null;
-/**
- * Get the C library screenshot helper instance.
- * @returns {MakasScreenshot.Screenshot}
- */
-export function getScreenshotHelper() {
-  if (!screenshotHelper) {
-    screenshotHelper = MakasScreenshot.Screenshot.new();
-  }
-  return screenshotHelper;
-}
 
 export const backends = {
   [CaptureBackend.X11]: {
