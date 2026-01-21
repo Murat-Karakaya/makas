@@ -11,3 +11,5 @@ export const CaptureBackend = {
     SHELL: "SHELL",
     PORTAL: "PORTAL",
 };
+
+export const SOURCE_PATH = "/com/github/murat/karakaya/Makas";

@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import { CaptureMode } from "../constants.js";
+import { CaptureMode, CaptureBackend, SOURCE_PATH } from "../constants.js";
 import { selectArea } from "../popupWindows/area-selection.js";
 import { settings, wait, showScreenshotNotification } from "../utils.js";
 import { performCapture } from "../performCapture.js";
@@ -18,15 +18,14 @@ export const PreScreenshot = GObject.registerClass(
       });
 
       this.setUpPostScreenshot = setUpPostScreenshot;
-      this.captureMode = CaptureMode.SCREEN;
 
       this.buildUI();
-      this.setUpValues();
+      this.backendListener();
     }
 
     buildUI() {
       const builder = new Gtk.Builder();
-      builder.add_from_resource("/com/github/murat/karakaya/Makas/screenshot/prescreenshot/prescreenshot.ui");
+      builder.add_from_resource(SOURCE_PATH + "/screenshot/prescreenshot/prescreenshot.ui");
 
       const mainBox = builder.get_object("main");
       this.add(mainBox);
@@ -45,8 +44,11 @@ export const PreScreenshot = GObject.registerClass(
         if (this.areaRadio.get_active()) this.captureMode = CaptureMode.AREA;
       });
 
-      this.delaySpinner = builder.get_object("spinbutton1");
-      this.pointerSwitch = builder.get_object("switch1");
+      this.delaySpinner = builder.get_object("delaySpinner");
+      
+      this.pointerSwitch = builder.get_object("pointerSwitch");
+      this.pointerRow = builder.get_object("pointerRow");
+      
       this.shootBtn = builder.get_object("shootBtn");
       this.statusLabel = builder.get_object("statusLabel");
 
@@ -67,7 +69,7 @@ export const PreScreenshot = GObject.registerClass(
 
       const delay = this.delaySpinner.get_value_as_int()
       const includePointer = this.pointerSwitch.get_active();
-      const captureBackendValue = settings.get_string("capture-backend-auto")
+      const captureBackendValue = this.captureBackendValue;
       const isHideWindow = settings.get_boolean("hide-window");
       const topLevel = this.get_toplevel();
       const captureMode = this.captureMode;
@@ -162,13 +164,58 @@ export const PreScreenshot = GObject.registerClass(
     setStatus(text) {
       this.statusLabel.set_text(text);
     }
-
-    setUpValues() {
-      this.setStatus("Ready");
+    
+    vfunc_map() {
+      super.vfunc_map();
+      
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
-      this.captureMode = settings.get_string("screenshot-mode")
+      this.setCaptureMode(settings.get_string("screenshot-mode"));
+      this.setBackend(settings.get_string("capture-backend-auto"));
+      this.setStatus("Ready");
+    }
 
+    transitionToPostScreenshot(pixbuf) {
+      if (settings.get_boolean("last-screenshot-delay")) {
+        settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
+      }
+      if (settings.get_boolean("last-include-pointer")) {
+        settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
+      }
+      if (settings.get_boolean("last-screenshot-mode")) {
+        settings.set_string("screenshot-mode", this.captureMode);
+      }
+      
+      this.setUpPostScreenshot(pixbuf);
+      this.setUpValues();
+    }
+    
+    setBackend(backend) {
+      this.captureBackendValue = backend;
+      if (backend === CaptureBackend.GRIM || backend === CaptureBackend.PORTAL) {
+        this.windowRadio.hide();
+        if (this.captureMode === CaptureMode.WINDOW) {
+          const settingValue = settings.get_string("screenshot-mode")
+          this.setCaptureMode(settingValue === CaptureMode.WINDOW ? CaptureMode.SCREEN : settingValue);
+        }
+      } else {
+        this.windowRadio.show();
+      }
+      
+      if (backend === CaptureBackend.PORTAL) {
+        this.pointerRow.hide();
+        // One thing to consider here is that we don't change the pointer switch value.
+        // Benefit: If the user changes to a backend that supports pointer capture, 
+        // The switch value will remain unchanged.
+        // Not so clean part: We still send the switch value. So the Portal backend
+        // mustn't throw an error when the switch value is true and it should simply ignore it.
+      } else {
+        this.pointerRow.show();
+      }
+    }
+    
+    setCaptureMode(mode) {
+      this.captureMode = mode;
       switch (this.captureMode) {
         case CaptureMode.SCREEN:
           this.screenRadio.set_active(true);
@@ -182,22 +229,13 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    transitionToPostScreenshot(pixbuf) {
-      this.syncValues();
-      this.setUpPostScreenshot(pixbuf);
-      this.setUpValues();
-    }
-
-    syncValues() {
-      if (settings.get_boolean("last-screenshot-delay")) {
-        settings.set_int("screenshot-delay", this.delaySpinner.get_value_as_int());
-      }
-      if (settings.get_boolean("last-include-pointer")) {
-        settings.set_boolean("include-pointer", this.pointerSwitch.get_active());
-      }
-      if (settings.get_boolean("last-screenshot-mode")) {
-        settings.set_string("screenshot-mode", this.captureMode);
-      }
+    backendListener() {
+      this._captureBackendChangedId = settings.connect(
+        "changed::capture-backend-auto",
+        () => {
+          this.setBackend(settings.get_string("capture-backend-auto"));
+        }
+      );
     }
 
   },
