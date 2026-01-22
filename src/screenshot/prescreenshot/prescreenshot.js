@@ -139,9 +139,13 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    async startDelay(timer, windowWait) {
-      print(`Waiting... ${(timer + windowWait) / 1000}s`);
-      this.setStatus(`Capturing in ${(timer + windowWait) / 1000}s...`);
+    async startDelay(timerMs, windowWaitMs) {
+      const timer = timerMs/10
+      const windowWait = windowWaitMs/10
+      const getRemainingSeconds = ()=> ((timer + windowWait) - ((timer + windowWait) % 100))/100
+      
+      print(`Waiting... ${(timer + windowWait) / 100}s`);
+      this.setStatus(`Capturing in ${getRemainingSeconds()}s...`);
 
       if (timer <= 0) return;
 
@@ -149,9 +153,9 @@ export const PreScreenshot = GObject.registerClass(
       return new Promise((resolve) => {
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 10, () => {
           remaining--;
-          if ((remaining + windowWait) % 1000 === 0) {
-            this.setStatus(`Capturing in ${(remaining + windowWait) / 1000}s...`);
-            print(`Waiting... ${(remaining + windowWait) / 1000}s`);
+          if ((remaining + windowWait) % 100 === 0) {
+            this.setStatus(`Capturing in ${(remaining + windowWait) / 100}s...`);
+            print(`Waiting... ${(remaining + windowWait) / 100}s`);
           }
           if (remaining <= 0) {
             resolve();

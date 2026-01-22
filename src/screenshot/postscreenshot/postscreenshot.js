@@ -267,7 +267,7 @@ export const PostScreenshot = GObject.registerClass(
       const CLIPBOARD_ATOM = Gdk.Atom.intern("CLIPBOARD", false);
       const clipboard = Gtk.Clipboard.get(CLIPBOARD_ATOM);
       clipboard.set_image(this.pixbuf);
-      clipboard.store();
+      //clipboard.store(); //this hangs the app for a bit. DE's don't need this and shouldn't be a big problems on TWM's
 
       this.statusLabel.set_text("Copied to clipboard");
     }

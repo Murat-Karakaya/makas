@@ -7,13 +7,11 @@
 
 The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
 
-Copying to clipboard hangs the app for some bit. Something to investigate
-
-delay probably lasts 10x higher than it should be
-
 Flashing effect is always fullscreen in wayland. Might wanna look at transient_for property
 
 The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
+
+Should probably do a cleanup of the temp files
 
 ### TO DO: 
 
