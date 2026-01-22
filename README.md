@@ -9,6 +9,12 @@ The backend selection and determination logic should be all async. They cause th
 
 Copying to clipboard hangs the app for some bit. Something to investigate
 
+delay probably lasts 10x higher than it should be
+
+Flashing effect is always fullscreen in wayland. Might wanna look at transient_for property
+
+The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
+
 ### TO DO: 
 
 Implement a cancel button when delay is active.
@@ -17,9 +23,11 @@ Text recognition
 
 Open image with other applications
 
-Add Appimage and nix package builds.
+Add Appimage, tar.gz and nix package builds.
 
 Review area selection logic. There might be a performance issue.
+
+terminal commands should be added
 
 ### WON'T FIX
 

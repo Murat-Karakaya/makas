@@ -7,23 +7,36 @@
     <property name="can-focus">False</property>
     <property name="icon-name">edit-undo-symbolic</property>
   </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
+  <object class="GtkPopoverMenu" id="popovermenu1">
     <property name="can-focus">False</property>
-    <property name="icon-name">document-save-symbolic</property>
-    <style>
-      <class name="suggested-action"/>
-    </style>
+    <property name="position">bottom</property>
+    <property name="constrain-to">none</property>
+    <child>
+      <object class="GtkModelButton" id="saveAsBtn">
+        <property name="visible">True</property>
+        <property name="can-focus">True</property>
+        <property name="receives-default">True</property>
+        <property name="text" translatable="yes">Save As...</property>
+      </object>
+      <packing>
+        <property name="submenu">main</property>
+      </packing>
+    </child>
   </object>
-  <object class="GtkImage" id="image3">
-    <property name="visible">True</property>
+  <object class="GtkPopoverMenu" id="popovermenu2">
     <property name="can-focus">False</property>
-    <property name="icon-name">document-save-as-symbolic</property>
-  </object>
-  <object class="GtkImage" id="image4">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="icon-name">edit-copy-symbolic</property>
+    <property name="position">bottom</property>
+    <child>
+      <object class="GtkModelButton" id="openWithBtn">
+        <property name="visible">True</property>
+        <property name="can-focus">True</property>
+        <property name="receives-default">True</property>
+        <property name="text" translatable="yes">Open With...</property>
+      </object>
+      <packing>
+        <property name="submenu">main</property>
+      </packing>
+    </child>
   </object>
   <object class="GtkBox" id="main">
     <property name="visible">True</property>
@@ -70,16 +83,44 @@
         <property name="halign">center</property>
         <property name="spacing">9</property>
         <child>
-          <object class="GtkButton" id="saveBtn">
-            <property name="label" translatable="yes">Save</property>
+          <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <property name="halign">end</property>
-            <property name="image">image2</property>
-            <property name="always-show-image">True</property>
+            <property name="can-focus">False</property>
+            <child>
+              <object class="GtkButton" id="saveBtn">
+                <property name="label" translatable="yes">Save</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkMenuButton">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="focus-on-click">False</property>
+                <property name="receives-default">True</property>
+                <property name="popover">popovermenu1</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
             <style>
-              <class name="suggested-action"/>
+              <class name="linked"/>
             </style>
           </object>
           <packing>
@@ -89,13 +130,42 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="saveAsBtn">
-            <property name="label" translatable="yes">Save As</property>
+          <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <property name="image">image3</property>
-            <property name="always-show-image">True</property>
+            <property name="can-focus">False</property>
+            <child>
+              <object class="GtkButton" id="openAppBtn">
+                <property name="label" translatable="yes">Open App</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkMenuButton">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="focus-on-click">False</property>
+                <property name="receives-default">True</property>
+                <property name="popover">popovermenu2</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <style>
+              <class name="linked"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -105,13 +175,19 @@
         </child>
         <child>
           <object class="GtkButton" id="copyBtn">
-            <property name="label" translatable="yes">Copy</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <property name="tooltip-text" translatable="yes">Copy Image</property>
             <property name="halign">start</property>
-            <property name="image">image4</property>
             <property name="always-show-image">True</property>
+            <child>
+              <object class="GtkImage" id="image4">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">edit-copy-symbolic</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
