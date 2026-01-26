@@ -4,21 +4,14 @@ import Cairo from "cairo";
 import { wait, settings } from "../utils.js";
 
 /**
- * Check if we're running on Wayland.
- * @returns {boolean}
- */
-function isWayland() {
-    return GLib.getenv("XDG_SESSION_TYPE") === "wayland" || !!GLib.getenv("WAYLAND_DISPLAY");
-}
-
-/**
  * Flash a rectangular region on the screen with a simple white overlay.
  * @param {number} x
  * @param {number} y
  * @param {number} width
  * @param {number} height
+ * @param {Gtk.Window} toplevel
  */
-export async function flashRect(x, y, width, height) {
+export async function flashRect(x, y, width, height, toplevel) {
     // Check if flash is enabled
     if (!settings.get_boolean("enable-flash")) {
         return;
@@ -26,11 +19,10 @@ export async function flashRect(x, y, width, height) {
 
     await wait(100); // wait to avoid lag in the main window and a possible race condition with the screenshot
 
-    const onWayland = isWayland();
-
     const win = new Gtk.Window({
         type: Gtk.WindowType.POPUP,
         decorated: false,
+        transient_for: toplevel,
     });
 
     win.set_keep_above(true);
@@ -42,7 +34,7 @@ export async function flashRect(x, y, width, height) {
     const visual = screen.get_rgba_visual();
 
     // On Wayland, skip transparency - use opaque flash
-    const useTransparency = !onWayland && visual && screen.is_composited();
+    const useTransparency = visual && screen.is_composited();
 
     if (visual) {
         win.set_visual(visual);

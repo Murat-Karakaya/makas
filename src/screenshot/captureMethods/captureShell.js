@@ -7,7 +7,6 @@ import { getCurrentDate, settings, wait } from "../utils.js";
 let isAvailable = null;
 
 export async function captureWithShell({ includePointer, captureMode, topLevel }) {
-    const flashEnabled = settings.get_boolean("enable-flash");
     const serviceName = "org.gnome.Shell.Screenshot";
     const interfaceName = serviceName;
     const objectPath = "/org/gnome/Shell/Screenshot";
@@ -29,7 +28,7 @@ export async function captureWithShell({ includePointer, captureMode, topLevel }
             method = "Screenshot";
             dbusParams = new GLib.Variant("(bbs)", [
                 includePointer,
-                flashEnabled,
+                false,
                 tmpFilename,
             ]);
             break;
@@ -42,15 +41,7 @@ export async function captureWithShell({ includePointer, captureMode, topLevel }
             dbusParams = new GLib.Variant("(bbbs)", [
                 true, // include_decorations
                 includePointer,
-                flashEnabled,
-                tmpFilename,
-            ]);
-            break;
-        case CaptureMode.AREA:
-            method = "Screenshot";
-            dbusParams = new GLib.Variant("(bbs)", [
-                includePointer,
-                false, // disabled because this one would've flashed the entire screen
+                false,
                 tmpFilename,
             ]);
             break;
@@ -74,7 +65,11 @@ export async function captureWithShell({ includePointer, captureMode, topLevel }
     GLib.unlink(tmpFilename);
 
     if (!pixbuf) throw new Error("Pixbuf is null");
-    return pixbuf;
+    return {
+        x: 0,
+        y: 0,
+        pixbuf,
+    };
 }
 
 export function hasShellScreenshot() {

@@ -62,7 +62,11 @@ export async function captureWithPortal({ captureMode }) {
                         // Ignore cleanup errors
                     }
 
-                    resolve(pixbuf);
+                    resolve({
+                        x: 0,
+                        y: 0,
+                        pixbuf,
+                    });
                 } catch (e) {
                     reject(e);
                 }

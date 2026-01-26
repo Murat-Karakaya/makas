@@ -93,20 +93,20 @@ export const PreScreenshot = GObject.registerClass(
 
         let pixbuf;
         if (captureMode === CaptureMode.AREA) {
-          const screenPixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          const screenCaptureResult = await performCapture(captureBackendValue, { captureMode: CaptureMode.SCREEN, includePointer, topLevel });
 
-          if (!screenPixbuf) {
+          if (!screenCaptureResult || !screenCaptureResult.pixbuf) {
             throw new Error("Area capture failed");
           }
+
+          const screenPixbuf = screenCaptureResult.pixbuf;
 
           selectionResult = await selectArea(screenPixbuf);
           if (!selectionResult) {
             return this.setStatus("Capture cancelled");
           }
 
-          console.log(selectionResult);
-          console.log(screenPixbuf.get_width());
-          console.log(screenPixbuf.get_height());
+          console.log(selectionResult, screenPixbuf.get_width(), screenPixbuf.get_height());
 
           pixbuf = screenPixbuf.new_subpixbuf(
             Math.max(0, selectionResult.x), // These two
@@ -115,9 +115,12 @@ export const PreScreenshot = GObject.registerClass(
             Math.min(screenPixbuf.get_height(), selectionResult.height) // Are currently a sanity check
           );
 
-          flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
+          flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height, topLevel);
         } else {
-          pixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          const captureResult = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          pixbuf = captureResult.pixbuf;
+          
+          flashRect(captureResult.x, captureResult.y, pixbuf.get_width(), pixbuf.get_height(), topLevel);
         }
 
         if (!pixbuf) {

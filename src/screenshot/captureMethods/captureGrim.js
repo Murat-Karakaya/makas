@@ -3,7 +3,6 @@ import GioUnix from "gi://GioUnix";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
 import { CaptureMode } from "../constants.js";
 import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
-import { flashRect } from "../popupWindows/flash.js";
 
 let isAvailable = null;
 
@@ -48,8 +47,11 @@ export async function captureWithGrim({ includePointer, captureMode }) {
                 loader.close();
                 const pixbuf = loader.get_pixbuf();
                 GLib.spawn_close_pid(pid);
-                flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
-                resolve(pixbuf);
+                resolve({
+                    x: 0,
+                    y: 0,
+                    pixbuf,
+                });
             } catch (e) {
                 try {
                     loader.close();
