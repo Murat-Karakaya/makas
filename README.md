@@ -5,13 +5,11 @@
 
 ### FIXME: 
 
-The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
-
-Flashing effect is always fullscreen in wayland. Might wanna look at transient_for property
-
 The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
 
 Should probably do a cleanup of the temp files
+
+In Cosmic DE the latest version of grim is not available. Causing inconsistencies.
 
 ### TO DO: 
 
@@ -25,7 +23,7 @@ Add Appimage, tar.gz and nix package builds.
 
 Review area selection logic. There might be a performance issue.
 
-terminal commands should be added
+Terminal commands should be added
 
 ### WON'T FIX
 
@@ -36,6 +34,10 @@ It's better to take Screenshot after the window animation is done. But I couldn'
 FreeDesktop will allways flash the entire screenshot in cinnamon.
 
 Free select won't be implemented.
+
+The backend selection and determination logic should be all async. They cause the app to hang for quite a lot in budgie.
+
+Flashing effect is at an offset from the actual area that is captured in wayland
 
 ## Build and Package
 
