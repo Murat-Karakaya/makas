@@ -83,3 +83,9 @@ export function showScreenshotNotification(app) {
 
   app.send_notification("screenshot-captured", notification);
 }
+
+export function isWayland() {
+  const sessionType = GLib.getenv("XDG_SESSION_TYPE");
+  const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
+  return sessionType === "wayland" || (waylandDisplay && waylandDisplay.includes("wayland"));
+}

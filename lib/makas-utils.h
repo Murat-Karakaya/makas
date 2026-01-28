@@ -15,6 +15,15 @@ G_BEGIN_DECLS
  */
 gboolean makas_utils_is_grim_supported(void);
 
+/**
+ * makas_utils_is_layer_shell_supported:
+ *
+ * Checks if the current session supports the zwlr_layer_shell_v1 protocol.
+ *
+ * Returns: TRUE if supported, FALSE otherwise.
+ */
+gboolean makas_utils_is_layer_shell_supported(void);
+
 G_END_DECLS
 
 #endif /* MAKAS_UTILS_H */

@@ -3,9 +3,9 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import { CaptureMode, CaptureBackend, SOURCE_PATH } from "../constants.js";
-import { selectArea } from "../popupWindows/area-selection.js";
+import { selectArea } from "../areaSelectionMethods/selectArea.js";
 import { settings, wait, showScreenshotNotification } from "../utils.js";
-import { performCapture } from "../performCapture.js";
+import { performCapture } from "../captureMethods/performCapture.js";
 import { flashRect } from "../popupWindows/flash.js";
 
 export const PreScreenshot = GObject.registerClass(

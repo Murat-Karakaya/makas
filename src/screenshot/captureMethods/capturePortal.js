@@ -76,6 +76,7 @@ export async function captureWithPortal({ captureMode }) {
         try {
             const options = {
                 "handle_token": new GLib.Variant("s", token),
+                "interactive": new GLib.Variant("b", false),
             };
 
             connection.call(

@@ -5,19 +5,24 @@
     <file>window.js</file>
     <file>screenshot/screenshot.js</file>
 
-    <file>screenshot/popupWindows/area-selection.js</file>
     <file>screenshot/popupWindows/selectWindow.js</file>
     <file>screenshot/popupWindows/flash.js</file>
 
     <file>screenshot/postscreenshot/postscreenshot.js</file>
     <file>screenshot/prescreenshot/prescreenshot.js</file>
     <file>screenshot/utils.js</file>
-    <file>screenshot/performCapture.js</file>
 
+    <file>screenshot/captureMethods/performCapture.js</file>
     <file>screenshot/captureMethods/captureX11.js</file>
     <file>screenshot/captureMethods/captureShell.js</file>
     <file>screenshot/captureMethods/captureGrim.js</file>
     <file>screenshot/captureMethods/capturePortal.js</file>
+
+    <file>screenshot/areaSelectionMethods/selectArea.js</file>
+    <file>screenshot/areaSelectionMethods/selectAreaLayerShell.js</file>
+    <file>screenshot/areaSelectionMethods/selectAreaX11.js</file>
+    <file>screenshot/areaSelectionMethods/selectAreaXWayland.js</file>
+    <file>screenshot/areaSelectionMethods/xwayland-helper.js</file>
 
     <file>screenshot/constants.js</file>
     <file>preferences.js</file>
