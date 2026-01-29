@@ -11,16 +11,11 @@
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf";
-import cairo from "gi://cairo";
 import Gio from "gi://Gio";
 import system from "system";
+import { SelectionDrawer } from "./selectionDrawer.js";
 
 const args = system.programArgs;
-// args usually contains [scriptName, arg1, arg2...] in some environments or just [arg1, arg2...]
-// In GJS module mode, let's assume standard behavior.
-// If run via `gjs -m script arg1`, args might include script name.
-// We can filter.
-
 let bgImagePath, resultPath;
 
 // Simple heuristic to find args
@@ -46,6 +41,7 @@ Gtk.init(null);
 
 const bgPixbuf = GdkPixbuf.Pixbuf.new_from_file(bgImagePath);
 let bgSurface = null;
+const drawer = new SelectionDrawer();
 
 const data = {
     rect: { x: 0, y: 0, width: 0, height: 0 },
@@ -98,38 +94,18 @@ window.connect("draw", (widget, cr) => {
         bgSurface = Gdk.cairo_surface_create_from_pixbuf(bgPixbuf, 0, widget.get_window());
     }
 
-    if (bgSurface) {
-        cr.setSourceSurface(bgSurface, 0, 0);
-        cr.paint();
-    } else {
-        cr.setSourceRGBA(0, 0, 0, 0.3);
-        cr.paint();
-    }
-
-    let selX = data.rect.x;
-    let selY = data.rect.y;
-    let selW = data.rect.width;
-    let selH = data.rect.height;
-
-    cr.setOperator(cairo.Operator.OVER);
-    cr.setSourceRGBA(0, 0, 0, 0.4);
-    cr.rectangle(0, 0, widget.get_allocated_width(), widget.get_allocated_height());
-
-    if (selW > 0 && selH > 0) {
-        cr.rectangle(selX + selW, selY, -selW, selH);
-    }
-
-    cr.fill();
-
-    if (data.buttonPressed && selW > 0 && selH > 0) {
-        cr.setOperator(cairo.Operator.OVER);
-        cr.setSourceRGBA(0.2, 0.6, 1.0, 0.8);
-        cr.setLineWidth(2);
-        cr.rectangle(selX, selY, selW, selH);
-        cr.stroke();
-    }
+    drawer.draw(cr, widget, bgSurface, data.rect, { x: 0, y: 0 }, data.buttonPressed);
     return true;
 });
+
+const queueDrawRect = (rect) => {
+    window.queue_draw_area(
+        rect.x - 10, 
+        rect.y - 10, 
+        rect.width + 20, 
+        rect.height + 20
+    );
+};
 
 window.connect("button-press-event", (widget, event) => {
     if (data.buttonPressed) return true;
@@ -140,17 +116,23 @@ window.connect("button-press-event", (widget, event) => {
     data.rect.y = data.startY;
     data.rect.width = 0;
     data.rect.height = 0;
+    
+    queueDrawRect(data.rect);
     return true;
 });
 
 window.connect("motion-notify-event", (widget, event) => {
     if (!data.buttonPressed) return true;
+    
+    queueDrawRect(data.rect);
+
     const [, currentX, currentY] = event.get_root_coords();
     data.rect.width = Math.abs(currentX - data.startX);
     data.rect.height = Math.abs(currentY - data.startY);
     data.rect.x = Math.min(data.startX, currentX);
     data.rect.y = Math.min(data.startY, currentY);
-    widget.queue_draw();
+    
+    queueDrawRect(data.rect);
     return true;
 });
 
@@ -158,6 +140,9 @@ const seat = display.get_default_seat();
 
 window.connect("button-release-event", (widget, event) => {
     if (!data.buttonPressed) return true;
+    
+    queueDrawRect(data.rect);
+
     const [, currentX, currentY] = event.get_root_coords();
     data.rect.width = Math.abs(currentX - data.startX);
     data.rect.height = Math.abs(currentY - data.startY);

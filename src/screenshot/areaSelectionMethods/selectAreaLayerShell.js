@@ -2,6 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import cairo from "gi://cairo";
 import GtkLayerShell from "gi://GtkLayerShell";
+import { SelectionDrawer } from "./selectionDrawer.js";
 
 /**
  * Layer Shell area selection for wlroots-based compositors.
@@ -19,6 +20,8 @@ export function selectAreaLayerShell(bgPixbuf) {
         const nMonitors = display.get_n_monitors();
         const windows = [];
         let resolved = false;
+        
+        const drawer = new SelectionDrawer();
 
         // Shared state
         const data = {
@@ -45,9 +48,9 @@ export function selectAreaLayerShell(bgPixbuf) {
                 print("Error ungrabbing seat: " + e);
             }
 
-            windows.forEach(w => {
+            windows.forEach(({ window }) => {
                 try {
-                    w.destroy();
+                    window.destroy();
                 } catch (e) {
                     // ignore
                 }
@@ -66,6 +69,20 @@ export function selectAreaLayerShell(bgPixbuf) {
                 });
             }
             cleanup();
+        };
+        
+        const queueDrawRect = (rect) => {
+            const pad = 10;
+            const globalX = rect.x - pad;
+            const globalY = rect.y - pad;
+            const globalW = rect.width + 2 * pad;
+            const globalH = rect.height + 2 * pad;
+
+            windows.forEach(({ window, geometry }) => {
+                const localX = globalX - geometry.x;
+                const localY = globalY - geometry.y;
+                window.queue_draw_area(localX, localY, globalW, globalH);
+            });
         };
 
         for (let i = 0; i < nMonitors; i++) {
@@ -115,93 +132,14 @@ export function selectAreaLayerShell(bgPixbuf) {
             window.connect("draw", (widget, cr) => {
                 // 1. Draw background
                 if (!bgSurface && bgPixbuf) {
-                    // Create a surface for the whole virtual screen? 
-                    // Or create a surface from the part of pixbuf corresponding to this monitor?
-                    // The passed bgPixbuf is likely the full screenshot.
-                    // On X11/cairo, simply drawing the pixbuf at (0,0) might draw the top-left of pixbuf.
-                    // But this window corresponds to a specific monitor with specific geometry.
-                    // We need to translate coordinates.
-                    // Wait, `selectWindow.js` (not seen here) or `capturePortal.js` returns a full pixbuf?
-                    // Assuming bgPixbuf covers the virtual screen (all monitors combined).
-                    // Ideally we should crop the bgPixbuf for this monitor, OR translate the drawing.
-
-                    // Currently simple implementation:
                     bgSurface = Gdk.cairo_surface_create_from_pixbuf(
                         bgPixbuf,
                         0,
                         widget.get_window()
                     );
                 }
-
-                // If bgSurface is the full screenshot, we need to draw it offset by -geometry.x, -geometry.y
-                // But `widget` allocation (0,0) in LayerShell usually maps to the monitor origin? 
-                // No, GtkLayerShell window coordinates are local to the window.
-                // So (0,0) in the window is the top-left of the monitor.
-                // The monitor is at (geometry.x, geometry.y) in global coordinates.
-                // So we should draw the bgSurface at (-geometry.x, -geometry.y).
-
-                if (bgSurface) {
-                    cr.setSourceSurface(bgSurface, -geometry.x, -geometry.y);
-                    cr.paint();
-                } else {
-                    cr.setSourceRGBA(0, 0, 0, 0.3);
-                    cr.paint();
-                }
-
-                // 2. Dim overlay
-                cr.setOperator(cairo.Operator.OVER);
-                cr.setSourceRGBA(0, 0, 0, 0.4);
-
-                const w = widget.get_allocated_width();
-                const h = widget.get_allocated_height();
-
-                // If we have a selection active, we need to subtract it from the dim overlay.
-                // The selection `data.rect` is in GLOBAL coordinates.
-                // We need to intersect it with this window's geometry.
-
-                let selX = data.rect.x;
-                let selY = data.rect.y;
-                let selW = data.rect.width;
-                let selH = data.rect.height;
-
-                // Intersect selection with current window geometry
-                // Window origin in global space is (geometry.x, geometry.y)
-
-                // Convert global selection to local coordinates
-                let localSelX = selX - geometry.x;
-                let localSelY = selY - geometry.y;
-
-                // Simple verify: just draw dim everywhere, then clear the selection rect
-                // But clearing means restoring the background... which is complicated if we already painted it.
-                // Standard approach: Path = Full Rect - Selection Rect. Fill with dim color.
-
-                // Add outer rectangle
-                cr.rectangle(0, 0, w, h);
-
-                // Subtract selection rectangle if it overlaps this window
-                if (selW > 0 && selH > 0) {
-                    // Check intersection
-                    // We can just add a negative rectangle or using EvenOdd rule?
-                    // Easier: using logic.
-                    // rectangle(localSelX, localSelY, selW, selH) with negative direction?
-                    // Cairo allows winding rules.
-
-                    cr.rectangle(localSelX + selW, localSelY, -selW, selH);
-                }
-                cr.fill();
-
-                // 3. Selection Border
-                if (data.buttonPressed && selW > 0 && selH > 0) {
-                    const style = widget.get_style_context();
-                    style.save();
-                    style.add_class(Gtk.STYLE_CLASS_RUBBERBAND);
-                    cr.setSourceRGBA(0.2, 0.6, 1.0, 0.8);
-                    cr.setLineWidth(2 * scale); // Scale the border
-                    cr.rectangle(localSelX, localSelY, selW, selH);
-                    cr.stroke();
-                    style.restore();
-                }
-
+                
+                drawer.draw(cr, widget, bgSurface, data.rect, geometry, data.buttonPressed);
                 return true;
             });
 
@@ -226,12 +164,14 @@ export function selectAreaLayerShell(bgPixbuf) {
                 const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
                 seat.grab(widget.get_window(), Gdk.SeatCapabilities.ALL_POINTING, false, cursor, null, null);
 
-                queueDrawAll();
+                queueDrawRect(data.rect);
                 return true;
             });
 
             window.connect("motion-notify-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
+                
+                queueDrawRect(data.rect);
 
                 const [, localX, localY] = event.get_coords();
                 const currentX = localX + geometry.x;
@@ -242,12 +182,14 @@ export function selectAreaLayerShell(bgPixbuf) {
                 data.rect.x = Math.min(data.startX, currentX);
                 data.rect.y = Math.min(data.startY, currentY);
 
-                queueDrawAll();
+                queueDrawRect(data.rect);
                 return true;
             });
 
             window.connect("button-release-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
+                
+                queueDrawRect(data.rect);
 
                 // We are adding the geometry  coords to prevent rectangle offset
                 const [, localX, localY] = event.get_coords();
@@ -273,24 +215,17 @@ export function selectAreaLayerShell(bgPixbuf) {
                 return false;
             });
 
-            windows.push(window);
-        }
-
-        function queueDrawAll() {
-            windows.forEach(w => w.queue_draw());
+            windows.push({ window, geometry });
         }
 
         // Show all windows
-        windows.forEach(w => {
-            w.show();
-            // Set cursor for each window surface
-            // Note: Layer Shell windows don't have a typical GdkWindow until mapped?
-            // We can try setting cursor after realize.
+        windows.forEach(({ window }) => {
+            window.show();
         });
 
         // Post-show cursor setting
-        windows.forEach(w => {
-            const gdkWin = w.get_window();
+        windows.forEach(({ window }) => {
+            const gdkWin = window.get_window();
             if (gdkWin) {
                 const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
                 gdkWin.set_cursor(cursor);

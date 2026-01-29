@@ -11,7 +11,11 @@ Should probably do a cleanup of the temp files
 
 In Cosmic DE the latest version of grim is not available. Causing inconsistencies.
 
+Gtk Layer shell is not a dependency, but should be
+
 ### TO DO: 
+
+After multiple same fallbacks in a row, the default should screenshot backend should change
 
 Implement a cancel button when delay is active.
 
@@ -20,8 +24,6 @@ Text recognition
 Open image with other applications
 
 Add Appimage, tar.gz and nix package builds.
-
-Review area selection logic. There might be a performance issue.
 
 Terminal commands should be added
 

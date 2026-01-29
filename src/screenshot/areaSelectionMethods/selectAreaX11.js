@@ -2,6 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
 import GLib from "gi://GLib";
 import cairo from "gi://cairo";
+import { SelectionDrawer } from "./selectionDrawer.js";
 
 /**
  * X11 area selection using GTK POPUP window.
@@ -18,6 +19,7 @@ export function selectAreaX11(bgPixbuf) {
         }
         /** @type {cairo.Surface} */
         let bgSurface = null;
+        const drawer = new SelectionDrawer();
 
         const data = {
             rect: { x: 0, y: 0, width: 0, height: 0 },
@@ -71,53 +73,20 @@ export function selectAreaX11(bgPixbuf) {
                 );
             }
 
-            if (bgSurface) {
-                cr.setSourceSurface(bgSurface, 0, 0);
-                cr.paint();
-            } else {
-                // Fallback if no image (shouldn't happen in new flow)
-                cr.setSourceRGBA(0, 0, 0, 0.3);
-                cr.paint();
-            }
-
-            // 2. Determine selection rect
-            let selX = data.rect.x;
-            let selY = data.rect.y;
-            let selW = data.rect.width;
-            let selH = data.rect.height;
-
-
-            // 3. Draw dim overlay with "hole" for selection
-            cr.setOperator(cairo.Operator.OVER);
-            cr.setSourceRGBA(0, 0, 0, 0.4);
-
-            // Define the "hole" path
-            // Full screen rect
-            cr.rectangle(0, 0, widget.get_allocated_width(), widget.get_allocated_height());
-
-            // Subtract selection rect (winding rule)
-            if (selW > 0 && selH > 0) {
-                cr.rectangle(selX + selW, selY, -selW, selH); // Clockwise vs Counter-clockwise
-            }
-
-            cr.fill();
-
-            // 4. Draw selection border
-            if (data.buttonPressed && selW > 0 && selH > 0) {
-                const style = widget.get_style_context();
-                style.save();
-                style.add_class(Gtk.STYLE_CLASS_RUBBERBAND);
-
-                cr.setOperator(cairo.Operator.OVER);
-                cr.setSourceRGBA(0.2, 0.6, 1.0, 0.8);
-                cr.setLineWidth(2);
-                cr.rectangle(selX, selY, selW, selH);
-                cr.stroke();
-
-                style.restore();
-            }
+            // For X11 popup covering everything, geometry is 0,0
+            drawer.draw(cr, widget, bgSurface, data.rect, { x: 0, y: 0 }, data.buttonPressed);
             return true;
         });
+
+        const queueDrawRect = (rect) => {
+             // Invalidate slightly larger area to clear borders
+             window.queue_draw_area(
+                 rect.x - 10, 
+                 rect.y - 10, 
+                 rect.width + 20, 
+                 rect.height + 20
+             );
+        };
 
         window.connect("button-press-event", (widget, event) => {
             if (data.buttonPressed) return true;
@@ -128,17 +97,26 @@ export function selectAreaX11(bgPixbuf) {
             data.rect.y = data.startY;
             data.rect.width = 0;
             data.rect.height = 0;
+            
+            // Draw initial point
+            queueDrawRect(data.rect);
             return true;
         });
 
         window.connect("motion-notify-event", (widget, event) => {
             if (!data.buttonPressed) return true;
+            
+            // Invalidate old rect
+            queueDrawRect(data.rect);
+
             const [, currentX, currentY] = event.get_root_coords();
             data.rect.width = Math.abs(currentX - data.startX);
             data.rect.height = Math.abs(currentY - data.startY);
             data.rect.x = Math.min(data.startX, currentX);
             data.rect.y = Math.min(data.startY, currentY);
-            widget.queue_draw();
+            
+            // Invalidate new rect
+            queueDrawRect(data.rect);
             return true;
         });
 
@@ -146,6 +124,10 @@ export function selectAreaX11(bgPixbuf) {
 
         window.connect("button-release-event", (widget, event) => {
             if (!data.buttonPressed) return true;
+            
+            // Invalidate old rect before finalizing
+            queueDrawRect(data.rect);
+
             const [, currentX, currentY] = event.get_root_coords();
             data.rect.width = Math.abs(currentX - data.startX);
             data.rect.height = Math.abs(currentY - data.startY);

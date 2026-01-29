@@ -23,6 +23,7 @@
     <file>screenshot/areaSelectionMethods/selectAreaX11.js</file>
     <file>screenshot/areaSelectionMethods/selectAreaXWayland.js</file>
     <file>screenshot/areaSelectionMethods/xwayland-helper.js</file>
+    <file>screenshot/areaSelectionMethods/selectionDrawer.js</file>
 
     <file>screenshot/constants.js</file>
     <file>preferences.js</file>

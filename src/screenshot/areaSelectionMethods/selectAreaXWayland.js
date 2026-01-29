@@ -21,6 +21,7 @@ export async function selectAreaXWayland(bgPixbuf) {
     const tempImagePath = GLib.build_filenamev([tempDir, `makas_area_select_bg_${timestamp}.png`]);
     const tempResultPath = GLib.build_filenamev([tempDir, `makas_area_select_result_${timestamp}.json`]);
     const tempScriptPath = GLib.build_filenamev([tempDir, `makas_xwayland_helper_${timestamp}.mjs`]);
+    const tempDrawerPath = GLib.build_filenamev([tempDir, "selectionDrawer.js"]);
 
     try {
         // Save pixbuf to temp file
@@ -32,6 +33,7 @@ export async function selectAreaXWayland(bgPixbuf) {
         const lastSlash = currentUri.lastIndexOf("/");
         const baseUri = currentUri.substring(0, lastSlash);
         const scriptUri = `${baseUri}/xwayland-helper.js`;
+        const drawerUri = `${baseUri}/selectionDrawer.js`;
 
         const scriptFile = Gio.File.new_for_uri(scriptUri);
         const [success, scriptContent] = scriptFile.load_contents(null);
@@ -40,8 +42,17 @@ export async function selectAreaXWayland(bgPixbuf) {
             throw new Error(`Failed to read xwayland-helper.js from ${scriptUri}`);
         }
 
+        const drawerFile = Gio.File.new_for_uri(drawerUri);
+        const [dSuccess, drawerContent] = drawerFile.load_contents(null);
+
+        if (!dSuccess) {
+            throw new Error(`Failed to read selectionDrawer.js from ${drawerUri}`);
+        }
+
         // Write the script to a temp file so gjs can execute it easily as a file
         GLib.file_set_contents(tempScriptPath, scriptContent);
+        // Write the drawer module
+        GLib.file_set_contents(tempDrawerPath, drawerContent);
 
         // Run the subprocess with GDK_BACKEND=x11
         const launcher = new Gio.SubprocessLauncher({
@@ -115,5 +126,6 @@ export async function selectAreaXWayland(bgPixbuf) {
         cleanup(tempImagePath);
         cleanup(tempResultPath);
         cleanup(tempScriptPath);
+        cleanup(tempDrawerPath);
     }
 }
