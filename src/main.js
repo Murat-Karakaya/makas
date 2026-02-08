@@ -9,6 +9,7 @@ import GObject from 'gi://GObject';
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
 import { settings, backends } from './screenshot/utils.js';
+import { parseCLI, executeCLIAction } from './cli.js';
 
 (() => {
     const preferred = settings.get_string("capture-backend");
@@ -85,12 +86,23 @@ export const ScreenRecorderApp = GObject.registerClass(
             if (!win) {
                 win = new ScreenshotWindow(this);
             }
-            win.present();
+
+            if (this.cliOptions && this.cliOptions.action === 'capture') {
+                executeCLIAction(this, win, this.cliOptions);
+            } else {
+                win.present();
+            }
         }
     }
 );
 
 export function main(argv) {
+    const cliResult = parseCLI(argv);
+    if (cliResult.exit) {
+        return 0;
+    }
+
     const app = new ScreenRecorderApp();
-    return app.runAsync(argv);
+    app.cliOptions = cliResult;
+    return app.runAsync(cliResult.gjsArgv);
 }

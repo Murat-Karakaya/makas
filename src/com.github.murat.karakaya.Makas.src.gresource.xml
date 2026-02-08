@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/com/github/murat/karakaya/Makas/js">
     <file>main.js</file>
+    <file>cli.js</file>
     <file>window.js</file>
     <file>screenshot/screenshot.js</file>
 

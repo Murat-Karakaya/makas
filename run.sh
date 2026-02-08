@@ -10,16 +10,23 @@ SKIP_BUILD=false
 USE_WAYLAND=false
 
 # Parse arguments
-while getopts "rw" opt; do
-  case $opt in
-    r) SKIP_BUILD=true ;;
-    w) USE_WAYLAND=true ;;
-    *) echo "Usage: $0 [-r] [-w]"; exit 1 ;;
+APP_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -r|--skip-build)
+      SKIP_BUILD=true
+      shift
+      ;;
+    --dev-wayland)
+      USE_WAYLAND=true
+      shift
+      ;;
+    *)
+      APP_ARGS+=("$1")
+      shift
+      ;;
   esac
 done
-
-# Shift off the options so "$@" only contains remaining script arguments
-shift $((OPTIND-1))
 
 if [ "$SKIP_BUILD" = false ]; then
     echo "Building and installing..."
@@ -61,4 +68,4 @@ fi
 
 # Run the installed application wrapper
 echo "Starting application..."
-"${INSTALL_DIR}/bin/com.github.murat.karakaya.Makas" "$@"
+"${INSTALL_DIR}/bin/com.github.murat.karakaya.Makas" -- "${APP_ARGS[@]}"

@@ -10,6 +10,10 @@ export async function performCapture(
   } catch (e) {
     console.error(`Backend ${captureBackendValue} failed: ${e.message}`);
 
+    if (props.disableFallback) {
+        throw new Error(`Backend ${captureBackendValue} failed and fallback is disabled: ${e.message}`);
+    }
+
     for (const b in backends) {
       if (b === captureBackendValue) continue; // Already checked
       if (backends[b].isAvailable()) {
