@@ -5,11 +5,17 @@
 
 ### FIXME: 
 
-The backend selection and determination logic should be all async. They cause the app to hang for quite a lot.
+The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
 
-Notifications don't work as expected on GNOME.
+Should probably do a cleanup of the temp files
+
+In Cosmic DE the latest version of grim is not available. Causing inconsistencies.
+
+Gtk Layer shell is not a dependency, but should be
 
 ### TO DO: 
+
+After multiple same fallbacks in a row, the default should screenshot backend should change
 
 Implement a cancel button when delay is active.
 
@@ -17,11 +23,9 @@ Text recognition
 
 Open image with other applications
 
-Add Appimage and nix package builds.
+Add Appimage, tar.gz and nix package builds.
 
-Warn the user about how for the settings to take effect, they need to restart the app.
-
-Review area selection logic. There might be a performance issue.
+Terminal commands should be added
 
 ### WON'T FIX
 
@@ -32,6 +36,10 @@ It's better to take Screenshot after the window animation is done. But I couldn'
 FreeDesktop will allways flash the entire screenshot in cinnamon.
 
 Free select won't be implemented.
+
+The backend selection and determination logic should be all async. They cause the app to hang for quite a lot in budgie.
+
+Flashing effect is at an offset from the actual area that is captured in wayland
 
 ## Build and Package
 

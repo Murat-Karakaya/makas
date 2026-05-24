@@ -3,9 +3,9 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import { CaptureMode, CaptureBackend, SOURCE_PATH } from "../constants.js";
-import { selectArea } from "../popupWindows/area-selection.js";
+import { selectArea } from "../areaSelectionMethods/selectArea.js";
 import { settings, wait, showScreenshotNotification } from "../utils.js";
-import { performCapture } from "../performCapture.js";
+import { performCapture } from "../captureMethods/performCapture.js";
 import { flashRect } from "../popupWindows/flash.js";
 
 export const PreScreenshot = GObject.registerClass(
@@ -20,6 +20,7 @@ export const PreScreenshot = GObject.registerClass(
       this.setUpPostScreenshot = setUpPostScreenshot;
 
       this.buildUI();
+      this.setUpValues();
       this.backendListener();
     }
 
@@ -92,20 +93,20 @@ export const PreScreenshot = GObject.registerClass(
 
         let pixbuf;
         if (captureMode === CaptureMode.AREA) {
-          const screenPixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          const screenCaptureResult = await performCapture(captureBackendValue, { captureMode: CaptureMode.SCREEN, includePointer, topLevel });
 
-          if (!screenPixbuf) {
+          if (!screenCaptureResult || !screenCaptureResult.pixbuf) {
             throw new Error("Area capture failed");
           }
+
+          const screenPixbuf = screenCaptureResult.pixbuf;
 
           selectionResult = await selectArea(screenPixbuf);
           if (!selectionResult) {
             return this.setStatus("Capture cancelled");
           }
 
-          console.log(selectionResult);
-          console.log(screenPixbuf.get_width());
-          console.log(screenPixbuf.get_height());
+          console.log(selectionResult, screenPixbuf.get_width(), screenPixbuf.get_height());
 
           pixbuf = screenPixbuf.new_subpixbuf(
             Math.max(0, selectionResult.x), // These two
@@ -114,9 +115,12 @@ export const PreScreenshot = GObject.registerClass(
             Math.min(screenPixbuf.get_height(), selectionResult.height) // Are currently a sanity check
           );
 
-          flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height);
+          flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height, topLevel);
         } else {
-          pixbuf = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          const captureResult = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          pixbuf = captureResult.pixbuf;
+          
+          flashRect(captureResult.x, captureResult.y, pixbuf.get_width(), pixbuf.get_height(), topLevel);
         }
 
         if (!pixbuf) {
@@ -138,9 +142,13 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    async startDelay(timer, windowWait) {
-      print(`Waiting... ${(timer + windowWait) / 1000}s`);
-      this.setStatus(`Capturing in ${(timer + windowWait) / 1000}s...`);
+    async startDelay(timerMs, windowWaitMs) {
+      const timer = timerMs/10
+      const windowWait = windowWaitMs/10
+      const getRemainingSeconds = ()=> ((timer + windowWait) - ((timer + windowWait) % 100))/100
+      
+      print(`Waiting... ${(timer + windowWait) / 100}s`);
+      this.setStatus(`Capturing in ${getRemainingSeconds()}s...`);
 
       if (timer <= 0) return;
 
@@ -148,9 +156,9 @@ export const PreScreenshot = GObject.registerClass(
       return new Promise((resolve) => {
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 10, () => {
           remaining--;
-          if ((remaining + windowWait) % 1000 === 0) {
-            this.setStatus(`Capturing in ${(remaining + windowWait) / 1000}s...`);
-            print(`Waiting... ${(remaining + windowWait) / 1000}s`);
+          if ((remaining + windowWait) % 100 === 0) {
+            this.setStatus(`Capturing in ${(remaining + windowWait) / 100}s...`);
+            print(`Waiting... ${(remaining + windowWait) / 100}s`);
           }
           if (remaining <= 0) {
             resolve();
@@ -167,11 +175,13 @@ export const PreScreenshot = GObject.registerClass(
     
     vfunc_map() {
       super.vfunc_map();
-      
+      this.setBackend(settings.get_string("capture-backend-auto"));
+    }
+    
+    setUpValues (){
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
       this.setCaptureMode(settings.get_string("screenshot-mode"));
-      this.setBackend(settings.get_string("capture-backend-auto"));
       this.setStatus("Ready");
     }
 

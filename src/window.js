@@ -91,9 +91,9 @@ export const ScreenshotWindow = GObject.registerClass(
       menuToolItem.add(menuButton);
       toolbar.insert(menuToolItem, 0);
 
-      const screenshotPage = new ScreenshotPage();
-      screenshotPage.show_all();
-      this.main_box.add(screenshotPage);
+      this.screenshotPage = new ScreenshotPage();
+      this.screenshotPage.show_all();
+      this.main_box.add(this.screenshotPage);
     }
   },
 );

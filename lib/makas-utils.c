@@ -21,6 +21,7 @@ typedef struct {
   gboolean has_ext_image_copy_capture_manager;
   gboolean has_screencopy_manager;
   gboolean has_outputs;
+  gboolean has_layer_shell;
 } MakasGrimSupportState;
 
 // Registry listener to populate state
@@ -48,6 +49,8 @@ static void grim_support_registry_handler(void *data,
     state->has_ext_image_copy_capture_manager = TRUE;
   } else if (strcmp(interface, "zwlr_screencopy_manager_v1") == 0) {
     state->has_screencopy_manager = TRUE;
+  } else if (strcmp(interface, "zwlr_layer_shell_v1") == 0) {
+    state->has_layer_shell = TRUE;
   }
 }
 
@@ -162,4 +165,65 @@ gboolean makas_utils_is_grim_supported(void) {
 
   // printf("DEBUG: Grim support check passed\n");
   return TRUE;
+}
+
+gboolean makas_utils_is_layer_shell_supported(void) {
+  void *handle = dlopen("libwayland-client.so.0", RTLD_LAZY);
+  if (!handle) {
+    fprintf(stderr, "DEBUG: Failed to dlopen libwayland-client.so.0: %s\n",
+            dlerror());
+    return FALSE;
+  }
+
+  // Symbol loading
+  void *(*wl_display_connect)(const char *) =
+      dlsym(handle, "wl_display_connect");
+  void *(*wl_proxy_marshal_constructor)(void *, uint32_t, void *, ...) =
+      dlsym(handle, "wl_proxy_marshal_constructor");
+  void *wl_registry_interface = dlsym(handle, "wl_registry_interface");
+
+  int (*wl_proxy_add_listener)(void *, void (**)(void), void *) =
+      dlsym(handle, "wl_proxy_add_listener");
+  int (*wl_display_roundtrip)(void *) = dlsym(handle, "wl_display_roundtrip");
+  void (*wl_display_disconnect)(void *) =
+      dlsym(handle, "wl_display_disconnect");
+
+  if (!wl_display_connect || !wl_proxy_marshal_constructor ||
+      !wl_registry_interface || !wl_proxy_add_listener ||
+      !wl_display_roundtrip || !wl_display_disconnect) {
+    dlclose(handle);
+    return FALSE;
+  }
+
+  void *display = wl_display_connect(NULL);
+  if (!display) {
+    dlclose(handle);
+    return FALSE;
+  }
+
+  MakasGrimSupportState state = {0};
+  void *registry =
+      wl_proxy_marshal_constructor(display, 1, wl_registry_interface, NULL);
+
+  if (!registry) {
+    wl_display_disconnect(display);
+    dlclose(handle);
+    return FALSE;
+  }
+
+  struct wl_registry_listener listener = {
+      .global = grim_support_registry_handler, .global_remove = NULL};
+
+  wl_proxy_add_listener(registry, (void (**)(void))&listener, &state);
+
+  if (wl_display_roundtrip(display) < 0) {
+    wl_display_disconnect(display);
+    dlclose(handle);
+    return FALSE;
+  }
+
+  wl_display_disconnect(display);
+  dlclose(handle);
+
+  return state.has_layer_shell;
 }

@@ -1,7 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import { PreScreenshot } from "./prescreenshot/prescreenshot.js";
-import { PostScreenshot } from "./postscreenshot.js";
+import { PostScreenshot } from "./postscreenshot/postscreenshot.js";
 
 export const ScreenshotPage = GObject.registerClass(
   class ScreenshotPage extends Gtk.Box {

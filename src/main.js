@@ -8,22 +8,23 @@ import GObject from 'gi://GObject';
 
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
-import { settings, isBackendAvailable } from './screenshot/utils.js';
+import { settings, backends } from './screenshot/utils.js';
+import { executeCLIAction } from './cli.js';
+import { parseCLI } from './parseCli.js';
 
 (() => {
     const preferred = settings.get_string("capture-backend");
 
     // Try preferred first
-    if (isBackendAvailable(preferred)) {
+    if (backends[preferred] && backends[preferred].isAvailable()) {
         settings.set_string("capture-backend-auto", preferred);
         return;
     }
 
-    // Fallback order: X11 -> SHELL -> GRIM
-    const backends = [CaptureBackend.X11, CaptureBackend.SHELL, CaptureBackend.GRIM, CaptureBackend.PORTAL];
-    for (const b of backends) {
+    // Fallback order: Determined by keys in backends object
+    for (const b in backends) {
         if (b === preferred) continue; // Already checked
-        if (isBackendAvailable(b)) {
+        if (backends[b].isAvailable()) {
             settings.set_string("capture-backend-auto", b);
             print(`[Makas] Preferred backend '${preferred}' unavailable. Falling back to '${b}'.`);
             return;
@@ -57,7 +58,7 @@ export const ScreenRecorderApp = GObject.registerClass(
                     modal: true,
                     program_name: 'Makas',
                     logo_icon_name: 'com.github.murat.karakaya.Makas',
-                    version: '0.1.0',
+                    version: pkg.version,
                     authors: [
                         'Murat'
                     ],
@@ -86,12 +87,23 @@ export const ScreenRecorderApp = GObject.registerClass(
             if (!win) {
                 win = new ScreenshotWindow(this);
             }
-            win.present();
+
+            if (this.cliOptions && this.cliOptions.action === 'capture') {
+                executeCLIAction(this, win, this.cliOptions);
+            } else {
+                win.present();
+            }
         }
     }
 );
 
 export function main(argv) {
+    const cliResult = parseCLI(argv);
+    if (cliResult.exit) {
+        return 0;
+    }
+
     const app = new ScreenRecorderApp();
-    return app.runAsync(argv);
+    app.cliOptions = cliResult;
+    return app.runAsync(cliResult.gjsArgv);
 }

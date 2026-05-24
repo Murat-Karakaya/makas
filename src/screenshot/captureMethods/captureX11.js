@@ -1,28 +1,33 @@
 import Gdk from "gi://Gdk?version=3.0";
 import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
+import GLib from "gi://GLib";
+import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
 import { CaptureMode } from "../constants.js";
-import { getScreenshotHelper } from "../utils.js";
-import { flashRect } from "../popupWindows/flash.js";
 import { selectWindow } from "../popupWindows/selectWindow.js";
 
 
+let isAvailable = null;
+
 export async function captureWithX11({ includePointer, captureMode }) {
-    let pixbuf;
+    let result;
     switch (captureMode) {
         case CaptureMode.SCREEN: {
             const rootWindow = Gdk.get_default_root_window();
-            pixbuf = Gdk.pixbuf_get_from_window(
+            const pixbuf = Gdk.pixbuf_get_from_window(
                 rootWindow,
                 0,
                 0,
                 rootWindow.get_width(),
                 rootWindow.get_height(),
             );
-            if (includePointer) {
-                compositeCursor(pixbuf, 0, 0);
-            }
-
-            flashRect(0, 0, pixbuf.get_width(), pixbuf.get_height());
+            if (includePointer) compositeCursor(pixbuf, 0, 0);
+            
+            result = {
+                x: 0,
+                y: 0,
+                pixbuf,
+            };
+            
             break;
         }
         case CaptureMode.WINDOW: {
@@ -30,37 +35,26 @@ export async function captureWithX11({ includePointer, captureMode }) {
 
             if (!selectionResult) return null;
 
-            const result = captureWindowWithXShape(
+            result = captureWindowWithXShape(
                 selectionResult.clickX,
                 selectionResult.clickY
             );
             if (!result) break;
-            pixbuf = result.pixbuf;
-            if (includePointer) {
-                compositeCursor(pixbuf, result.offsetX, result.offsetY);
-            }
-
-            flashRect(result.offsetX, result.offsetY, pixbuf.get_width(), pixbuf.get_height());
-            break;
-        }
-        case CaptureMode.AREA: {
-            const rootWindow = Gdk.get_default_root_window();
-            pixbuf = Gdk.pixbuf_get_from_window(
-                rootWindow,
-                0,
-                0,
-                rootWindow.get_width(),
-                rootWindow.get_height(),
-            );
-            if (includePointer) {
-                compositeCursor(pixbuf, 0, 0);
-            }
+            
+            if(includePointer) compositeCursor(result.pixbuf, result.x, result.y);
+            
             break;
         }
     }
 
-    if (!pixbuf) throw new Error("Pixbuf is null");
-    return pixbuf;
+    if (!result?.pixbuf) throw new Error("Pixbuf is null");
+    return result;
+}
+
+
+export function hasX11Screenshot() {
+  if (isAvailable !== null) return isAvailable;
+  return isAvailable = GLib.getenv("XDG_SESSION_TYPE") === "x11";
 }
 
 
@@ -120,15 +114,14 @@ function compositeCursor(pixbuf, rootX, rootY) {
 
 
 function captureWindowWithXShape(x, y) {
-    const helper = getScreenshotHelper();
     // GJS handles (out) arguments by returning an array: [return_val, out_arg1, out_arg2, ...]
-    const result = helper.capture_window(x, y);
+    const result = MakasScreenshot.capture_window_x11(x, y);
 
     if (!result || !result[0]) return null;
 
     return {
         pixbuf: result[0],
-        offsetX: result[1],
-        offsetY: result[2]
+        x: result[1],
+        y: result[2]
     };
 }
