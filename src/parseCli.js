@@ -36,7 +36,7 @@ export function parseCLI(argv) {
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
         let val = null;
-        
+
         if (arg === '--') continue;
 
         // Handle --param=value syntax
@@ -72,7 +72,7 @@ export function parseCLI(argv) {
           options.pointerSet = true;
           break
         case('--delay'):case('-d'):
-          options.action = 'capture'; 
+					options.action = 'capture';
           if (val) {
             options.delay = parseInt(val, 10);
           } else if (i + 1 < args.length && !isFlag(args[i+1])) {
@@ -109,7 +109,7 @@ export function parseCLI(argv) {
           break;
       }
     }
-    
+
     if (options.exit) return options;
 
     if (options.interactive) {
@@ -129,7 +129,7 @@ function printHelp() {
 
   Help Options:
     -h, --help                     Show help options
-  
+
   Application Options:
     -c, --clipboard                Send the grab directly to the clipboard
     -w, --window                   Grab a window instead of the entire screen
