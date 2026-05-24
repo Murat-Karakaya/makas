@@ -1,85 +1,51 @@
 import GLib from "gi://GLib";
-import GioUnix from "gi://GioUnix";
-import GdkPixbuf from "gi://GdkPixbuf?version=2.0";
-import { CaptureMode } from "../constants.js";
 import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
+import { CaptureMode } from "../constants.js";
 
 let isAvailable = null;
 
-export async function captureWithGrim({ includePointer, captureMode }) {
+/**
+ * Capture the screen using the native Wayland capture implementation.
+ * Tries ext-image-copy-capture first, then falls back to wlr-screencopy.
+ */
+export async function captureWithWayland({ includePointer, captureMode }) {
     if (captureMode === CaptureMode.WINDOW) {
-        throw new Error("Window capture isn't supported in Grim Backend. Please use a different backend for window capture.");
+        throw new Error("Window capture isn't supported in Wayland Backend. Please use a different backend for window capture.");
     }
 
-    let argv = ["grim"];
+    // Try ext-image-copy-capture first (newer, standard protocol)
+    let pixbuf = MakasScreenshot.capture_ext_image_copy(includePointer);
 
-    if (includePointer) {
-        argv.push("-c");
+    // Fall back to wlr-screencopy (older, wlroots-specific protocol)
+    if (!pixbuf) {
+        pixbuf = MakasScreenshot.capture_screencopy(includePointer);
     }
 
-    argv.push("-");
-
-    try {
-        const [success, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
-            null, // working directory
-            argv,
-            null, // env
-            GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-            null // child_setup
-        );
-
-        if (!success) {
-            throw new Error("Failed to spawn grim");
-        }
-        GLib.close(stdin);
-        GLib.close(stderr); // We might want to read stderr if it fails, but for now ignoring it.
-        const stream = new GioUnix.InputStream({ fd: stdout, close_fd: true });
-
-        // Use PixbufLoader to load from stream
-        const loader = new GdkPixbuf.PixbufLoader();
-
-        return new Promise((resolve, reject) => {
-            try {
-                let bytes;
-                while ((bytes = stream.read_bytes(4096, null)) && bytes.get_size() > 0) {
-                    loader.write(bytes.get_data());
-                }
-                loader.close();
-                const pixbuf = loader.get_pixbuf();
-                GLib.spawn_close_pid(pid);
-                resolve({
-                    x: 0,
-                    y: 0,
-                    pixbuf,
-                });
-            } catch (e) {
-                try {
-                    loader.close();
-                } catch (_) { }
-                GLib.spawn_close_pid(pid);
-                reject(e);
-            }
-        });
-
-    } catch (e) {
-        print(`Grim backend failed: ${e.message}`);
-        return null;
+    if (!pixbuf) {
+        throw new Error("Wayland capture failed: no supported capture protocol available");
     }
+
+    return {
+        x: 0,
+        y: 0,
+        pixbuf,
+    };
 }
 
-export function hasGrimScreenshot() {
-  if (isAvailable !== null) return isAvailable;
+/**
+ * Check if the native Wayland capture is available.
+ * No external binary is required — we use the native C implementation.
+ */
+export function hasWaylandScreenshot() {
+    if (isAvailable !== null) return isAvailable;
 
-  const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
-  if (!waylandDisplay) return isAvailable = false;
+    const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
+    if (!waylandDisplay) return isAvailable = false;
 
-  const grimPath = GLib.find_program_in_path("grim");
-  if (!grimPath) return isAvailable = false;
-
-  try {
-    return isAvailable = MakasScreenshot.utils_is_grim_supported();
-  } catch (e) {
-    console.error("Failed to check Grim availability:", e);
-    return isAvailable = false;
-  }
+    try {
+        return isAvailable = MakasScreenshot.utils_is_grim_supported();
+    } catch (e) {
+        console.error("Failed to check Wayland capture availability:", e);
+        return isAvailable = false;
+    }
 }

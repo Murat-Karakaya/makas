@@ -139,6 +139,6 @@ function printHelp() {
     -i, --interactive              Interactively set options
     -f, --file=filename            Save screenshot directly to this file
     --version                      Print version information and exit
-    -b, --backend=backend          Select backend temporarily (x11, shell, grim, portal)
+    -b, --backend=backend          Select backend temporarily (x11, shell, wayland, portal)
   `);
 }

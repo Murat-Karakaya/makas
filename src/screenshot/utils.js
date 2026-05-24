@@ -3,7 +3,7 @@ import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
 import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
-import { captureWithGrim, hasGrimScreenshot } from "./captureMethods/captureGrim.js";
+import { captureWithWayland, hasWaylandScreenshot } from "./captureMethods/captureGrim.js";
 import { captureWithPortal, hasPortalScreenshot } from "./captureMethods/capturePortal.js";
 
 
@@ -23,10 +23,10 @@ export const backends = {
     capture: captureWithShell,
     label: "Cinnamon Shell",
   },
-  [CaptureBackend.GRIM]: {
-    isAvailable: hasGrimScreenshot,
-    capture: captureWithGrim,
-    label: "Wayland (Grim)",
+  [CaptureBackend.WAYLAND]: {
+    isAvailable: hasWaylandScreenshot,
+    capture: captureWithWayland,
+    label: "Wayland",
   },
   [CaptureBackend.PORTAL]: {
     isAvailable: hasPortalScreenshot,
