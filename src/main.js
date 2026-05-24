@@ -58,7 +58,7 @@ export const ScreenRecorderApp = GObject.registerClass(
                     modal: true,
                     program_name: 'Makas',
                     logo_icon_name: 'com.github.murat.karakaya.Makas',
-                    version: '0.1.0',
+                    version: pkg.version,
                     authors: [
                         'Murat'
                     ],
