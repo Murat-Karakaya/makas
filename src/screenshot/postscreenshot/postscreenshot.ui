@@ -20,6 +20,7 @@
       </object>
       <packing>
         <property name="submenu">main</property>
+        <property name="position">1</property>
       </packing>
     </child>
   </object>
@@ -35,6 +36,7 @@
       </object>
       <packing>
         <property name="submenu">main</property>
+        <property name="position">1</property>
       </packing>
     </child>
   </object>
@@ -206,6 +208,8 @@
       <object class="GtkLabel" id="statusLabel">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="wrap">True</property>
+        <property name="wrap-mode">word-char</property>
       </object>
       <packing>
         <property name="expand">False</property>
