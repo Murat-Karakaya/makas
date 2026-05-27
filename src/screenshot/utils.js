@@ -57,11 +57,8 @@ export const getCurrentDate = () => {
 };
 
 export const getDestinationPath = (options) => {
-  let folder = options.folder;
-  const name = options.filename;
-  if (!folder || !name) return null;
-  if (!folder.endsWith("/")) folder += "/";
-  return folder + name;
+  // GLib handles all the slash-joining logic perfectly under the hood
+  return GLib.build_filenamev([options.folder, options.filename]);
 };
 
 

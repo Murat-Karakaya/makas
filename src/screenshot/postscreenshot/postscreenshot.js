@@ -4,7 +4,7 @@ import GObject from "gi://GObject";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GdkPixbuf from "gi://GdkPixbuf";
-import { getCurrentDate, getDestinationPath, settings } from "../utils.js";
+import { getBackupFolder, getCurrentDate, getDestinationPath, settings } from "../utils.js";
 import { SOURCE_PATH } from "../constants.js";
 
 export const PostScreenshot = GObject.registerClass(
@@ -78,6 +78,9 @@ export const PostScreenshot = GObject.registerClass(
 
       this.drawingArea.queue_draw();
       this.statusLabel.set_text("");
+
+      if (settings.get_boolean("auto-save")) this.onSave()
+      if (settings.get_boolean("auto-copy")) this.onCopyToClipboard()
     }
 
     onDraw(widget, cr) {
@@ -117,13 +120,13 @@ export const PostScreenshot = GObject.registerClass(
       if (filepath) {
         try {
           this.pixbuf.savev(filepath, "png", [], []);
-          this.statusLabel.set_text(`Saved to: ${filepath}`);
+          this.statusLabel.set_text(`Saved as: ${GLib.path_get_basename(filepath)}`);
         } catch {
           try {
-            const folder = GLib.get_home_dir();
+            const folder = getBackupFolder()
             const filepath = getDestinationPath({ folder, filename });
             this.pixbuf.savev(filepath, "png", [], []);
-            this.statusLabel.set_text(`Saved to: ${filepath}`);
+            this.statusLabel.set_text(`Saved as: ${GLib.path_get_basename(filepath)}`);
           } catch (e) {
             this.statusLabel.set_text(`Save failed: ${e.message}`);
           }

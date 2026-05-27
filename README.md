@@ -5,8 +5,6 @@
 
 ### FIXME:
 
-The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
-
 The new wayland backend kinda sucks. The code itself should be seperated into 2 parts
 
 Gtk Layer shell is not a dependency, but should be
