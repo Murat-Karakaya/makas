@@ -21,6 +21,8 @@ Text recognition
 
 Add Appimage, tar.gz and nix package builds.
 
+Add a setting for opening with an app
+
 ### WON'T FIX
 
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
