@@ -12,6 +12,21 @@ export const settings = new Gio.Settings({
 });
 
 
+export function getBackupFolder() {
+    const picturesPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
+    if (picturesPath) {
+      // Create a Gio.File reference for the "Screenshot" subfolder
+      let screenshotFolder = Gio.File.new_for_path(picturesPath).get_child("Screenshot");
+
+      // Check if the "Screenshot" folder actually exists on the system
+      if (screenshotFolder.query_exists(null)) {
+        return screenshotFolder.get_path();
+      }
+      return picturesPath; //Return pictures folder
+    }
+    return GLib.get_home_dir();
+}
+
 export const backends = {
   [CaptureBackend.X11]: {
     isAvailable: hasX11Screenshot,

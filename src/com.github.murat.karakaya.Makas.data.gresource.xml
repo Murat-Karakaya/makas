@@ -3,6 +3,7 @@
   <gresource prefix="/com/github/murat/karakaya/Makas">
     <file preprocess="xml-stripblanks">screenshot/prescreenshot/prescreenshot.ui</file>
     <file preprocess="xml-stripblanks">screenshot/postscreenshot/postscreenshot.ui</file>
+    <file preprocess="xml-stripblanks">preferneces.ui</file>
   </gresource>
   <gresource prefix="/com/github/murat/karakaya/Makas/icons">
     <file alias="selection-symbolic.svg">../data/icons/selection-symbolic.svg</file>

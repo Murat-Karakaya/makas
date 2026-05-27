@@ -45,10 +45,10 @@ export const PostScreenshot = GObject.registerClass(
 
       this.saveAsBtn = builder.get_object("saveAsBtn");
       this.saveAsBtn.connect("clicked", () => this.onSaveAs());
-      
+
       this.openAppBtn = builder.get_object("openAppBtn");
       this.openAppBtn.connect("clicked", () => this.onOpenApp());
-      
+
       this.openWithBtn = builder.get_object("openWithBtn");
       this.openWithBtn.connect("clicked", () => this.onOpenWith());
 
@@ -60,7 +60,7 @@ export const PostScreenshot = GObject.registerClass(
       this.drawingArea.set_vexpand(true);
       this.drawingArea.set_hexpand(true);
       this.drawingArea.connect("draw", (widget, cr) => this.onDraw(widget, cr));
-      
+
       const imageContainer = builder.get_object("imageContainer");
       imageContainer.add(this.drawingArea);
 
@@ -75,7 +75,7 @@ export const PostScreenshot = GObject.registerClass(
         this.fileMonitor = null;
       }
       this.currentFilepath = null;
-      
+
       this.drawingArea.queue_draw();
       this.statusLabel.set_text("");
     }
@@ -109,6 +109,8 @@ export const PostScreenshot = GObject.registerClass(
       if (!this.pixbuf) return;
 
       const folder = settings.get_string("screenshot-save-folder");
+
+      console.log("folder", folder);
       const filename = `Screenshot-${getCurrentDate()}.png`;
       const filepath = getDestinationPath({ folder, filename });
 
@@ -151,9 +153,9 @@ export const PostScreenshot = GObject.registerClass(
           if (filepath) {
             try {
               this.pixbuf.savev(filepath, "png", [], []);
-              this.statusLabel.set_text(`Saved to: ${filepath}`);
+              this.statusLabel.set_text(`Saved as: ${GLib.path_get_basename(filepath)}`);
               if (settings.get_boolean("last-screenshot-save-folder")) {
-                settings.set_string("screenshot-save-folder", filepath);
+                settings.set_string("screenshot-save-folder", GLib.path_get_dirname(filepath));
               }
             } catch (e) {
               this.statusLabel.set_text(`Save failed: ${e.message}`);
@@ -165,14 +167,14 @@ export const PostScreenshot = GObject.registerClass(
 
       dialog.show();
     }
-    
+
     ensureFile() {
       if (this.currentFilepath) return this.currentFilepath;
-      
+
       const tmpDir = GLib.get_tmp_dir();
       const filename = `makas-temp-${getCurrentDate()}.png`;
       const filepath = getDestinationPath({ folder: tmpDir, filename });
-            
+
       try {
         this.pixbuf.savev(filepath, "png", [], []);
         this.currentFilepath = filepath;
@@ -184,15 +186,15 @@ export const PostScreenshot = GObject.registerClass(
         return null;
       }
     }
-    
+
     setupFileMonitor() {
       if (this.fileMonitor) {
         this.fileMonitor.cancel();
         this.fileMonitor = null;
       }
-      
+
       if (!this.currentFilepath) return;
-      
+
       const file = Gio.File.new_for_path(this.currentFilepath);
       this.fileMonitor = file.monitor_file(Gio.FileMonitorFlags.NONE, null);
       this.fileMonitor.connect("changed", (monitor, file, otherFile, eventType) => {
@@ -209,15 +211,15 @@ export const PostScreenshot = GObject.registerClass(
         }
       });
     }
-    
+
     onOpenWith() {
       const filepath = this.ensureFile();
       if (!filepath) return;
-      
+
       const file = Gio.File.new_for_path(filepath);
-      
+
       const dialog = new Gtk.Dialog({
-        transient_for: this.get_toplevel(), 
+        transient_for: this.get_toplevel(),
         modal: true,
         destroy_with_parent: true,
         title: "Open screenshot with"
@@ -230,7 +232,7 @@ export const PostScreenshot = GObject.registerClass(
 
       // UX: Double-clicking an app should trigger "Open"
       chooser.connect("application-activated", () => dialog.response(Gtk.ResponseType.OK));
-  
+
       dialog.connect("response", (self, response_id) => {
         if (response_id === Gtk.ResponseType.OK) {
           // Get selection from the widget, not the dialog
@@ -239,14 +241,14 @@ export const PostScreenshot = GObject.registerClass(
         }
         self.destroy();
       });
-  
+
       dialog.show_all();
     }
-    
+
     onOpenApp() {
       const filepath = this.ensureFile();
       if (!filepath) return;
-      
+
       try {
           const file = Gio.File.new_for_path(filepath);
           const success = Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);

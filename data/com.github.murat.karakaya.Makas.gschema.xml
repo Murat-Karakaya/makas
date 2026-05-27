@@ -2,7 +2,7 @@
 <schemalist gettext-domain="Makas">
 	<schema id="com.github.murat.karakaya.Makas" path="/com/github/murat/karakaya/Makas/">
 		<key name="screenshot-save-folder" type="s">
-			<default>'~/Pictures/Screenshots'</default>
+			<default>''</default>
 			<summary>Default folder for screenshot</summary>
 			<description>Default folder for screenshot</description>
 		</key>
@@ -72,6 +72,16 @@
 			<default>true</default>
 			<summary>Show notification after screenshot</summary>
 			<description>Whether to show a desktop notification after taking a screenshot</description>
+		</key>
+		<key name="auto-save" type="b">
+			<default>false</default>
+			<summary>Auto save screenshots</summary>
+			<description>Whether to automatically save screenshots to the screenshots folder</description>
+		</key>
+		<key name="auto-copy" type="b">
+			<default>true</default>
+			<summary>Auto copy screenshots</summary>
+			<description>Whether to automatically copy screenshots to clipboard</description>
 		</key>
 	</schema>
 </schemalist>
