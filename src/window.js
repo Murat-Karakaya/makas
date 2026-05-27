@@ -83,7 +83,18 @@ export const ScreenshotWindow = GObject.registerClass(
         prefsWindow.show_all();
       });
 
+      const aboutButton = new Gtk.ModelButton({
+        text: "About Makas",
+        visible: true,
+      });
+      aboutButton.connect("clicked", () => {
+        popover.popdown();
+        application.activate_action("about", null);
+      });
+
       popoverBox.add(preferencesButton);
+      popoverBox.add(aboutButton);
+
       popover.add(popoverBox);
       popover.set_relative_to(menuButton);
       menuButton.set_popover(popover);

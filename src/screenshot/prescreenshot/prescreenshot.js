@@ -202,7 +202,7 @@ export const PreScreenshot = GObject.registerClass(
     
     setBackend(backend) {
       this.captureBackendValue = backend;
-      if (backend === CaptureBackend.GRIM || backend === CaptureBackend.PORTAL) {
+      if (backend === CaptureBackend.WAYLAND || backend === CaptureBackend.PORTAL) {
         this.windowRadio.hide();
         if (this.captureMode === CaptureMode.WINDOW) {
           const settingValue = settings.get_string("screenshot-mode")

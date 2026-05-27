@@ -7,7 +7,7 @@ export const CaptureMode = {
 
 export const CaptureBackend = {
     X11: "X11",
-    GRIM: "GRIM",
+    WAYLAND: "WAYLAND",
     SHELL: "SHELL",
     PORTAL: "PORTAL",
 };

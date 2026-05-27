@@ -65,6 +65,9 @@ export const ScreenRecorderApp = GObject.registerClass(
                     copyright: '© 2026 Murat'
                 };
                 const aboutDialog = new Gtk.AboutDialog(aboutParams);
+                aboutDialog.connect('response', () => {
+                    aboutDialog.destroy();
+                });
                 aboutDialog.present();
             });
             this.add_action(show_about_action);

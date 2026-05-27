@@ -2,339 +2,158 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
-import { CaptureMode } from "./screenshot/constants.js"
+import { CaptureMode, SOURCE_PATH } from "./screenshot/constants.js";
 import {
   backends,
-  settings
+  settings,
+  getBackupFolder,
 } from "./screenshot/utils.js";
 
-export const PreferencesWindow = GObject.registerClass(
-  {
-    GTypeName: "PreferencesWindow",
-  },
-  class PreferencesWindow extends Gtk.Dialog {
-    constructor(parent) {
-      super({
-        title: "Preferences",
-        transient_for: parent,
-        modal: true,
-        default_width: 450,
-        default_height: 400,
-      });
+export class PreferencesWindow {
+  constructor(parent) {
+    const builder = new Gtk.Builder();
+    builder.add_from_resource(SOURCE_PATH + "/preferneces.ui");
 
-      this._currentRow = 0;
-      this._grid = null;
+    const dialog = builder.get_object("preferences-dialog");
+    dialog.set_transient_for(parent);
+    dialog.set_modal(true);
 
-      this._initUI();
-      this._bindSettings();
+    // Get widgets
+    const closeBtn = builder.get_object("close-btn");
+    const fileChooser = builder.get_object("file-chooser");
+    const folderCheckbox = builder.get_object("folder-checkbox");
+    const modeCombo = builder.get_object("mode-combo");
+    const modeCheckbox = builder.get_object("mode-checkbox");
+    const delaySpinner = builder.get_object("delay-spinner");
+    const delayCheckbox = builder.get_object("delay-checkbox");
+    const pointerSwitch = builder.get_object("pointer-switch");
+    const pointerCheckbox = builder.get_object("pointer-checkbox");
+    const autosaveSwitch = builder.get_object("autosave-switch");
+    const autocopySwitch = builder.get_object("autocopy-switch");
+    const flashSwitch = builder.get_object("flash-switch");
+    const notificationSwitch = builder.get_object("notification-switch");
+    const backendCombo = builder.get_object("backend-combo");
+    const windowTransitionWait = builder.get_object("window-transition-wait");
+    const showWindowCheckbox = builder.get_object("show-window-checkbox");
 
-      this.connect("response", () => this.destroy());
+    // Close buttons
+    closeBtn.connect("clicked", () => dialog.destroy());
+    dialog.connect("response", () => dialog.destroy());
+
+    // File Chooser Button setup
+    let currentFolder = settings.get_string("screenshot-save-folder");
+    if (!currentFolder || currentFolder.label===0) {
+    	currentFolder = getBackupFolder();
+    	settings.set_string("screenshot-save-folder", currentFolder);
     }
 
-    _initUI() {
-      this.add_button("Close", Gtk.ResponseType.CLOSE);
-
-      const contentArea = this.get_content_area();
-      contentArea.set_spacing(12);
-      contentArea.set_margin_top(12);
-      contentArea.set_margin_bottom(12);
-      contentArea.set_margin_start(12);
-      contentArea.set_margin_end(12);
-
-      this._grid = new Gtk.Grid({
-        row_spacing: 12,
-        column_spacing: 12,
-        column_homogeneous: false,
-      });
-      contentArea.add(this._grid);
-
-      this._buildFolderSection();
-      this._addSeparator();
-      this._buildDelaySection();
-      this._addSeparator();
-      this._buildPointerSection();
-      this._addSeparator();
-      this._buildModeSection();
-      this._addSeparator();
-      this._buildWaitSection();
-      this._addSeparator();
-      this._buildBackendSection();
-      this._addSeparator();
-      this._buildHideWindowSection();
-      this._addSeparator();
-      this._buildFlashSection();
-      this._addSeparator();
-      this._buildNotificationSection();
-
-      contentArea.show_all();
-    }
-
-    _buildFolderSection() {
-      const label = new Gtk.Label({
-        label: "Default Screenshot Folder:",
-        halign: Gtk.Align.START,
-      });
-
-      this.screenshotPathLabel = new Gtk.Label({
-        label: settings.get_string("screenshot-save-folder"),
-        hexpand: true,
-        halign: Gtk.Align.START,
-      });
-
-      this.screenshotFolderButton = new Gtk.Button({ label: "Browse" });
-      this.screenshotFolderButton.connect("clicked", () =>
-        this.onOpenFolderSelector("screenshot-save-folder")
-      );
-
-      this.lastFolderCheck = new Gtk.CheckButton({
-        label: "Remember last used folder",
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.screenshotPathLabel, 1, this._currentRow, 1, 1);
-      this._grid.attach(this.screenshotFolderButton, 2, this._currentRow, 1, 1);
-      this._currentRow++;
-
-      this._grid.attach(this.lastFolderCheck, 2, this._currentRow, 1, 1);
-      this._currentRow++;
-    }
-
-    _buildDelaySection() {
-      const label = new Gtk.Label({
-        label: "Default Delay (seconds):",
-        halign: Gtk.Align.START,
-      });
-
-      this.delaySpinner = new Gtk.SpinButton({
-        adjustment: new Gtk.Adjustment({
-          lower: 0,
-          upper: 3600,
-          step_increment: 1,
-        }),
-      });
-
-      this.lastDelayCheck = new Gtk.CheckButton({
-        label: "Remember last used delay",
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.delaySpinner, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-
-      this._grid.attach(this.lastDelayCheck, 2, this._currentRow, 1, 1);
-      this._currentRow++;
-    }
-
-    _buildPointerSection() {
-      const label = new Gtk.Label({
-        label: "Include Pointer:",
-        halign: Gtk.Align.START,
-      });
-
-      this.pointerSwitch = new Gtk.Switch({
-        halign: Gtk.Align.START,
-      });
-
-      this.lastPointerCheck = new Gtk.CheckButton({
-        label: "Remember last pointer option",
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.pointerSwitch, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-
-      this._grid.attach(this.lastPointerCheck, 2, this._currentRow, 1, 1);
-      this._currentRow++;
-    }
-
-    _buildModeSection() {
-      const label = new Gtk.Label({
-        label: "Default Mode:",
-        halign: Gtk.Align.START,
-      });
-
-      this.modeCombo = new Gtk.ComboBoxText();
-      this.modeCombo.append(CaptureMode.SCREEN, "Screen");
-      this.modeCombo.append(CaptureMode.WINDOW, "Window");
-      this.modeCombo.append(CaptureMode.AREA, "Area");
-
-      this.lastModeCheck = new Gtk.CheckButton({
-        label: "Remember last used mode",
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.modeCombo, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-
-      this._grid.attach(this.lastModeCheck, 2, this._currentRow, 1, 1);
-      this._currentRow++;
-    }
-
-    _buildWaitSection() {
-      const label = new Gtk.Label({
-        label: "Window Transition Wait (milliseconds):",
-        halign: Gtk.Align.START,
-      });
-
-      this.waitSpinner = new Gtk.SpinButton({
-        adjustment: new Gtk.Adjustment({
-          lower: 0,
-          upper: 5000,
-          step_increment: 200,
-        }),
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.waitSpinner, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-    }
-
-    _buildBackendSection() {
-      const label = new Gtk.Label({
-        label: "Capture Backend:",
-        halign: Gtk.Align.START,
-      });
-
-      this.backendStore = new Gtk.ListStore();
-      this.backendStore.set_column_types([
-        GObject.TYPE_STRING, // ID
-        GObject.TYPE_STRING, // Label
-        GObject.TYPE_BOOLEAN // Sensitive
-      ]);
-
-      this.backendCombo = new Gtk.ComboBox({
-        model: this.backendStore,
-        id_column: 0,
-      });
-
-      const renderer = new Gtk.CellRendererText();
-      this.backendCombo.pack_start(renderer, true);
-      this.backendCombo.add_attribute(renderer, "text", 1);
-      this.backendCombo.add_attribute(renderer, "sensitive", 2);
-
-      const backendData = [];
-      for (const key in backends) {
-        backendData.push([key, backends[key].label, backends[key].isAvailable()]);
+    fileChooser.set_filename(currentFolder);
+    fileChooser.connect("file-set", () => {
+      const folderPath = fileChooser.get_filename();
+      if (folderPath) {
+        settings.set_string("screenshot-save-folder", folderPath);
       }
-
-      for (const [id, backendLabel, available] of backendData) {
-        const iter = this.backendStore.insert(-1);
-        this.backendStore.set(iter, [0, 1, 2], [id, backendLabel, available]);
+    });
+    const folderChangedId = settings.connect("changed::screenshot-save-folder", () => {
+      const path = settings.get_string("screenshot-save-folder");
+      if (path) {
+        fileChooser.set_filename(path);
       }
+    });
 
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.backendCombo, 1, this._currentRow, 2, 1);
-      this._currentRow++;
+    // Spin button adjustments
+    delaySpinner.set_adjustment(new Gtk.Adjustment({
+      lower: 0,
+      upper: 3600,
+      step_increment: 1,
+    }));
+
+    windowTransitionWait.set_adjustment(new Gtk.Adjustment({
+      lower: 0,
+      upper: 5000,
+      step_increment: 200,
+    }));
+
+    // ComboBoxText options for mode
+    modeCombo.append(CaptureMode.SCREEN, "Screen");
+    modeCombo.append(CaptureMode.WINDOW, "Window");
+    modeCombo.append(CaptureMode.AREA, "Area");
+
+    // Bindings using Gio.Settings.bind
+    settings.bind("last-screenshot-save-folder", folderCheckbox, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("screenshot-mode", modeCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("last-screenshot-mode", modeCheckbox, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("screenshot-delay", delaySpinner, "value", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("last-screenshot-delay", delayCheckbox, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("include-pointer", pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("last-include-pointer", pointerCheckbox, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("auto-save", autosaveSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("auto-copy", autocopySwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("show-notification", notificationSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
+    settings.bind("window-wait", windowTransitionWait, "value", Gio.SettingsBindFlags.DEFAULT);
+
+    // Inverted bindings / Custom sync for show-window-checkbox (hide-window)
+    showWindowCheckbox.set_active(!settings.get_boolean("hide-window"));
+    showWindowCheckbox.connect("toggled", () => {
+      settings.set_boolean("hide-window", !showWindowCheckbox.get_active());
+    });
+    const hideWindowChangedId = settings.connect("changed::hide-window", () => {
+      showWindowCheckbox.set_active(!settings.get_boolean("hide-window"));
+    });
+
+    // Inverted bindings / Custom sync for flash-switch (enable-flash)
+    flashSwitch.set_active(!settings.get_boolean("enable-flash"));
+    flashSwitch.connect("state-set", (widget, state) => {
+      settings.set_boolean("enable-flash", !state);
+      return false;
+    });
+    const enableFlashChangedId = settings.connect("changed::enable-flash", () => {
+      flashSwitch.set_active(!settings.get_boolean("enable-flash"));
+    });
+
+    // Backend setup (custom ListStore for sensitivity)
+    const backendStore = new Gtk.ListStore();
+    backendStore.set_column_types([
+      GObject.TYPE_STRING, // ID
+      GObject.TYPE_STRING, // Label
+      GObject.TYPE_BOOLEAN // Sensitive
+    ]);
+
+    backendCombo.set_model(backendStore);
+    backendCombo.set_id_column(0);
+
+    const renderer = new Gtk.CellRendererText();
+    backendCombo.pack_start(renderer, true);
+    backendCombo.add_attribute(renderer, "text", 1);
+    backendCombo.add_attribute(renderer, "sensitive", 2);
+
+    const backendData = [];
+    for (const key in backends) {
+      backendData.push([key, backends[key].label, backends[key].isAvailable()]);
     }
 
-    _buildHideWindowSection() {
-      const label = new Gtk.Label({
-        label: "Hide window at capture:",
-        halign: Gtk.Align.START,
-      });
-
-      this.isHideWindow = new Gtk.Switch({
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.isHideWindow, 1, this._currentRow, 2, 1);
-      this._currentRow++;
+    for (const [id, backendLabel, available] of backendData) {
+      const iter = backendStore.insert(-1);
+      backendStore.set(iter, [0, 1, 2], [id, backendLabel, available]);
     }
 
-    _buildFlashSection() {
-      const label = new Gtk.Label({
-        label: "Enable flash effect:",
-        halign: Gtk.Align.START,
-      });
+    settings.bind("capture-backend-auto", backendCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
 
-      this.flashSwitch = new Gtk.Switch({
-        halign: Gtk.Align.START,
-      });
+    const backendChangedId = backendCombo.connect("changed", () => {
+      const activeId = backendCombo.get_active_id();
+      if (activeId) {
+        settings.set_string("capture-backend", activeId);
+      }
+    });
 
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.flashSwitch, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-    }
+    // Clean up settings connections on dialog destroy to avoid memory leaks
+    dialog.connect("destroy", () => {
+      settings.disconnect(folderChangedId);
+      settings.disconnect(hideWindowChangedId);
+      settings.disconnect(enableFlashChangedId);
+      backendCombo.disconnect(backendChangedId);
+    });
 
-    _buildNotificationSection() {
-      const label = new Gtk.Label({
-        label: "Show notification after capture:",
-        halign: Gtk.Align.START,
-      });
-
-      this.notificationSwitch = new Gtk.Switch({
-        halign: Gtk.Align.START,
-      });
-
-      this._grid.attach(label, 0, this._currentRow, 1, 1);
-      this._grid.attach(this.notificationSwitch, 1, this._currentRow, 2, 1);
-      this._currentRow++;
-    }
-
-    _addSeparator() {
-      const separator = new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL });
-      this._grid.attach(separator, 0, this._currentRow, 3, 1);
-      this._currentRow++;
-    }
-
-    _bindSettings() {
-      settings.bind("last-screenshot-delay", this.lastDelayCheck, "active", Gio.SettingsBindFlags.DEFAULT);
-      settings.bind("screenshot-delay", this.delaySpinner, "value", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("last-screenshot-mode", this.lastModeCheck, "active", Gio.SettingsBindFlags.DEFAULT);
-      settings.bind("screenshot-mode", this.modeCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("last-include-pointer", this.lastPointerCheck, "active", Gio.SettingsBindFlags.DEFAULT);
-      settings.bind("include-pointer", this.pointerSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("window-wait", this.waitSpinner, "value", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("hide-window", this.isHideWindow, "active", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("enable-flash", this.flashSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
-      settings.bind("show-notification", this.notificationSwitch, "active", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("capture-backend-auto", this.backendCombo, "active-id", Gio.SettingsBindFlags.DEFAULT);
-
-      settings.bind("last-screenshot-save-folder", this.lastFolderCheck, "active", Gio.SettingsBindFlags.DEFAULT);
-
-      this.backendCombo.connect("changed", () => {
-        const activeId = this.backendCombo.get_active_id();
-        if (activeId) {
-          settings.set_string("capture-backend", activeId);
-        }
-      });
-    }
-
-    onOpenFolderSelector(key) {
-      // Store reference to prevent garbage collection
-      this.fileChooser = new Gtk.FileChooserNative({
-        title: "Select a Folder",
-        transient_for: this,
-        action: Gtk.FileChooserAction.SELECT_FOLDER,
-        accept_label: "Select",
-        cancel_label: "Cancel",
-        modal: true,
-      });
-
-      this.fileChooser.connect("response", (dialog, response) => {
-        if (response === Gtk.ResponseType.ACCEPT) {
-          const folderPath = dialog.get_filename();
-          if (folderPath) {
-            this.screenshotPathLabel.set_text(folderPath);
-            settings.set_string(key, folderPath);
-            print(`${key} set to: ${folderPath}`);
-          }
-        }
-        this.fileChooser.destroy();
-      });
-
-      this.fileChooser.show();
-    }
-  },
-);
+    return dialog;
+  }
+}

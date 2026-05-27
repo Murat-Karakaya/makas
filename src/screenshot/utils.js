@@ -3,7 +3,7 @@ import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
 import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
-import { captureWithGrim, hasGrimScreenshot } from "./captureMethods/captureGrim.js";
+import { captureWithWayland, hasWaylandScreenshot } from "./captureMethods/captureGrim.js";
 import { captureWithPortal, hasPortalScreenshot } from "./captureMethods/capturePortal.js";
 
 
@@ -11,6 +11,21 @@ export const settings = new Gio.Settings({
   schema_id: "com.github.murat.karakaya.Makas",
 });
 
+
+export function getBackupFolder() {
+    const picturesPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES);
+    if (picturesPath) {
+      // Create a Gio.File reference for the "Screenshot" subfolder
+      let screenshotFolder = Gio.File.new_for_path(picturesPath).get_child("Screenshot");
+
+      // Check if the "Screenshot" folder actually exists on the system
+      if (screenshotFolder.query_exists(null)) {
+        return screenshotFolder.get_path();
+      }
+      return picturesPath; //Return pictures folder
+    }
+    return GLib.get_home_dir();
+}
 
 export const backends = {
   [CaptureBackend.X11]: {
@@ -23,10 +38,10 @@ export const backends = {
     capture: captureWithShell,
     label: "Cinnamon Shell",
   },
-  [CaptureBackend.GRIM]: {
-    isAvailable: hasGrimScreenshot,
-    capture: captureWithGrim,
-    label: "Wayland (Grim)",
+  [CaptureBackend.WAYLAND]: {
+    isAvailable: hasWaylandScreenshot,
+    capture: captureWithWayland,
+    label: "Wayland",
   },
   [CaptureBackend.PORTAL]: {
     isAvailable: hasPortalScreenshot,
@@ -42,11 +57,8 @@ export const getCurrentDate = () => {
 };
 
 export const getDestinationPath = (options) => {
-  let folder = options.folder;
-  const name = options.filename;
-  if (!folder || !name) return null;
-  if (!folder.endsWith("/")) folder += "/";
-  return folder + name;
+  // GLib handles all the slash-joining logic perfectly under the hood
+  return GLib.build_filenamev([options.folder, options.filename]);
 };
 
 

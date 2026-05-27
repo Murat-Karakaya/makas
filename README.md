@@ -3,17 +3,15 @@
 
 ## Roadmap
 
-### FIXME: 
+### FIXME:
 
-The fallback of saving an image should be going up a parent folder. not directly jumping to $HOME
-
-Should probably do a cleanup of the temp files
-
-In Cosmic DE the latest version of grim is not available. Causing inconsistencies.
+The new wayland backend kinda sucks. The code itself should be seperated into 2 parts
 
 Gtk Layer shell is not a dependency, but should be
 
-### TO DO: 
+When you select a backend that doesn't support some settings, the settings are still enabled.
+
+### TO DO:
 
 After multiple same fallbacks in a row, the default should screenshot backend should change
 
@@ -21,11 +19,7 @@ Implement a cancel button when delay is active.
 
 Text recognition
 
-Open image with other applications
-
 Add Appimage, tar.gz and nix package builds.
-
-Terminal commands should be added
 
 ### WON'T FIX
 
@@ -69,7 +63,7 @@ To run the app in development mode:
 ## Credits
 
 The open source codebase of the gnome-screenshot has significantly helped the making of this project.
-This project is not exactly a fork of gnome-screenshot, but it has been inspired by it. Some images and 
+This project is not exactly a fork of gnome-screenshot, but it has been inspired by it. Some images and
 functions has been used from gnome-screenshot.
 
 
