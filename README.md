@@ -7,8 +7,6 @@
 
 The new wayland backend kinda sucks. The code itself should be seperated into 2 parts
 
-Gtk Layer shell is not a dependency, but should be
-
 When you select a backend that doesn't support some settings, the settings are still enabled.
 
 ### TO DO:

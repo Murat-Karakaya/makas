@@ -16,6 +16,7 @@ m_dep = meson.get_compiler('c').find_library('m')
 wayland_client_dep = dependency('wayland-client')
 wayland_protos_dep = dependency('wayland-protocols', version: '>=1.37')
 pixman_dep = dependency('pixman-1')
+gtk_layer_shell_dep = dependency('gtk-layer-shell-0')
 
 wl_protocol_dir = wayland_protos_dep.get_variable('pkgdatadir')
 
@@ -64,7 +65,7 @@ lib_headers = [
 # Build shared library
 libmakas_screenshot = shared_library('makas-screenshot',
   lib_sources + protocols_src,
-  dependencies: [glib_dep, gobject_dep, gdk_dep, gdk_pixbuf_dep, gtk_dep, x11_dep, xext_dep, xcomposite_dep, dl_dep, m_dep, wayland_client_dep, pixman_dep],
+  dependencies: [glib_dep, gobject_dep, gdk_dep, gdk_pixbuf_dep, gtk_dep, x11_dep, xext_dep, xcomposite_dep, dl_dep, m_dep, wayland_client_dep, pixman_dep, gtk_layer_shell_dep],
   install: true,
   install_dir: get_option('libdir'),
 )
