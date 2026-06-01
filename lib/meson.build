@@ -53,13 +53,16 @@ endforeach
 lib_sources = [
   'makas-screenshot.c',
   'makas-utils.c',
-  'makas-grim.c',
+  'wayland-common.c',
+  'ext-image.c',
+  'zwlr-screen.c',
 ]
 
 lib_headers = [
   'makas-screenshot.h',
   'makas-utils.h',
-  'makas-grim.h',
+  'ext-image.h',
+  'zwlr-screen.h',
 ]
 
 # Build shared library

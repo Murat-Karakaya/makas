@@ -43,7 +43,7 @@ export function hasWaylandScreenshot() {
     if (!waylandDisplay) return isAvailable = false;
 
     try {
-        return isAvailable = MakasScreenshot.utils_is_grim_supported();
+        return isAvailable = MakasScreenshot.is_zwlr_screencopy_supported() || MakasScreenshot.is_ext_img_supported();
     } catch (e) {
         console.error("Failed to check Wayland capture availability:", e);
         return isAvailable = false;

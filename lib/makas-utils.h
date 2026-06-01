@@ -6,14 +6,24 @@
 G_BEGIN_DECLS
 
 /**
- * makas_utils_is_grim_supported:
+ * makas_is_ext_img_supported:
  *
  * Checks if the current session supports the necessary protocols for
- * grim to capture screenshots (e.g. wl_shm, screencopy, etc.).
+ * ext-image copy capture (e.g. wl_shm, ext-image-copy-capture, etc.).
  *
  * Returns: TRUE if supported, FALSE otherwise.
  */
-gboolean makas_utils_is_grim_supported(void);
+gboolean makas_is_ext_img_supported(void);
+
+/**
+ * makas_is_zwlr_screencopy_supported:
+ *
+ * Checks if the current session supports the necessary protocols for
+ * zwlr-screencopy (e.g. wl_shm, screencopy-manager, etc.).
+ *
+ * Returns: TRUE if supported, FALSE otherwise.
+ */
+gboolean makas_is_zwlr_screencopy_supported(void);
 
 /**
  * makas_utils_is_layer_shell_supported:

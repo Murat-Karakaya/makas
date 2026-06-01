@@ -1,4 +1,5 @@
 #include "makas-utils.h"
+#include "glib.h"
 #include <dlfcn.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,15 +23,15 @@ typedef struct {
   gboolean has_screencopy_manager;
   gboolean has_outputs;
   gboolean has_layer_shell;
-} MakasGrimSupportState;
+} MakasWaylandSupportState;
 
 // Registry listener to populate state
-static void grim_support_registry_handler(void *data,
+static void wayland_support_registry_handler(void *data,
                                           G_GNUC_UNUSED void *registry,
                                           G_GNUC_UNUSED uint32_t name,
                                           const char *interface,
                                           G_GNUC_UNUSED uint32_t version) {
-  MakasGrimSupportState *state = (MakasGrimSupportState *)data;
+  MakasWaylandSupportState *state = (MakasWaylandSupportState *)data;
 
   if (strcmp(interface, "wl_shm") == 0) {
     state->has_shm = TRUE;
@@ -54,7 +55,7 @@ static void grim_support_registry_handler(void *data,
   }
 }
 
-gboolean makas_utils_is_grim_supported(void) {
+static gboolean get_wayland_support_state(MakasWaylandSupportState *state) {
   void *handle = dlopen("libwayland-client.so.0", RTLD_LAZY);
   if (!handle) {
     fprintf(stderr, "DEBUG: Failed to dlopen libwayland-client.so.0: %s\n",
@@ -105,9 +106,7 @@ gboolean makas_utils_is_grim_supported(void) {
     return FALSE;
   }
 
-  // Initialize checks
-  MakasGrimSupportState state = {0};
-  // WL_DISPLAY_GET_REGISTRY = 1
+  memset(state, 0, sizeof(*state));
   void *registry =
       wl_proxy_marshal_constructor(display, 1, wl_registry_interface, NULL);
 
@@ -119,40 +118,27 @@ gboolean makas_utils_is_grim_supported(void) {
   }
 
   struct wl_registry_listener listener = {
-      .global = grim_support_registry_handler, .global_remove = NULL};
+      .global = wayland_support_registry_handler, .global_remove = NULL};
 
-  wl_proxy_add_listener(registry, (void (**)(void))&listener, &state);
+  wl_proxy_add_listener(registry, (void (**)(void))&listener, state);
 
-  if (wl_display_roundtrip(display) < 0) {
-    fprintf(stderr, "DEBUG: wl_display_roundtrip failed\n");
-    wl_display_disconnect(display);
-    dlclose(handle);
-    return FALSE;
-  }
-
+  gboolean displayTrip = wl_display_roundtrip(display) < 0;
   wl_display_disconnect(display);
   dlclose(handle);
+  if (displayTrip) {
+    fprintf(stderr, "DEBUG: wl_display_roundtrip failed\n");
+    return FALSE;
+  }
+  return TRUE;
+}
 
-  // Logic copied from grim/main.c
-
-  // 1. Check for SHM
-  if (!state.has_shm) {
-    fprintf(stderr, "DEBUG: Missing wl_shm\n");
+gboolean makas_is_ext_img_supported(void) {
+  MakasWaylandSupportState state;
+  if (!get_wayland_support_state(&state)) {
     return FALSE;
   }
 
-  // 2. Check for capture capability
-  gboolean can_capture = state.has_screencopy_manager ||
-                         (state.has_ext_output_image_capture_source_manager &&
-                          state.has_ext_image_copy_capture_manager);
-
-  if (!can_capture) {
-    fprintf(stderr,
-            "DEBUG: Missing capture managers. Screencopy: %d, ExtSrc: %d, "
-            "ExtCopy: %d\n",
-            state.has_screencopy_manager,
-            state.has_ext_output_image_capture_source_manager,
-            state.has_ext_image_copy_capture_manager);
+  if (!state.has_shm) {
     return FALSE;
   }
 
@@ -163,67 +149,31 @@ gboolean makas_utils_is_grim_supported(void) {
     return FALSE;
   }
 
-  // printf("DEBUG: Grim support check passed\n");
-  return TRUE;
+  return state.has_ext_output_image_capture_source_manager &&
+         state.has_ext_image_copy_capture_manager;
+}
+
+gboolean makas_is_zwlr_screencopy_supported(void) {
+  MakasWaylandSupportState state;
+  if (!get_wayland_support_state(&state)) {
+    return FALSE;
+  }
+
+  if (!state.has_shm) {
+    return FALSE;
+  }
+
+  if (!state.has_outputs) {
+    return FALSE;
+  }
+
+  return state.has_screencopy_manager;
 }
 
 gboolean makas_utils_is_layer_shell_supported(void) {
-  void *handle = dlopen("libwayland-client.so.0", RTLD_LAZY);
-  if (!handle) {
-    fprintf(stderr, "DEBUG: Failed to dlopen libwayland-client.so.0: %s\n",
-            dlerror());
+  MakasWaylandSupportState state;
+  if (!get_wayland_support_state(&state)) {
     return FALSE;
   }
-
-  // Symbol loading
-  void *(*wl_display_connect)(const char *) =
-      dlsym(handle, "wl_display_connect");
-  void *(*wl_proxy_marshal_constructor)(void *, uint32_t, void *, ...) =
-      dlsym(handle, "wl_proxy_marshal_constructor");
-  void *wl_registry_interface = dlsym(handle, "wl_registry_interface");
-
-  int (*wl_proxy_add_listener)(void *, void (**)(void), void *) =
-      dlsym(handle, "wl_proxy_add_listener");
-  int (*wl_display_roundtrip)(void *) = dlsym(handle, "wl_display_roundtrip");
-  void (*wl_display_disconnect)(void *) =
-      dlsym(handle, "wl_display_disconnect");
-
-  if (!wl_display_connect || !wl_proxy_marshal_constructor ||
-      !wl_registry_interface || !wl_proxy_add_listener ||
-      !wl_display_roundtrip || !wl_display_disconnect) {
-    dlclose(handle);
-    return FALSE;
-  }
-
-  void *display = wl_display_connect(NULL);
-  if (!display) {
-    dlclose(handle);
-    return FALSE;
-  }
-
-  MakasGrimSupportState state = {0};
-  void *registry =
-      wl_proxy_marshal_constructor(display, 1, wl_registry_interface, NULL);
-
-  if (!registry) {
-    wl_display_disconnect(display);
-    dlclose(handle);
-    return FALSE;
-  }
-
-  struct wl_registry_listener listener = {
-      .global = grim_support_registry_handler, .global_remove = NULL};
-
-  wl_proxy_add_listener(registry, (void (**)(void))&listener, &state);
-
-  if (wl_display_roundtrip(display) < 0) {
-    wl_display_disconnect(display);
-    dlclose(handle);
-    return FALSE;
-  }
-
-  wl_display_disconnect(display);
-  dlclose(handle);
-
   return state.has_layer_shell;
 }
