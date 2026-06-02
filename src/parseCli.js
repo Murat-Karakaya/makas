@@ -1,5 +1,4 @@
-import { backends } from './screenshot/utils.js';
-import { CaptureMode } from './screenshot/constants.js';
+import { CaptureMode, CaptureBackend } from './screenshot/constants.js';
 
 export function parseCLI(argv) {
     const args = argv.slice(1);
@@ -20,8 +19,8 @@ export function parseCLI(argv) {
 
     const resolveBackend = (name) => {
         const lower = name.toLowerCase();
-        for (const key in backends) {
-            if (key.toLowerCase() === lower || backends[key].label.toLowerCase().includes(lower)) {
+        for (const key in CaptureBackend) {
+            if (key.toLowerCase() === lower || CaptureBackend[key].toLowerCase().includes(lower)) {
                 return key;
             }
         }
@@ -139,6 +138,6 @@ function printHelp() {
     -i, --interactive              Interactively set options
     -f, --file=filename            Save screenshot directly to this file
     --version                      Print version information and exit
-    -b, --backend=backend          Select backend temporarily (x11, shell, wayland, portal)
+    -b, --backend=backend          Select backend temporarily (${Object.values(CaptureBackend).map(b => b.toLowerCase()).join(', ')})
   `);
 }

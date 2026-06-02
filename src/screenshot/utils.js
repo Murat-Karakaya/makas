@@ -3,7 +3,8 @@ import Gio from "gi://Gio";
 import { CaptureBackend } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
 import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
-import { captureWithWayland, hasWaylandScreenshot } from "./captureMethods/captureGrim.js";
+import { captureWithExtImg, hasExtImgScreenshot } from "./captureMethods/captureExtImg.js";
+import { captureWithZwlr, hasZwlrScreenshot } from "./captureMethods/captureZwlr.js";
 import { captureWithPortal, hasPortalScreenshot } from "./captureMethods/capturePortal.js";
 
 
@@ -38,10 +39,15 @@ export const backends = {
     capture: captureWithShell,
     label: "Cinnamon Shell",
   },
-  [CaptureBackend.WAYLAND]: {
-    isAvailable: hasWaylandScreenshot,
-    capture: captureWithWayland,
-    label: "Wayland",
+  [CaptureBackend.ZWLR]: {
+    isAvailable: hasZwlrScreenshot,
+    capture: captureWithZwlr,
+    label: "Zwlr Screencopy Manager",
+  },
+  [CaptureBackend.EXT_IMG]: {
+    isAvailable: hasExtImgScreenshot,
+    capture: captureWithExtImg,
+    label: "Ext Image Copy Capture",
   },
   [CaptureBackend.PORTAL]: {
     isAvailable: hasPortalScreenshot,

@@ -17,7 +17,8 @@
     <file>screenshot/captureMethods/performCapture.js</file>
     <file>screenshot/captureMethods/captureX11.js</file>
     <file>screenshot/captureMethods/captureShell.js</file>
-    <file>screenshot/captureMethods/captureGrim.js</file>
+    <file>screenshot/captureMethods/captureZwlr.js</file>
+    <file>screenshot/captureMethods/captureExtImg.js</file>
     <file>screenshot/captureMethods/capturePortal.js</file>
 
     <file>screenshot/areaSelectionMethods/selectArea.js</file>
