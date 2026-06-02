@@ -5,15 +5,15 @@
 
 ### FIXME:
 
-The new wayland backend kinda sucks. The code itself should be seperated into 2 parts
-
 When you select a backend that doesn't support some settings, the settings are still enabled.
 
 gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
-### TO DO:
+When an unsupported backend is invoked via terminal, the app should simply kill process.
 
-After multiple same fallbacks in a row, the default should screenshot backend should change
+The changing of default screenshot mode should immediatly apply to main window.
+
+### TO DO:
 
 Implement a cancel button when delay is active.
 
@@ -22,6 +22,8 @@ Text recognition
 Add Appimage, tar.gz and nix package builds.
 
 Add a setting for opening with an app
+
+Add monitor capture mode
 
 ### WON'T FIX
 
