@@ -21,13 +21,13 @@ export async function captureWithX11({ includePointer, captureMode }) {
                 rootWindow.get_height(),
             );
             if (includePointer) compositeCursor(pixbuf, 0, 0);
-            
+
             result = {
                 x: 0,
                 y: 0,
                 pixbuf,
             };
-            
+
             break;
         }
         case CaptureMode.WINDOW: {
@@ -40,9 +40,9 @@ export async function captureWithX11({ includePointer, captureMode }) {
                 selectionResult.clickY
             );
             if (!result) break;
-            
+
             if(includePointer) compositeCursor(result.pixbuf, result.x, result.y);
-            
+
             break;
         }
     }
@@ -68,7 +68,7 @@ function compositeCursor(pixbuf, rootX, rootY) {
         const [_, x, y] = pointer.get_position();
 
         // Create cursor to get its image
-        // Note: This creates a standard arrow cursor. Getting the *actual* current cursor image 
+        // Note: This creates a standard arrow cursor. Getting the *actual* current cursor image
         // is quite complex
         const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.LEFT_PTR);
         const cursorPixbuf = cursor.get_image();

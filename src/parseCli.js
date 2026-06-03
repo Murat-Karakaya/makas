@@ -20,11 +20,11 @@ export function parseCLI(argv) {
     const resolveBackend = (name) => {
         const lower = name.toLowerCase();
         for (const key in CaptureBackend) {
-            if (key.toLowerCase() === lower || CaptureBackend[key].toLowerCase().includes(lower)) {
+            if (key.toLowerCase() === lower) {
                 return key;
             }
         }
-        return name;
+        return false;
     };
 
     const isFlag = (arg) => arg.startsWith('-');
@@ -34,7 +34,7 @@ export function parseCLI(argv) {
 
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
-        let val = null;
+        let afterEquals = null;
 
         if (arg === '--') continue;
 
@@ -42,7 +42,7 @@ export function parseCLI(argv) {
         if (arg.startsWith('--') && arg.includes('=')) {
             const parts = arg.split('=');
             arg = parts[0];
-            val = parts.slice(1).join('=');
+            afterEquals = parts.slice(1).join('=');
         }
 
       switch (arg) {
@@ -60,10 +60,18 @@ export function parseCLI(argv) {
           break;
         case('--window'):case('-w'):
           options.action = 'capture';
+          if (options.mode) {
+            const oldFlag = options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a';
+            print(`[Makas] Warning: Flag '${arg}' overrides previously set mode flag: ${oldFlag}`);
+          }
           options.mode = CaptureMode.WINDOW;
           break;
         case('--area'):case('-a'):
           options.action = 'capture';
+          if (options.mode) {
+            const oldFlag = options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a';
+            print(`[Makas] Warning: Flag '${arg}' overrides previously set mode flag: ${oldFlag}`);
+          }
           options.mode = CaptureMode.AREA;
           break;
         case('--include-pointer'):case('-p'):
@@ -72,35 +80,61 @@ export function parseCLI(argv) {
           break
         case('--delay'):case('-d'):
 					options.action = 'capture';
-          if (val) {
-            options.delay = parseInt(val, 10);
+					let delayVal = null;
+          if (afterEquals) {
+            delayVal = afterEquals;
           } else if (i + 1 < args.length && !isFlag(args[i+1])) {
-            options.delay = parseInt(args[++i], 10);
+            delayVal = args[++i];
           } else {
             print(`[Makas] Error: Argument '${arg}' requires a value (seconds).`);
             options.exit = true;
+            break;
+          }
+          const parsedDelay = Number(delayVal);
+          if (Number.isNaN(parsedDelay) || !Number.isInteger(parsedDelay) || parsedDelay < 0) {
+            print(`[Makas] Error: Argument '${arg}' requires a non-negative integer (number of seconds). Received: '${delayVal}'`);
+            options.exit = true;
+          } else {
+            options.delay = parsedDelay;
           }
           break
         case ('--interactive'):case('-i'):
           options.interactive = true;
           break;
-        case('-f'):
+        case('--file'): case('-f'):
           options.action = 'capture';
+
+          //Filename validation checks are done in cli.js to prevent check operations from hurting performance
+
+          if (afterEquals) {
+            options.file = afterEquals;
+            break;
+          }
           if (i + 1 < args.length && !isFlag(args[i+1])) {
             options.file = args[++i];
             break;
           }
-          print(`[Makas] Error: Argument '${arg}' requires a filename.`);
+          print(`[Makas] Error: Argument '${arg}' requires a filename string.`);
           options.exit = true;
           break;
         case ('--backend'):case ('-b'):
-          if (val) {
-            options.backend = resolveBackend(val);
+          let backendVal = null;
+          if (afterEquals) {
+            backendVal = afterEquals;
           } else if (i + 1 < args.length && !isFlag(args[i+1])) {
-            options.backend = resolveBackend(args[++i]);
+            backendVal = args[++i];
           } else {
             print(`[Makas] Error: Argument '${arg}' requires a backend name.`);
             options.exit = true;
+            break;
+          }
+          const resolvedBackend = resolveBackend(backendVal);
+          if (!resolvedBackend) {
+            const allowedBackends = Object.keys(CaptureBackend).join(', ').toLowerCase();
+            print(`[Makas] Error: Argument '${arg}' requires a valid backend type (one of: ${allowedBackends}). Received: '${backendVal}'`);
+            options.exit = true;
+          } else {
+            options.backend = resolvedBackend;
           }
           break;
         default:
@@ -113,9 +147,20 @@ export function parseCLI(argv) {
 
     if (options.interactive) {
         options.action = null; // Forces main.js to use win.present() (PreScreenshot)
+        const ignoredFlags = [];
+        if (options.mode) ignoredFlags.push(options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a');
+        if (options.pointerSet) ignoredFlags.push('--include-pointer/-p');
+        if (options.backend) ignoredFlags.push('--backend/-b');
+        if (options.delay !== null) ignoredFlags.push('--delay/-d');
+        if (options.clipboard) ignoredFlags.push('--clipboard/-c');
+        if (options.file) ignoredFlags.push('--file/-f');
+
+        if (ignoredFlags.length > 0) {
+            print(`[Makas] Warning: The following flag(s) are ignored in interactive mode: ${ignoredFlags.join(', ')}`);
+        }
     } else {
         if (!options.action) {
-             options.action = 'capture';
+          options.action = 'capture';
         }
     }
 
@@ -138,6 +183,6 @@ function printHelp() {
     -i, --interactive              Interactively set options
     -f, --file=filename            Save screenshot directly to this file
     --version                      Print version information and exit
-    -b, --backend=backend          Select backend temporarily (${Object.values(CaptureBackend).map(b => b.toLowerCase()).join(', ')})
+    -b, --backend=backend          Select backend temporarily (${Object.keys(CaptureBackend).join(', ').toLowerCase()})
   `);
 }

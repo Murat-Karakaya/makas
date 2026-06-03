@@ -4,7 +4,7 @@ import GObject from "gi://GObject";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GdkPixbuf from "gi://GdkPixbuf";
-import { getBackupFolder, getCurrentDate, getDestinationPath, settings } from "../utils.js";
+import { getBackupFolder, getCurrentDate, getDestinationPath, settings, copyPixbuf } from "../utils.js";
 import { SOURCE_PATH } from "../constants.js";
 
 export const PostScreenshot = GObject.registerClass(
@@ -268,12 +268,7 @@ export const PostScreenshot = GObject.registerClass(
         this.statusLabel.set_text("No screenshot to copy");
         return;
       }
-
-      const CLIPBOARD_ATOM = Gdk.Atom.intern("CLIPBOARD", false);
-      const clipboard = Gtk.Clipboard.get(CLIPBOARD_ATOM);
-      clipboard.set_image(this.pixbuf);
-      //clipboard.store(); //this hangs the app for a bit. DE's don't need this and shouldn't be a big problems on TWM's
-
+      copyPixbuf(this.pixbuf);
       this.statusLabel.set_text("Copied to clipboard");
     }
   },

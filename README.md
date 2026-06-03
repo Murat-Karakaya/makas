@@ -3,27 +3,57 @@
 
 ## Roadmap
 
+## REVIEWS:
+
+Check cairo code
+
+Check support-checker codes
+
+Check multi-monitor functionalities
+
+Check zwlr and ext-img code
+
+Check meson code
+
+See if you can add window screenshot on Wayland only methods
+
 ### FIXME:
 
 When you select a backend that doesn't support some settings, the settings are still enabled.
 
 gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
-When an unsupported backend is invoked via terminal, the app should simply kill process.
-
 The changing of default screenshot mode should immediatly apply to main window.
 
+Just allow users to screenshot the panel and other elements in x11 backend
+
+Clean up logs
+
+Add warnings when a cli flag is ignored
+
+Print defaults for cli
+
+Add a test for cli commands
+
+Redesign logo
+
 ### TO DO:
+
+Add aliases for cli
+
+Add a notification option to cli
 
 Implement a cancel button when delay is active.
 
 Text recognition
 
-Add Appimage, tar.gz and nix package builds.
+Add Appimage, tar.gz, .rpm and nix package builds.
 
 Add a setting for opening with an app
 
 Add monitor capture mode
+
+Add Add-ons that can open a new window in app.
 
 ### WON'T FIX
 

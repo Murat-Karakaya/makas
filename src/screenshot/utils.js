@@ -1,5 +1,7 @@
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
+import Gdk from "gi://Gdk";
+import Gtk from "gi://Gtk";
 import { CaptureBackend } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
 import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
@@ -97,7 +99,7 @@ export function showScreenshotNotification(app) {
   notification.set_default_action("app.activate");
 
   // Add action to disable notifications
-  notification.add_button("Disable Screenshot Notifications", "app.disable-notifications");
+  notification.add_button("Disable Notifications", "app.disable-notifications");
 
   app.send_notification("screenshot-captured", notification);
 }
@@ -106,4 +108,11 @@ export function isWayland() {
   const sessionType = GLib.getenv("XDG_SESSION_TYPE");
   const waylandDisplay = GLib.getenv("WAYLAND_DISPLAY");
   return sessionType === "wayland" || (waylandDisplay && waylandDisplay.includes("wayland"));
+}
+
+export function copyPixbuf(pixbuf) {
+  const CLIPBOARD_ATOM = Gdk.Atom.intern("CLIPBOARD", false);
+  const clipboard = Gtk.Clipboard.get(CLIPBOARD_ATOM);
+  clipboard.set_image(pixbuf);
+  //clipboard.store(); //this hangs the app for a bit. DE's don't need this and shouldn't be a big problems on TWM's
 }
