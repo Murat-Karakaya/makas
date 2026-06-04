@@ -1,5 +1,5 @@
-import { settings, showScreenshotNotification, wait, copyPixbuf } from './screenshot/utils.js';
-import { CaptureMode } from './screenshot/constants.js';
+import { settings, showScreenshotNotification, wait, copyPixbuf, backends } from './screenshot/utils.js';
+import { BackendSupport, CaptureMode } from './screenshot/constants.js';
 import { performCapture } from './screenshot/captureMethods/performCapture.js';
 import { selectArea } from './screenshot/areaSelectionMethods/selectArea.js';
 import { flashRect } from './screenshot/popupWindows/flash.js';
@@ -93,6 +93,23 @@ export async function executeCLIAction(app, window, options) {
   } catch (e) {
     console.error(`Capture failed: ${e.message}`);
     app.quit();
+  } finally {
+	  const backend = options.backend || settings.get_string("capture-backend-auto");
+	  if (options.pointerSet && !BackendSupport[backend].includePointer) {
+	    print(`[Makas] Warning: The specified flag '--include-pointer/-p' is ignored because backend '${backend.toLowerCase()}' does not support including pointer.`);
+
+	    const supportedBackends = [];
+	    for (const element in backends) {
+	      if (backends[element].isAvailable() && BackendSupport[element].includePointer)
+	     		supportedBackends.push(`'${element}'`);
+	    }
+
+	    if (supportedBackends.length === 0) {
+	      print(`[Makas] Info: No backend in your system is found that supports including pointer.`);
+	    } else {
+	      print(`[Makas] Hint: Some backend(s) that support including pointer - ${supportedBackends.join(", ").toLowerCase()} - can be used in your system.`);
+	    }
+	  }
   }
 }
 

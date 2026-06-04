@@ -19,39 +19,39 @@ export const BackendSupport = {
 	X11: {
 		includePointer: true,
 		modes: [
-			"Screen",
-			"Window",
-			"Area",
+			"SCREEN",
+			"WINDOW",
+			"AREA",
 		],
 
 	},
 	EXT_IMG: {
 		includePointer: true,
 		modes: [
-			"Screen",
-			"Area",
+			"SCREEN",
+			"AREA",
 		],
 	},
 	ZWLR: {
 		includePointer: true,
 		modes: [
-			"Screen",
-			"Area",
+			"SCREEN",
+			"AREA",
 		],
 	},
 	SHELL: {
 		includePointer: true,
 		modes: [
-			"Screen",
-			"Window",
-			"Area",
+			"SCREEN",
+			"WINDOW",
+			"AREA",
 		],
 	},
 	PORTAL: {
 		includePointer: false,
 		modes: [
-			"Screen",
-			"Area",
+			"SCREEN",
+			"AREA",
 		],
 	},
 }

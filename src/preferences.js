@@ -74,12 +74,6 @@ export class PreferencesWindow {
       step_increment: 200,
     }));
 
-    const modeMap = {
-      "Screen": CaptureMode.SCREEN,
-      "Window": CaptureMode.WINDOW,
-      "Area": CaptureMode.AREA,
-    };
-
     let updatingBackend = false;
 
 
@@ -178,9 +172,8 @@ export class PreferencesWindow {
 
       let currentModeStillSupported = false;
       for (const m of support.modes) {
-        const id = modeMap[m];
         if (id) {
-          modeCombo.append(id, m);
+          modeCombo.append(m, m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()); // Adds WINDOW as Window
           if (id === currentMode) {
             currentModeStillSupported = true;
           }

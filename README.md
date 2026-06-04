@@ -27,8 +27,6 @@ setBackend() in prescreenshot.js is an outdated. Which causes inaccurate results
 
 Clean up logs
 
-Add warnings when a cli flag is ignored
-
 Print defaults for cli
 
 Add a test for cli commands
