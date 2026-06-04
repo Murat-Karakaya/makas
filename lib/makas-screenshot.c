@@ -51,14 +51,6 @@ static GdkWindow *find_window_at_coords(gint x, gint y) {
   for (GList *l = windows; l != NULL; l = l->next) {
     GdkWindow *win = l->data;
 
-    GdkWindowTypeHint type_hint = gdk_window_get_type_hint(win);
-
-    // Just ignore the dock and the desktop. Might wanto to expose the option to
-    // include them in the future.
-    if (type_hint == GDK_WINDOW_TYPE_HINT_DESKTOP ||
-        type_hint == GDK_WINDOW_TYPE_HINT_DOCK)
-      continue;
-
     if (!gdk_window_is_viewable(win))
       continue;
 

@@ -25,8 +25,6 @@ gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 The changing of default screenshot mode should immediatly apply to main window.
 
-Just allow users to screenshot the panel and other elements in x11 backend
-
 Clean up logs
 
 Add warnings when a cli flag is ignored
@@ -36,6 +34,10 @@ Print defaults for cli
 Add a test for cli commands
 
 Redesign logo
+
+A pinned window will not be screenshotted by x11 window picker
+
+When a capture is cancelled, don't make it give an error message in cli
 
 ### TO DO:
 
