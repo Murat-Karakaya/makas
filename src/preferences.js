@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
-import { CaptureMode, SOURCE_PATH } from "./screenshot/constants.js";
+import { CaptureMode, SOURCE_PATH, BackendSupport } from "./screenshot/constants.js";
 import {
   backends,
   settings,
@@ -74,10 +74,14 @@ export class PreferencesWindow {
       step_increment: 200,
     }));
 
-    // ComboBoxText options for mode
-    modeCombo.append(CaptureMode.SCREEN, "Screen");
-    modeCombo.append(CaptureMode.WINDOW, "Window");
-    modeCombo.append(CaptureMode.AREA, "Area");
+    const modeMap = {
+      "Screen": CaptureMode.SCREEN,
+      "Window": CaptureMode.WINDOW,
+      "Area": CaptureMode.AREA,
+    };
+
+    let updatingBackend = false;
+
 
     // Bindings using Gio.Settings.bind
     settings.bind("last-screenshot-save-folder", folderCheckbox, "active", Gio.SettingsBindFlags.DEFAULT);
@@ -144,7 +148,11 @@ export class PreferencesWindow {
       if (activeId) {
         settings.set_string("capture-backend", activeId);
       }
+      updateBackendSupport();
     });
+
+    // Run initial update for options supported by the selected backend
+    updateBackendSupport();
 
     // Clean up settings connections on dialog destroy to avoid memory leaks
     dialog.connect("destroy", () => {
@@ -153,6 +161,39 @@ export class PreferencesWindow {
       settings.disconnect(enableFlashChangedId);
       backendCombo.disconnect(backendChangedId);
     });
+
+
+    function updateBackendSupport () {
+      const backend = backendCombo.get_active_id() || settings.get_string("capture-backend-auto") || "PORTAL";
+      const support = BackendSupport[backend];
+
+      // Disable/enable pointer option
+      const hasPointer = support.includePointer;
+      pointerSwitch.set_sensitive(hasPointer);
+      pointerCheckbox.set_sensitive(hasPointer);
+
+      // Rebuild modeCombo based on backend support
+      const currentMode = settings.get_string("screenshot-mode");
+      modeCombo.remove_all();
+
+      let currentModeStillSupported = false;
+      for (const m of support.modes) {
+        const id = modeMap[m];
+        if (id) {
+          modeCombo.append(id, m);
+          if (id === currentMode) {
+            currentModeStillSupported = true;
+          }
+        }
+      }
+
+      if (!currentModeStillSupported) {
+        settings.set_string("screenshot-mode", CaptureMode.SCREEN);
+        modeCombo.set_active_id(CaptureMode.SCREEN);
+      } else {
+        modeCombo.set_active_id(currentMode);
+      }
+    };
 
     return dialog;
   }

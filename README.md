@@ -19,8 +19,6 @@ See if you can add window screenshot on Wayland only methods
 
 ### FIXME:
 
-When you select a backend that doesn't support some settings, the settings are still enabled.
-
 gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 The changing of default screenshot mode should immediatly apply to main window.
