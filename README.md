@@ -35,8 +35,6 @@ Add a test for cli commands
 
 Redesign logo
 
-A pinned window will not be screenshotted by x11 window picker
-
 When a capture is cancelled, don't make it give an error message in cli
 
 ### TO DO:

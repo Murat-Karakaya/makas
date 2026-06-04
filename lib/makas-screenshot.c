@@ -2,6 +2,7 @@
 #include "glib.h"
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/shape.h>
 #include <gdk/gdkx.h>
@@ -33,6 +34,35 @@ static Window find_wm_window(GdkWindow *window) {
   } while (TRUE);
 }
 
+// Read _NET_ACTIVE_WINDOW directly from the root window via Xlib.
+// This is the non-deprecated equivalent of gdk_screen_get_active_window().
+static GdkWindow *get_active_window_x11(void) {
+  Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+  Window root = DefaultRootWindow(display);
+
+  Atom net_active_window = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+  Atom actual_type;
+  int actual_format;
+  unsigned long nitems, bytes_after;
+  unsigned char *data = NULL;
+
+  if (XGetWindowProperty(display, root, net_active_window, 0, 1, False,
+                         XA_WINDOW, &actual_type, &actual_format, &nitems,
+                         &bytes_after, &data) != Success ||
+      data == NULL) {
+    return NULL;
+  }
+
+  Window active_xid = *(Window *)data;
+  XFree(data);
+
+  if (active_xid == None)
+    return NULL;
+
+  return gdk_x11_window_foreign_new_for_display(
+      gdk_display_get_default(), active_xid);
+}
+
 static GdkWindow *find_window_at_coords(gint x, gint y) {
   GdkScreen *screen = gdk_screen_get_default();
   GdkWindow *found = NULL;
@@ -40,6 +70,29 @@ static GdkWindow *find_window_at_coords(gint x, gint y) {
   gint current_desktop = -1;
   if (GDK_IS_X11_SCREEN(screen)) {
     current_desktop = gdk_x11_screen_get_current_desktop(screen);
+  }
+
+  // Prioritize the currently focused window. The stacking order from
+  // _NET_CLIENT_LIST_STACKING can be unreliable for sticky (visible on all
+  // workspaces) windows — the WM may not place them at the correct position
+  // in the stack. By checking the active window first, we ensure that if the
+  // cursor is over the focused window, it is always selected. Somehow, the below
+  // code also works for cases where the sticky window is on top but not focused.
+  // Or any other allways-on-top windows that are not focused for that matter.
+  GdkWindow *active = get_active_window_x11();
+  if (active != NULL) {
+    if (gdk_window_is_viewable(active)) {
+      GdkRectangle rect;
+      gdk_window_get_frame_extents(active, &rect);
+
+      if (x >= rect.x && x < rect.x + rect.width && y >= rect.y &&
+          y < rect.y + rect.height) {
+        gdk_window_set_events(active,
+                              gdk_window_get_events(active) | GDK_STRUCTURE_MASK);
+        return gdk_window_get_toplevel(active);
+      }
+    }
+    g_object_unref(active);
   }
 
   GList *windows = gdk_screen_get_window_stack(screen);
