@@ -12,6 +12,7 @@ const options = {
   interactive: false,
   exit: false,
   disableFallback: false,
+  notification: false,
   gjsArgv: null, //This will be immediately filled by parseCli
 };
 export function parseCLI(argv) {
@@ -131,6 +132,9 @@ export function parseCLI(argv) {
           options.backend = resolvedBackend;
           options.disableFallback = true;
           break;
+        case ('--notification'):case ('-n'):
+          options.notification = true;
+          break;
         default:
           options.gjsArgv.push(arg);
           break;
@@ -147,6 +151,7 @@ export function parseCLI(argv) {
         if (options.delay !== null) ignoredFlags.push('--delay/-d');
         if (options.clipboard) ignoredFlags.push('--clipboard/-c');
         if (options.file) ignoredFlags.push('--file/-f');
+        if (options.notification) ignoredFlags.push('--notification/-n');
 
         if (ignoredFlags.length > 0) {
             print(`[Makas] Warning: The following flag(s) are ignored in interactive session: ${ignoredFlags.join(', ')}`);
@@ -175,6 +180,7 @@ function printHelp() {
     -p, --include-pointer          Include the pointer with the screenshot
     -d, --delay=seconds            Take screenshot after specified delay [in seconds]. Default: ${DefaultCliSettings.delay}
     -i, --interactive              Interactively set options
+    -n, --notification             Show notification after screenshot is taken
     -f, --file=filename            Save screenshot directly to this file. Default: ${DefaultCliSettings.file === null ? 'none' : DefaultCliSettings.file}
     --version                      Print version information and exit
     -b, --backend=backend          Select backend temporarily (${Object.keys(CaptureBackend).join(', ').toLowerCase()}) Default: ${defaultBackend}

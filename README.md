@@ -37,8 +37,6 @@ When a capture is cancelled, don't make it give an error message in cli
 
 Add aliases for cli
 
-Add a notification option to cli
-
 Implement a cancel button when delay is active.
 
 Text recognition

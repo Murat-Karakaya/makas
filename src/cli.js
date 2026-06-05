@@ -1,6 +1,5 @@
 import {
 	settings,
-	showScreenshotNotification,
 	wait,
 	copyPixbuf,
 	backends,
@@ -13,9 +12,10 @@ import { performCapture } from './screenshot/captureMethods/performCapture.js';
 import { selectArea } from './screenshot/areaSelectionMethods/selectArea.js';
 import { flashRect } from './screenshot/popupWindows/flash.js';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 export async function executeCLIAction(app, window, options) {
-  const {backend: captureBackendValue, mode, includePointer, disableFallback} = options;
+  const {backend: captureBackendValue, mode, includePointer, disableFallback, notification} = options;
   let delay = options.delay;
   const topLevel = window;
 
@@ -84,7 +84,9 @@ export async function executeCLIAction(app, window, options) {
     if (window.screenshotPage) {
       window.screenshotPage.setUpPostScreenshot(pixbuf);
     }
-    showScreenshotNotification(app);
+    if (options.notification) {
+      showNotification(app);
+    }
 
   } catch (e) {
     console.error(`Capture failed: ${e.message}`);
@@ -120,4 +122,14 @@ function checkFile(file) { //This does not check if we have permission to write 
     return false;
   }
   return true;
+}
+
+function showNotification(app) {
+
+  const notification = new Gio.Notification();
+  notification.set_title("Screenshot Captured");
+  notification.set_body("Your screenshot has been captured successfully.");
+  notification.set_priority(Gio.NotificationPriority.NORMAL);
+
+  app.send_notification("screenshot-captured", notification);
 }

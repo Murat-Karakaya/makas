@@ -63,4 +63,5 @@ export const DefaultCliSettings = {
   clipboard: false,
   file: null,
   interactive: false,
+  notification: false,
 }
