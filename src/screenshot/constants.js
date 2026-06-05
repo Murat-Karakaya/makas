@@ -55,3 +55,12 @@ export const BackendSupport = {
 		],
 	},
 }
+
+export const DefaultCliSettings = {
+  mode: CaptureMode.SCREEN,
+  includePointer: false,
+  delay: 0,
+  clipboard: false,
+  file: null,
+  interactive: false,
+}

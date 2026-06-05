@@ -1,36 +1,32 @@
-import { settings, showScreenshotNotification, wait, copyPixbuf, backends } from './screenshot/utils.js';
-import { BackendSupport, CaptureMode } from './screenshot/constants.js';
+import {
+	settings,
+	showScreenshotNotification,
+	wait,
+	copyPixbuf,
+	backends,
+} from './screenshot/utils.js';
+import {
+	BackendSupport,
+	CaptureMode,
+} from './screenshot/constants.js';
 import { performCapture } from './screenshot/captureMethods/performCapture.js';
 import { selectArea } from './screenshot/areaSelectionMethods/selectArea.js';
 import { flashRect } from './screenshot/popupWindows/flash.js';
 import GLib from 'gi://GLib';
 
 export async function executeCLIAction(app, window, options) {
-  const captureBackendValue = options.backend || settings.get_string("capture-backend-auto");
-  const captureMode = options.mode || settings.get_string("screenshot-mode") || CaptureMode.SCREEN;
-  const includePointer = options.pointerSet ? options.includePointer : settings.get_boolean("include-pointer");
-  let delay = options.delay !== null ? options.delay : 0;
-
-  // Explicit backend disables fallback
-  const disableFallback = !!options.backend;
-
+  const {backend: captureBackendValue, mode, includePointer, disableFallback} = options;
+  let delay = options.delay;
   const topLevel = window;
-  const windowWait = settings.get_int("window-wait");
-
 
 	while (delay > 0) {
     print(`Waiting ${delay--} seconds...`);
     await wait(1000);
   }
 
-  if (settings.get_boolean("hide-window")) {
-    topLevel.hide();
-    await wait(windowWait);
-  }
-
   let pixbuf;
   try {
-    if (captureMode === CaptureMode.AREA) {
+    if (mode === CaptureMode.AREA) {
       const screenResult = await performCapture(captureBackendValue, {
         captureMode: CaptureMode.SCREEN,
         includePointer,
@@ -58,7 +54,7 @@ export async function executeCLIAction(app, window, options) {
 
     } else {
       const result = await performCapture(captureBackendValue, {
-        captureMode,
+        captureMode: mode,
         includePointer,
         topLevel,
         disableFallback
@@ -95,7 +91,7 @@ export async function executeCLIAction(app, window, options) {
     app.quit();
   } finally {
 	  const backend = options.backend || settings.get_string("capture-backend-auto");
-	  if (options.pointerSet && !BackendSupport[backend].includePointer) {
+	  if (options.includePointer && !BackendSupport[backend].includePointer) {
 	    print(`[Makas] Warning: The specified flag '--include-pointer/-p' is ignored because backend '${backend.toLowerCase()}' does not support including pointer.`);
 
 	    const supportedBackends = [];

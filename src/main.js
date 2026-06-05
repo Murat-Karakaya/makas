@@ -91,7 +91,7 @@ export const ScreenRecorderApp = GObject.registerClass(
                 win = new ScreenshotWindow(this);
             }
 
-            if (this.cliOptions && this.cliOptions.action === 'capture') {
+            if (!this.cliOptions.interactive) {
                 executeCLIAction(this, win, this.cliOptions);
             } else {
                 win.present();

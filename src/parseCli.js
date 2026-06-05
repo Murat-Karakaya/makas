@@ -1,21 +1,23 @@
-import { CaptureMode, CaptureBackend } from './screenshot/constants.js';
+import { CaptureMode, CaptureBackend, DefaultCliSettings } from './screenshot/constants.js';
+import { settings } from './screenshot/utils.js';
 
+const defaultBackend = settings.get_string("capture-backend-auto").toLowerCase();
+const options = {
+  mode: null,
+  includePointer: false,
+  backend: defaultBackend,
+  delay: null,
+  clipboard: false,
+  file: null,
+  interactive: false,
+  exit: false,
+  disableFallback: false,
+  gjsArgv: null, //This will be immediately filled by parseCli
+};
 export function parseCLI(argv) {
     const args = argv.slice(1);
-    const options = {
-        action: null,
-        mode: null,
-        includePointer: false,
-        pointerSet: false,
-        backend: null,
-        delay: null,
-        clipboard: false,
-        file: null,
-        interactive: false,
-        exit: false,
-        settingsToSet: [],
-        gjsArgv: [argv[0]]
-    };
+
+    options.gjsArgv = [argv[0]];
 
     const resolveBackend = (name) => {
         const lower = name.toLowerCase();
@@ -31,7 +33,6 @@ export function parseCLI(argv) {
 
     // Check if we have any args that determine action, otherwise default to capture
     // But we need to parse first.
-
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
         let afterEquals = null;
@@ -55,11 +56,9 @@ export function parseCLI(argv) {
           options.exit = true;
           return options;
         case('--clipboard'):case('-c'):
-          options.action = 'capture';
           options.clipboard = true;
           break;
         case('--window'):case('-w'):
-          options.action = 'capture';
           if (options.mode) {
             const oldFlag = options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a';
             print(`[Makas] Warning: Flag '${arg}' overrides previously set mode flag: ${oldFlag}`);
@@ -67,7 +66,6 @@ export function parseCLI(argv) {
           options.mode = CaptureMode.WINDOW;
           break;
         case('--area'):case('-a'):
-          options.action = 'capture';
           if (options.mode) {
             const oldFlag = options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a';
             print(`[Makas] Warning: Flag '${arg}' overrides previously set mode flag: ${oldFlag}`);
@@ -76,10 +74,8 @@ export function parseCLI(argv) {
           break;
         case('--include-pointer'):case('-p'):
           options.includePointer = true;
-          options.pointerSet = true;
           break
         case('--delay'):case('-d'):
-					options.action = 'capture';
 					let delayVal = null;
           if (afterEquals) {
             delayVal = afterEquals;
@@ -102,8 +98,6 @@ export function parseCLI(argv) {
           options.interactive = true;
           break;
         case('--file'): case('-f'):
-          options.action = 'capture';
-
           //Filename validation checks are done in cli.js to prevent check operations from hurting performance
 
           if (afterEquals) {
@@ -133,9 +127,9 @@ export function parseCLI(argv) {
             const allowedBackends = Object.keys(CaptureBackend).join(', ').toLowerCase();
             print(`[Makas] Error: Argument '${arg}' requires a valid backend type (one of: ${allowedBackends}). Received: '${backendVal}'`);
             options.exit = true;
-          } else {
-            options.backend = resolvedBackend;
           }
+          options.backend = resolvedBackend;
+          options.disableFallback = true;
           break;
         default:
           options.gjsArgv.push(arg);
@@ -146,23 +140,23 @@ export function parseCLI(argv) {
     if (options.exit) return options;
 
     if (options.interactive) {
-        options.action = null; // Forces main.js to use win.present() (PreScreenshot)
         const ignoredFlags = [];
         if (options.mode) ignoredFlags.push(options.mode === CaptureMode.WINDOW ? '--window/-w' : '--area/-a');
-        if (options.pointerSet) ignoredFlags.push('--include-pointer/-p');
+        if (options.includePointer) ignoredFlags.push('--include-pointer/-p');
         if (options.backend) ignoredFlags.push('--backend/-b');
         if (options.delay !== null) ignoredFlags.push('--delay/-d');
         if (options.clipboard) ignoredFlags.push('--clipboard/-c');
         if (options.file) ignoredFlags.push('--file/-f');
 
         if (ignoredFlags.length > 0) {
-            print(`[Makas] Warning: The following flag(s) are ignored in interactive mode: ${ignoredFlags.join(', ')}`);
-        }
-    } else {
-        if (!options.action) {
-          options.action = 'capture';
+            print(`[Makas] Warning: The following flag(s) are ignored in interactive session: ${ignoredFlags.join(', ')}`);
         }
     }
+
+    for (const key in options) {
+      options[key] = options[key] !== null ? options[key] : DefaultCliSettings[key];
+    }
+    options.backend = options.backend.toUpperCase(); //Set to uppercase so our functions recognize them
 
     return options;
 }
@@ -179,10 +173,10 @@ function printHelp() {
     -w, --window                   Grab a window instead of the entire screen
     -a, --area                     Grab an area of the screen instead of the entire screen
     -p, --include-pointer          Include the pointer with the screenshot
-    -d, --delay=seconds            Take screenshot after specified delay [in seconds]
+    -d, --delay=seconds            Take screenshot after specified delay [in seconds]. Default: ${DefaultCliSettings.delay}
     -i, --interactive              Interactively set options
-    -f, --file=filename            Save screenshot directly to this file
+    -f, --file=filename            Save screenshot directly to this file. Default: ${DefaultCliSettings.file === null ? 'none' : DefaultCliSettings.file}
     --version                      Print version information and exit
-    -b, --backend=backend          Select backend temporarily (${Object.keys(CaptureBackend).join(', ').toLowerCase()})
+    -b, --backend=backend          Select backend temporarily (${Object.keys(CaptureBackend).join(', ').toLowerCase()}) Default: ${defaultBackend}
   `);
 }

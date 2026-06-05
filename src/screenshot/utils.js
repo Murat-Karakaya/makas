@@ -2,7 +2,7 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import Gdk from "gi://Gdk";
 import Gtk from "gi://Gtk";
-import { CaptureBackend } from "./constants.js";
+import { CaptureBackend, CaptureMode } from "./constants.js";
 import { captureWithShell, hasShellScreenshot } from "./captureMethods/captureShell.js";
 import { captureWithX11, hasX11Screenshot } from "./captureMethods/captureX11.js";
 import { captureWithExtImg, hasExtImgScreenshot } from "./captureMethods/captureExtImg.js";
