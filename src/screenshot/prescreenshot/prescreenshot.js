@@ -2,7 +2,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
-import { CaptureMode, CaptureBackend, SOURCE_PATH } from "../constants.js";
+import { CaptureMode, BackendSupport, SOURCE_PATH } from "../constants.js";
 import { selectArea } from "../areaSelectionMethods/selectArea.js";
 import { settings, wait, showScreenshotNotification } from "../utils.js";
 import { performCapture } from "../captureMethods/performCapture.js";
@@ -204,7 +204,7 @@ export const PreScreenshot = GObject.registerClass(
 
     setBackend(backend) {
       this.captureBackendValue = backend;
-      if (backend === CaptureBackend.WAYLAND || backend === CaptureBackend.PORTAL) {
+      if (BackendSupport[backend]?.modes?.includes(CaptureMode.WINDOW)) {
         this.windowRadio.hide();
         if (this.captureMode === CaptureMode.WINDOW) {
           const settingValue = settings.get_string("screenshot-mode")
@@ -214,12 +214,12 @@ export const PreScreenshot = GObject.registerClass(
         this.windowRadio.show();
       }
 
-      if (backend === CaptureBackend.PORTAL) {
+      if (BackendSupport[backend]?.includePointer) {
         this.pointerRow.hide();
         // One thing to consider here is that we don't change the pointer switch value.
         // Benefit: If the user changes to a backend that supports pointer capture,
         // The switch value will remain unchanged.
-        // Not so clean part: We still send the switch value. So the Portal backend
+        // Not so clean part: We still send the switch value. So the the backend
         // mustn't throw an error when the switch value is true and it should simply ignore it.
       } else {
         this.pointerRow.show();

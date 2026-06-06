@@ -23,8 +23,6 @@ gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 The changing of default screenshot mode should immediatly apply to main window.
 
-setBackend() in prescreenshot.js is an outdated. Which causes inaccurate results for newer backends
-
 Clean up logs
 
 Add a test for cli commands
