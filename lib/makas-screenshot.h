@@ -15,12 +15,13 @@ G_BEGIN_DECLS
  * relative to the root window
  * @out_y_offset: (out): Return location for the Y offset of the content
  * relative to the root window
+ * @out_status: (out): Return status: 0 for success, 1 for no window found, 2 for capture failure
  *
  * Returns: (transfer full) (nullable): A GdkPixbuf with the screenshot, or NULL
  * on failure
  */
 GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
-                                    gint *out_y_offset);
+                                    gint *out_y_offset, gint *out_status);
 
 G_END_DECLS
 

@@ -33,13 +33,18 @@ export async function captureWithX11({ includePointer, captureMode }) {
         case CaptureMode.WINDOW: {
             const selectionResult = await selectWindow();
 
-            if (!selectionResult) return null;
+            if (!selectionResult) return { reason: "Capture cancelled" }
 
-            result = captureWindowWithXShape(
+            const capResult = captureWindowWithXShape(
                 selectionResult.clickX,
                 selectionResult.clickY
             );
-            if (!result) break;
+            if (!capResult || capResult.status === 2 || (capResult.status === 0 && !capResult.pixbuf)) {
+                throw new Error("Failed to capture window");
+            }
+            if (capResult.status === 1) return { reason: "No window found" };
+
+            result = capResult;
 
             if(includePointer) compositeCursor(result.pixbuf, result.x, result.y);
 
@@ -117,11 +122,12 @@ function captureWindowWithXShape(x, y) {
     // GJS handles (out) arguments by returning an array: [return_val, out_arg1, out_arg2, ...]
     const result = MakasScreenshot.capture_window_x11(x, y);
 
-    if (!result || !result[0]) return null;
+    if (!result) return null;
 
     return {
         pixbuf: result[0],
         x: result[1],
-        y: result[2]
+        y: result[2],
+        status: result[3]
     };
 }

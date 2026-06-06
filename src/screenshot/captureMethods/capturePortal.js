@@ -38,7 +38,11 @@ export async function captureWithPortal({ captureMode }) {
                     const [responseCode, results] = parameters.deep_unpack();
 
                     if (responseCode !== 0) {
-                        reject(new Error("Not allowed to take screenshot"));
+                        if (responseCode === 1) {
+                            resolve({ reason: "Capture cancelled" });
+                        } else {
+                            reject(new Error("Not allowed to take screenshot"));
+                        }
                         return;
                     }
 

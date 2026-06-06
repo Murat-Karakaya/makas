@@ -46,10 +46,10 @@ export const PreScreenshot = GObject.registerClass(
       });
 
       this.delaySpinner = builder.get_object("delaySpinner");
-      
+
       this.pointerSwitch = builder.get_object("pointerSwitch");
       this.pointerRow = builder.get_object("pointerRow");
-      
+
       this.shootBtn = builder.get_object("shootBtn");
       this.statusLabel = builder.get_object("statusLabel");
 
@@ -95,16 +95,17 @@ export const PreScreenshot = GObject.registerClass(
         if (captureMode === CaptureMode.AREA) {
           const screenCaptureResult = await performCapture(captureBackendValue, { captureMode: CaptureMode.SCREEN, includePointer, topLevel });
 
-          if (!screenCaptureResult || !screenCaptureResult.pixbuf) {
+          if (screenCaptureResult && screenCaptureResult.reason)
+            return this.setStatus(screenCaptureResult.reason);
+
+          if (!screenCaptureResult || !screenCaptureResult.pixbuf)
             throw new Error("Area capture failed");
-          }
 
           const screenPixbuf = screenCaptureResult.pixbuf;
 
           selectionResult = await selectArea(screenPixbuf);
-          if (!selectionResult) {
+          if (!selectionResult)
             return this.setStatus("Capture cancelled");
-          }
 
           console.log(selectionResult, screenPixbuf.get_width(), screenPixbuf.get_height());
 
@@ -118,14 +119,15 @@ export const PreScreenshot = GObject.registerClass(
           flashRect(selectionResult.x, selectionResult.y, selectionResult.width, selectionResult.height, topLevel);
         } else {
           const captureResult = await performCapture(captureBackendValue, { captureMode, includePointer, topLevel });
+          if (captureResult && captureResult.reason)
+            return this.setStatus(captureResult.reason);
+
           pixbuf = captureResult.pixbuf;
-          
+
           flashRect(captureResult.x, captureResult.y, pixbuf.get_width(), pixbuf.get_height(), topLevel);
         }
 
-        if (!pixbuf) {
-          return this.setStatus("Capture cancelled");
-        }
+        if (!pixbuf) return this.setStatus("Capture cancelled");
 
         const app = Gio.Application.get_default();
         showScreenshotNotification(app);
@@ -146,7 +148,7 @@ export const PreScreenshot = GObject.registerClass(
       const timer = timerMs/10
       const windowWait = windowWaitMs/10
       const getRemainingSeconds = ()=> ((timer + windowWait) - ((timer + windowWait) % 100))/100
-      
+
       print(`Waiting... ${(timer + windowWait) / 100}s`);
       this.setStatus(`Capturing in ${getRemainingSeconds()}s...`);
 
@@ -172,12 +174,12 @@ export const PreScreenshot = GObject.registerClass(
     setStatus(text) {
       this.statusLabel.set_text(text);
     }
-    
+
     vfunc_map() {
       super.vfunc_map();
       this.setBackend(settings.get_string("capture-backend-auto"));
     }
-    
+
     setUpValues (){
       this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
       this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
@@ -195,11 +197,11 @@ export const PreScreenshot = GObject.registerClass(
       if (settings.get_boolean("last-screenshot-mode")) {
         settings.set_string("screenshot-mode", this.captureMode);
       }
-      
+
       this.setUpPostScreenshot(pixbuf);
       this.setUpValues();
     }
-    
+
     setBackend(backend) {
       this.captureBackendValue = backend;
       if (backend === CaptureBackend.WAYLAND || backend === CaptureBackend.PORTAL) {
@@ -211,11 +213,11 @@ export const PreScreenshot = GObject.registerClass(
       } else {
         this.windowRadio.show();
       }
-      
+
       if (backend === CaptureBackend.PORTAL) {
         this.pointerRow.hide();
         // One thing to consider here is that we don't change the pointer switch value.
-        // Benefit: If the user changes to a backend that supports pointer capture, 
+        // Benefit: If the user changes to a backend that supports pointer capture,
         // The switch value will remain unchanged.
         // Not so clean part: We still send the switch value. So the Portal backend
         // mustn't throw an error when the switch value is true and it should simply ignore it.
@@ -223,7 +225,7 @@ export const PreScreenshot = GObject.registerClass(
         this.pointerRow.show();
       }
     }
-    
+
     setCaptureMode(mode) {
       this.captureMode = mode;
       switch (this.captureMode) {

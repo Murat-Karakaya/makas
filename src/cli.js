@@ -34,6 +34,12 @@ export async function executeCLIAction(app, window, options) {
         disableFallback
       });
 
+      if (screenResult && screenResult.reason && !screenResult.pixbuf) {
+        print(screenResult.reason);
+        if (!options.interactive) app.quit();
+        return;
+      }
+
       if (!screenResult || !screenResult.pixbuf) throw new Error("Pre-capture for area selection failed.");
 
       const selection = await selectArea(screenResult.pixbuf);
@@ -59,6 +65,11 @@ export async function executeCLIAction(app, window, options) {
         topLevel,
         disableFallback
       });
+      if (result && result.reason && !result.pixbuf) {
+        print(result.reason);
+        if (!options.interactive) app.quit();
+        return;
+      }
       pixbuf = result.pixbuf;
       flashRect(result.x, result.y, pixbuf.get_width(), pixbuf.get_height(), topLevel);
     }

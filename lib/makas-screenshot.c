@@ -280,12 +280,15 @@ static void apply_xshape_mask(GdkPixbuf *pixbuf, Display *display,
 
 /* Capture window logic implemented below */
 GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
-                                           gint *out_y_offset) {
+                                           gint *out_y_offset, gint *out_status) {
   GdkWindow *window, *wm_window = NULL;
   GdkPixbuf *screenshot = NULL;
   Window wm_xid;
   Display *display;
   g_autoptr(GError) error = NULL;
+
+  if (out_status)
+    *out_status = 0;
 
   screenshot = NULL;
 
@@ -295,6 +298,8 @@ GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
   window = find_window_at_coords(x, y);
   if (window == NULL) {
     g_warning("No window found at coordinates (%d, %d)", x, y);
+    if (out_status)
+      *out_status = 1;
     return NULL;
   }
 
@@ -304,6 +309,8 @@ GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
   wm_xid = find_wm_window(window);
   if (wm_xid == None) {
     g_warning("Could not find WM window");
+    if (out_status)
+      *out_status = 2;
     return NULL;
   }
 
@@ -320,6 +327,8 @@ GdkPixbuf *makas_capture_window_x11(gint x, gint y, gint *out_x_offset,
   if (!frame_pixbuf) {
     g_warning("Failed to capture window pixmap");
     g_object_unref(wm_window);
+    if (out_status)
+      *out_status = 2;
     return NULL;
   }
 
