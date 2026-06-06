@@ -5,7 +5,7 @@ const defaultBackend = settings.get_string("capture-backend-auto").toLowerCase()
 const options = {
   mode: null,
   includePointer: false,
-  backend: defaultBackend,
+  backend: null,
   delay: null,
   clipboard: false,
   file: null,
@@ -24,7 +24,7 @@ export function parseCLI(argv) {
         const lower = name.toLowerCase();
         for (const key in CaptureBackend) {
             if (key.toLowerCase() === lower) {
-                return key;
+                return key; //key is uppercase so our code recognizes the backend
             }
         }
         return false;
@@ -161,7 +161,7 @@ export function parseCLI(argv) {
     for (const key in options) {
       options[key] = options[key] !== null ? options[key] : DefaultCliSettings[key];
     }
-    options.backend = options.backend.toUpperCase(); //Set to uppercase so our functions recognize them
+    options.backend = options.backend || defaultBackend.toUpperCase(); //Set to uppercase so our functions recognize them
 
     return options;
 }
