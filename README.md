@@ -17,9 +17,9 @@ Check meson code
 
 See if you can add window screenshot on Wayland only methods
 
-### FIXME:
-
 gtk_layer_shell_dep dependency addition implementation should be reconsidered
+
+### FIXME:
 
 The changing of default screenshot mode should immediatly apply to main window.
 
@@ -30,8 +30,6 @@ Clean up logs
 Add a test for cli commands
 
 Redesign logo
-
-When a capture is cancelled, don't make it give an error message in cli
 
 ### TO DO:
 
