@@ -172,11 +172,9 @@ export class PreferencesWindow {
 
       let currentModeStillSupported = false;
       for (const m of support.modes) {
-        if (id) {
-          modeCombo.append(m, m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()); // Adds WINDOW as Window
-          if (id === currentMode) {
-            currentModeStillSupported = true;
-          }
+        modeCombo.append(m, m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()); // Adds WINDOW as Window
+        if (m === currentMode) {
+          currentModeStillSupported = true;
         }
       }
 

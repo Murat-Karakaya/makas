@@ -205,13 +205,13 @@ export const PreScreenshot = GObject.registerClass(
     setBackend(backend) {
       this.captureBackendValue = backend;
       if (BackendSupport[backend]?.modes?.includes(CaptureMode.WINDOW)) {
-        this.windowRadio.hide();
+        this.windowRadio.show();
         if (this.captureMode === CaptureMode.WINDOW) {
           const settingValue = settings.get_string("screenshot-mode")
           this.setCaptureMode(settingValue === CaptureMode.WINDOW ? CaptureMode.SCREEN : settingValue);
         }
       } else {
-        this.windowRadio.show();
+        this.windowRadio.hide();
       }
 
       if (BackendSupport[backend]?.includePointer) {
