@@ -41,8 +41,6 @@ Add Appimage, tar.gz, .rpm and nix package builds.
 
 Add a setting for opening with an app
 
-Add monitor capture mode
-
 Add Add-ons that can open a new window in app.
 
 ### WON'T FIX

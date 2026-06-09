@@ -21,7 +21,7 @@ export const PreScreenshot = GObject.registerClass(
 
       this.buildUI();
       this.setUpValues();
-      this.backendListener();
+      this.addListeners();
     }
 
     buildUI() {
@@ -175,7 +175,7 @@ export const PreScreenshot = GObject.registerClass(
       this.statusLabel.set_text(text);
     }
 
-    vfunc_map() {
+    vfunc_map() { //Hides elements after all elements are realized. Otherwise it won't hide stuff
       super.vfunc_map();
       this.setBackend(settings.get_string("capture-backend-auto"));
     }
@@ -215,14 +215,14 @@ export const PreScreenshot = GObject.registerClass(
       }
 
       if (BackendSupport[backend]?.includePointer) {
-        this.pointerRow.hide();
+        this.pointerRow.show();
         // One thing to consider here is that we don't change the pointer switch value.
         // Benefit: If the user changes to a backend that supports pointer capture,
         // The switch value will remain unchanged.
         // Not so clean part: We still send the switch value. So the the backend
         // mustn't throw an error when the switch value is true and it should simply ignore it.
       } else {
-        this.pointerRow.show();
+        this.pointerRow.hide();
       }
     }
 
@@ -241,13 +241,36 @@ export const PreScreenshot = GObject.registerClass(
       }
     }
 
-    backendListener() {
-      this._captureBackendChangedId = settings.connect(
+    addListeners() {
+      settings.connect(
         "changed::capture-backend-auto",
         () => {
           this.setBackend(settings.get_string("capture-backend-auto"));
         }
       );
+
+      settings.connect(
+        "changed::screenshot-mode",
+        () => {
+          this.setCaptureMode(settings.get_string("screenshot-mode"));
+        }
+      );
+
+      settings.connect(
+        "changed::include-pointer",
+        () => {
+          this.pointerSwitch.set_active(settings.get_boolean("include-pointer"));
+        }
+      );
+
+      settings.connect(
+        "changed::screenshot-delay",
+        () => {
+          this.delaySpinner.set_value(settings.get_int("screenshot-delay"));
+        }
+      );
+
+
     }
 
   },
