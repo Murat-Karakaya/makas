@@ -5,8 +5,6 @@
 
 ## REVIEWS:
 
-Check cairo code
-
 Check support-checker codes
 
 Check multi-monitor functionalities
@@ -29,6 +27,8 @@ Redesign logo
 
 ### TO DO:
 
+Add translations
+
 Add a test for cli commands
 
 Add aliases for cli
@@ -50,8 +50,6 @@ Add Add-ons that can open a new window in app.
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
 
 It's better to take Screenshot after the window animation is done. But I couldn't find a way to determine that.
-
-FreeDesktop will allways flash the entire screenshot in cinnamon.
 
 Free select won't be implemented.
 

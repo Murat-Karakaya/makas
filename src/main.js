@@ -9,8 +9,8 @@ import GObject from 'gi://GObject';
 import { ScreenshotWindow } from './window.js';
 import { CaptureBackend } from './screenshot/constants.js';
 import { settings, backends } from './screenshot/utils.js';
-import { executeCLIAction } from './cli.js';
-import { parseCLI } from './parseCli.js';
+import { executeCLIAction } from './cli/cli.js';
+import { parseCLI } from './cli/parseCli.js';
 
 (() => {
     const preferred = settings.get_string("capture-backend");

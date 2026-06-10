@@ -22,7 +22,7 @@ import GObject from "gi://GObject";
 import Gtk from "gi://Gtk?version=3.0";
 
 import { ScreenshotPage } from "./screenshot/screenshot.js";
-import { PreferencesWindow } from "./preferences.js";
+import { PreferencesWindow } from "./preferences/preferences.js";
 
 export const ScreenshotWindow = GObject.registerClass(
   {

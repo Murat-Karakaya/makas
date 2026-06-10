@@ -3,14 +3,14 @@ import {
 	wait,
 	copyPixbuf,
 	backends,
-} from './screenshot/utils.js';
+} from '../screenshot/utils.js';
 import {
 	BackendSupport,
 	CaptureMode,
-} from './screenshot/constants.js';
-import { performCapture } from './screenshot/captureMethods/performCapture.js';
-import { selectArea } from './screenshot/areaSelectionMethods/selectArea.js';
-import { flashRect } from './screenshot/popupWindows/flash.js';
+} from '../screenshot/constants.js';
+import { performCapture } from '../screenshot/captureMethods/performCapture.js';
+import { selectArea } from '../screenshot/areaSelectionMethods/selectArea.js';
+import { flashRect } from '../screenshot/popupWindows/flash.js';
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 

@@ -2,17 +2,17 @@ import Gtk from "gi://Gtk?version=3.0";
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 
-import { CaptureMode, SOURCE_PATH, BackendSupport } from "./screenshot/constants.js";
+import { CaptureMode, SOURCE_PATH, BackendSupport } from "../screenshot/constants.js";
 import {
   backends,
   settings,
   getBackupFolder,
-} from "./screenshot/utils.js";
+} from "../screenshot/utils.js";
 
 export class PreferencesWindow {
   constructor(parent) {
     const builder = new Gtk.Builder();
-    builder.add_from_resource(SOURCE_PATH + "/preferneces.ui");
+    builder.add_from_resource(SOURCE_PATH + "/preferences/preferences.ui");
 
     const dialog = builder.get_object("preferences-dialog");
     dialog.set_transient_for(parent);
