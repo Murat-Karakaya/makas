@@ -110,7 +110,7 @@ export async function selectAreaXWayland(bgPixbuf) {
         try {
             const result = JSON.parse(resultJson);
 
-            return result
+            return result.abort ? null : result;
         } catch (e) {
             print("Failed to parse result JSON: " + e);
             return null;

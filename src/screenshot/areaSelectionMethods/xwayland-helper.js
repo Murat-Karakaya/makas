@@ -42,9 +42,10 @@ Gtk.init(null);
 const bgPixbuf = GdkPixbuf.Pixbuf.new_from_file(bgImagePath);
 
 const result = await selectAreaX11(bgPixbuf);
+const returning = result ? {abort:false, ...result} : {abort: true};
 
 const file = Gio.File.new_for_path(resultPath);
 const outputStream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
 const encoder = new TextEncoder();
-outputStream.write_all(encoder.encode(JSON.stringify(result)), null);
+outputStream.write_all(encoder.encode(JSON.stringify(returning)), null);
 outputStream.close(null);
