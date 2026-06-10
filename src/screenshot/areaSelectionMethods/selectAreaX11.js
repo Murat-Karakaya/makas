@@ -1,13 +1,12 @@
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk?version=3.0";
-import GLib from "gi://GLib";
 import cairo from "gi://cairo";
 import { SelectionDrawer } from "./selectionDrawer.js";
 
 /**
  * X11 area selection using GTK POPUP window.
  * Works on X11 sessions and can be used as XWayland fallback on GNOME Wayland.
- * 
+ *
  * @param {GdkPixbuf.Pixbuf} bgPixbuf - The frozen screenshot to display as background
  * @returns {Promise<{x: number, y: number, width: number, height: number}|null>}
  */
@@ -51,10 +50,6 @@ export function selectAreaX11(bgPixbuf) {
         window.set_default_size(totalWidth, totalHeight);
         window.fullscreen();
 
-        if (screen.is_composited() && visual) {
-            window.set_visual(visual);
-            window.set_app_paintable(true);
-        }
 
         window.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK |
@@ -81,9 +76,9 @@ export function selectAreaX11(bgPixbuf) {
         const queueDrawRect = (rect) => {
              // Invalidate slightly larger area to clear borders
              window.queue_draw_area(
-                 rect.x - 10, 
-                 rect.y - 10, 
-                 rect.width + 20, 
+                 rect.x - 10,
+                 rect.y - 10,
+                 rect.width + 20,
                  rect.height + 20
              );
         };
@@ -97,7 +92,7 @@ export function selectAreaX11(bgPixbuf) {
             data.rect.y = data.startY;
             data.rect.width = 0;
             data.rect.height = 0;
-            
+
             // Draw initial point
             queueDrawRect(data.rect);
             return true;
@@ -105,7 +100,7 @@ export function selectAreaX11(bgPixbuf) {
 
         window.connect("motion-notify-event", (widget, event) => {
             if (!data.buttonPressed) return true;
-            
+
             // Invalidate old rect
             queueDrawRect(data.rect);
 
@@ -114,7 +109,7 @@ export function selectAreaX11(bgPixbuf) {
             data.rect.height = Math.abs(currentY - data.startY);
             data.rect.x = Math.min(data.startX, currentX);
             data.rect.y = Math.min(data.startY, currentY);
-            
+
             // Invalidate new rect
             queueDrawRect(data.rect);
             return true;
@@ -124,7 +119,7 @@ export function selectAreaX11(bgPixbuf) {
 
         window.connect("button-release-event", (widget, event) => {
             if (!data.buttonPressed) return true;
-            
+
             // Invalidate old rect before finalizing
             queueDrawRect(data.rect);
 
@@ -150,18 +145,14 @@ export function selectAreaX11(bgPixbuf) {
         });
 
         window.connect("destroy", () => {
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-                if (data.aborted || data.rect.width < 5 || data.rect.height < 5) {
-                    resolve(null);
-                } else {
-                    resolve({
-                        x: Math.round(data.rect.x),
-                        y: Math.round(data.rect.y),
-                        width: Math.round(data.rect.width),
-                        height: Math.round(data.rect.height),
-                    });
-                }
-                return GLib.SOURCE_REMOVE;
+            if (data.aborted || data.rect.width < 5 || data.rect.height < 5)
+                resolve(null);
+
+            resolve({
+                x: Math.round(data.rect.x),
+                y: Math.round(data.rect.y),
+                width: Math.round(data.rect.width),
+                height: Math.round(data.rect.height),
             });
         });
 

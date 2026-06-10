@@ -23,13 +23,17 @@ gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 Clean up logs
 
-Add a test for cli commands
+Fix escape key being ignored in GNOME xwayland area selection backend
 
 Redesign logo
 
 ### TO DO:
 
+Add a test for cli commands
+
 Add aliases for cli
+
+Add a setting for disabling XWayland fallback for area selection
 
 Implement a cancel button when delay is active.
 
