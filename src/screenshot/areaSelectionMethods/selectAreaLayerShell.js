@@ -7,7 +7,7 @@ import { SelectionDrawer } from "./selectionDrawer.js";
 /**
  * Layer Shell area selection for wlroots-based compositors.
  * Uses gtk-layer-shell to create a fullscreen overlay on all monitors.
- * 
+ *
  * @param {GdkPixbuf.Pixbuf} bgPixbuf - The frozen screenshot to display as background
  * @returns {Promise<{x: number, y: number, width: number, height: number, monitor_scale: number}|null>}
  */
@@ -20,7 +20,7 @@ export function selectAreaLayerShell(bgPixbuf) {
         const nMonitors = display.get_n_monitors();
         const windows = [];
         let resolved = false;
-        
+
         const drawer = new SelectionDrawer();
 
         // Shared state
@@ -36,58 +36,8 @@ export function selectAreaLayerShell(bgPixbuf) {
         /** @type {cairo.Surface} */
         let bgSurface = null;
 
-        // Cleaning up all windows
-        const cleanup = () => {
-            if (resolved) return;
-            resolved = true;
-
-            // Release grab if any
-            try {
-                seat.ungrab();
-            } catch (e) {
-                print("Error ungrabbing seat: " + e);
-            }
-
-            windows.forEach(({ window }) => {
-                try {
-                    window.destroy();
-                } catch (e) {
-                    // ignore
-                }
-            });
-        };
-
-        const finish = () => {
-            if (data.aborted || data.rect.width < 5 || data.rect.height < 5) {
-                resolve(null);
-            } else {
-                resolve({
-                    x: Math.round(data.rect.x),
-                    y: Math.round(data.rect.y),
-                    width: Math.round(data.rect.width),
-                    height: Math.round(data.rect.height),
-                });
-            }
-            cleanup();
-        };
-        
-        const queueDrawRect = (rect) => {
-            const pad = 10;
-            const globalX = rect.x - pad;
-            const globalY = rect.y - pad;
-            const globalW = rect.width + 2 * pad;
-            const globalH = rect.height + 2 * pad;
-
-            windows.forEach(({ window, geometry }) => {
-                const localX = globalX - geometry.x;
-                const localY = globalY - geometry.y;
-                window.queue_draw_area(localX, localY, globalW, globalH);
-            });
-        };
-
         for (let i = 0; i < nMonitors; i++) {
             const monitor = display.get_monitor(i);
-            const scale = monitor.get_scale_factor();
             const geometry = monitor.get_geometry();
 
             // Create window
@@ -111,15 +61,8 @@ export function selectAreaLayerShell(bgPixbuf) {
             // Using -1 means we don't reserve space.
             GtkLayerShell.set_exclusive_zone(window, -1);
 
-            // Enable keyboard interactivity (only needs to be set on one window really, but setting on all is safer)
+            // Enable keyboard interactivity (only needs to be set on one window really)
             GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE);
-
-            const screen = window.get_screen();
-            const visual = screen.get_rgba_visual();
-            if (screen.is_composited() && visual) {
-                window.set_visual(visual);
-                window.set_app_paintable(true);
-            }
 
             window.add_events(
                 Gdk.EventMask.BUTTON_PRESS_MASK |
@@ -138,7 +81,7 @@ export function selectAreaLayerShell(bgPixbuf) {
                         widget.get_window()
                     );
                 }
-                
+
                 drawer.draw(cr, widget, bgSurface, data.rect, geometry, data.buttonPressed);
                 return true;
             });
@@ -170,7 +113,7 @@ export function selectAreaLayerShell(bgPixbuf) {
 
             window.connect("motion-notify-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
-                
+
                 queueDrawRect(data.rect);
 
                 const [, localX, localY] = event.get_coords();
@@ -188,7 +131,7 @@ export function selectAreaLayerShell(bgPixbuf) {
 
             window.connect("button-release-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
-                
+
                 queueDrawRect(data.rect);
 
                 // We are adding the geometry  coords to prevent rectangle offset
@@ -219,18 +162,64 @@ export function selectAreaLayerShell(bgPixbuf) {
         }
 
         // Show all windows
-        windows.forEach(({ window }) => {
+        for (const { window } of windows) {
             window.show();
-        });
-
-        // Post-show cursor setting
-        windows.forEach(({ window }) => {
             const gdkWin = window.get_window();
             if (gdkWin) {
                 const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
                 gdkWin.set_cursor(cursor);
             }
-        });
+        };
+
+        // Cleaning up all windows
+        function cleanup() {
+            if (resolved) return;
+            resolved = true;
+
+            // Release grab if any
+            try {
+                seat.ungrab();
+            } catch (e) {
+                print("Error ungrabbing seat: " + e);
+            }
+
+            windows.forEach(({ window }) => {
+                try {
+                    window.destroy();
+                } catch (e) {
+                    // ignore
+                }
+            });
+        };
+
+        function finish() {
+            if (data.aborted || data.rect.width < 5 || data.rect.height < 5) {
+              resolve(null);
+            } else {
+          		resolve(data.rect);
+                /*resolve({
+                    x: Math.round(data.rect.x),
+                    y: Math.round(data.rect.y),
+                    width: Math.round(data.rect.width),
+                    height: Math.round(data.rect.height),
+                });*/
+            }
+            cleanup();
+        };
+
+        function queueDrawRect(rect) {
+            const pad = 10;
+            const globalX = rect.x - pad;
+            const globalY = rect.y - pad;
+            const globalW = rect.width + 2 * pad;
+            const globalH = rect.height + 2 * pad;
+
+            windows.forEach(({ window, geometry }) => {
+                const localX = globalX - geometry.x;
+                const localY = globalY - geometry.y;
+                window.queue_draw_area(localX, localY, globalW, globalH);
+            });
+        };
 
         // We do NOT do a global grab here. The windows are overlay, so they should catch input.
     });

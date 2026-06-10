@@ -21,8 +21,6 @@ gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 ### FIXME:
 
-The changing of default screenshot mode should immediatly apply to main window.
-
 Clean up logs
 
 Add a test for cli commands
