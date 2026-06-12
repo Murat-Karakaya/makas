@@ -6,14 +6,6 @@ import Gio from "gi://Gio";
  * Spawns a subprocess with GDK_BACKEND=x11 to force XWayland rendering.
  */
 export async function selectAreaXWayland(bgPixbuf) {
-    // Check if XWayland fallback is disabled
-    const disableXWayland = GLib.getenv("MAKAS_DISABLE_XWAYLAND_FALLBACK") === "1";
-    if (disableXWayland) {
-        print("XWayland fallback disabled, using native X11 selection");
-        const { selectAreaX11 } = await import("./selectAreaX11.js");
-        return selectAreaX11(bgPixbuf);
-    }
-
     print("Selection: selectAreaXWayland - saving pixbuf for subprocess");
 
     const tempDir = GLib.get_tmp_dir();
@@ -22,6 +14,7 @@ export async function selectAreaXWayland(bgPixbuf) {
     const tempResultPath = GLib.build_filenamev([tempDir, `makas_area_select_result_${timestamp}.json`]);
     const tempScriptPath = GLib.build_filenamev([tempDir, `makas_xwayland_helper_${timestamp}.mjs`]);
     const tempDrawerPath = GLib.build_filenamev([tempDir, "selectionDrawer.js"]);
+    const tempSelectAreaPath = GLib.build_filenamev([tempDir, "selectAreaX11.js"]);
 
     try {
         // Save pixbuf to temp file
@@ -34,6 +27,7 @@ export async function selectAreaXWayland(bgPixbuf) {
         const baseUri = currentUri.substring(0, lastSlash);
         const scriptUri = `${baseUri}/xwayland-helper.js`;
         const drawerUri = `${baseUri}/selectionDrawer.js`;
+        const selectAreaUri = `${baseUri}/selectAreaX11.js`;
 
         const scriptFile = Gio.File.new_for_uri(scriptUri);
         const [success, scriptContent] = scriptFile.load_contents(null);
@@ -49,10 +43,19 @@ export async function selectAreaXWayland(bgPixbuf) {
             throw new Error(`Failed to read selectionDrawer.js from ${drawerUri}`);
         }
 
+        const selectAreaFile = Gio.File.new_for_uri(selectAreaUri);
+        const [sSuccess, selectAreaContent] = selectAreaFile.load_contents(null);
+
+        if (!sSuccess) {
+            throw new Error(`Failed to read selectAreaX11.js from ${selectAreaUri}`);
+        }
+
         // Write the script to a temp file so gjs can execute it easily as a file
         GLib.file_set_contents(tempScriptPath, scriptContent);
         // Write the drawer module
         GLib.file_set_contents(tempDrawerPath, drawerContent);
+        // Write the selectAreaX11 module
+        GLib.file_set_contents(tempSelectAreaPath, selectAreaContent);
 
         // Run the subprocess with GDK_BACKEND=x11
         const launcher = new Gio.SubprocessLauncher({
@@ -98,16 +101,8 @@ export async function selectAreaXWayland(bgPixbuf) {
 
         try {
             const result = JSON.parse(resultJson);
-            if (result.aborted) {
-                return null;
-            }
 
-            return {
-                x: result.x,
-                y: result.y,
-                width: result.width,
-                height: result.height,
-            };
+            return result.abort ? null : result;
         } catch (e) {
             print("Failed to parse result JSON: " + e);
             return null;

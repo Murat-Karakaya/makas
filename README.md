@@ -5,13 +5,13 @@
 
 ## REVIEWS:
 
-Check cairo code
-
 Check support-checker codes
 
 Check multi-monitor functionalities
 
 Check zwlr and ext-img code
+
+FreeDesktop might be able to support window selection
 
 Check meson code
 
@@ -21,17 +21,21 @@ gtk_layer_shell_dep dependency addition implementation should be reconsidered
 
 ### FIXME:
 
-The changing of default screenshot mode should immediatly apply to main window.
-
 Clean up logs
 
-Add a test for cli commands
+Fix escape key being ignored in GNOME xwayland area selection backend
 
 Redesign logo
 
 ### TO DO:
 
+Add translations
+
+Add a test for cli commands
+
 Add aliases for cli
+
+Add a setting for disabling XWayland fallback for area selection
 
 Implement a cancel button when delay is active.
 
@@ -41,8 +45,6 @@ Add Appimage, tar.gz, .rpm and nix package builds.
 
 Add a setting for opening with an app
 
-Add monitor capture mode
-
 Add Add-ons that can open a new window in app.
 
 ### WON'T FIX
@@ -50,8 +52,6 @@ Add Add-ons that can open a new window in app.
 X11 backend will only composite cursor as left pointer. This also seems to be the case for gnome-screenshot as well.
 
 It's better to take Screenshot after the window animation is done. But I couldn't find a way to determine that.
-
-FreeDesktop will allways flash the entire screenshot in cinnamon.
 
 Free select won't be implemented.
 

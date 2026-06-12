@@ -1,5 +1,5 @@
-import { CaptureMode, CaptureBackend, DefaultCliSettings } from './screenshot/constants.js';
-import { settings } from './screenshot/utils.js';
+import { CaptureMode, CaptureBackend, DefaultCliSettings } from '../screenshot/constants.js';
+import { settings } from '../screenshot/utils.js';
 
 const defaultBackend = settings.get_string("capture-backend-auto").toLowerCase();
 const options = {

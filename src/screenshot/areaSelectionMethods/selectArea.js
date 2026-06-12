@@ -1,10 +1,10 @@
 import { selectAreaX11 } from "./selectAreaX11.js";
 import { isWayland } from "../utils.js";
 import MakasScreenshot from "gi://MakasScreenshot?version=1.0";
+import GLib from "gi://GLib?version=2.0";
 
 /**
  * Select screen area using the appropriate backend for the current environment.
- * 
  * @param {GdkPixbuf.Pixbuf} bgPixbuf - The frozen screenshot to display as background
  * @returns {Promise<{x: number, y: number, width: number, height: number}|null>}
  */
@@ -22,7 +22,7 @@ export async function selectArea(bgPixbuf) {
 
     print(`Area selection: wayland=${wayland}, hasLayerShell=${hasLayerShell}`);
 
-    if (!wayland) {
+    if (!wayland || GLib.getenv("MAKAS_DISABLE_XWAYLAND_FALLBACK") === "1") { //Disable XWayland if an env variable is passed
         // X11 session - use native GTK POPUP
         print("Using X11 area selection");
         return selectAreaX11(bgPixbuf);

@@ -2,8 +2,8 @@
 <gresources>
   <gresource prefix="/com/github/murat/karakaya/Makas/js">
     <file>main.js</file>
-    <file>cli.js</file>
-    <file>parseCli.js</file>
+    <file>cli/cli.js</file>
+    <file>cli/parseCli.js</file>
     <file>window.js</file>
     <file>screenshot/screenshot.js</file>
 
@@ -29,6 +29,6 @@
     <file>screenshot/areaSelectionMethods/selectionDrawer.js</file>
 
     <file>screenshot/constants.js</file>
-    <file>preferences.js</file>
+    <file>preferences/preferences.js</file>
   </gresource>
 </gresources>
