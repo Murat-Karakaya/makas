@@ -6,14 +6,6 @@ import Gio from "gi://Gio";
  * Spawns a subprocess with GDK_BACKEND=x11 to force XWayland rendering.
  */
 export async function selectAreaXWayland(bgPixbuf) {
-    // Check if XWayland fallback is disabled
-    const disableXWayland = GLib.getenv("MAKAS_DISABLE_XWAYLAND_FALLBACK") === "1";
-    if (disableXWayland) {
-        print("XWayland fallback disabled, using native X11 selection");
-        const { selectAreaX11 } = await import("./selectAreaX11.js");
-        return selectAreaX11(bgPixbuf);
-    }
-
     print("Selection: selectAreaXWayland - saving pixbuf for subprocess");
 
     const tempDir = GLib.get_tmp_dir();

@@ -11,6 +11,8 @@ Check multi-monitor functionalities
 
 Check zwlr and ext-img code
 
+FreeDesktop might be able to support window selection
+
 Check meson code
 
 See if you can add window screenshot on Wayland only methods

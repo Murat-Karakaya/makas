@@ -24,13 +24,15 @@ export function selectAreaLayerShell(bgPixbuf) {
         const drawer = new SelectionDrawer();
 
         // Shared state
-        const data = {
+        let data = {
             rect: { x: 0, y: 0, width: 0, height: 0 },
             buttonPressed: false,
             startX: 0,
             startY: 0,
+            currentX: 0,
+            currentY: 0,
+            mouseMoved: false,
             aborted: false,
-            activeWindow: null // The window where the drag started
         };
 
         /** @type {cairo.Surface} */
@@ -86,23 +88,44 @@ export function selectAreaLayerShell(bgPixbuf) {
                 return true;
             });
 
+            let tickId = window.add_tick_callback((widget, frameClock) => {
+                if (!data.buttonPressed) return true;
+
+                if (data.mouseMoved) {
+                    // 1. Invalidate the old bounding box position
+                    queueDrawRect(data.rect);
+
+                    // 2. Calculate the updated math
+                    data.rect.width = Math.abs(data.currentX - data.startX);
+                    data.rect.height = Math.abs(data.currentY - data.startY);
+                    data.rect.x = Math.min(data.startX, data.currentX);
+                    data.rect.y = Math.min(data.startY, data.currentY);
+
+                    // 3. Invalidate the new bounding box position
+                    queueDrawRect(data.rect);
+                    data.mouseMoved = false;
+                }
+                return true;
+            });
+
             // Events
             window.connect("button-press-event", (widget, event) => {
                 if (data.buttonPressed) return true;
-                data.buttonPressed = true;
-                data.activeWindow = widget;
 
                 // Global coordinates:
                 const [, localX, localY] = event.get_coords();
                 const rootX = localX + geometry.x;
                 const rootY = localY + geometry.y;
-                data.startX = rootX;
-                data.startY = rootY;
-                data.rect.x = rootX;
-                data.rect.y = rootY;
-                data.rect.width = 0;
-                data.rect.height = 0;
 
+                data = {
+                    buttonPressed: true,
+                    startX: rootX,
+                    startY: rootY,
+                    currentX: rootX,
+                    currentY: rootY,
+                    rect: { x: rootX, y: rootY, width: 0, height: 0 },
+                    aborted: false,
+                };
                 // Grab interactions
                 const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
                 seat.grab(widget.get_window(), Gdk.SeatCapabilities.ALL_POINTING, false, cursor, null, null);
@@ -114,25 +137,24 @@ export function selectAreaLayerShell(bgPixbuf) {
             window.connect("motion-notify-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
 
-                queueDrawRect(data.rect);
-
                 const [, localX, localY] = event.get_coords();
                 const currentX = localX + geometry.x;
                 const currentY = localY + geometry.y;
 
-                data.rect.width = Math.abs(currentX - data.startX);
-                data.rect.height = Math.abs(currentY - data.startY);
-                data.rect.x = Math.min(data.startX, currentX);
-                data.rect.y = Math.min(data.startY, currentY);
-
-                queueDrawRect(data.rect);
+                data.currentX = currentX;
+                data.currentY = currentY;
+                data.mouseMoved = true; // Let the tick callback handle the redraw request safely
                 return true;
             });
 
             window.connect("button-release-event", (widget, event) => {
                 if (!data.buttonPressed) return true;
+                data.buttonPressed = false;
 
-                queueDrawRect(data.rect);
+                if (tickId) {
+                    window.remove_tick_callback(tickId);
+                    tickId = null;
+                }
 
                 // We are adding the geometry  coords to prevent rectangle offset
                 const [, localX, localY] = event.get_coords();
@@ -151,6 +173,8 @@ export function selectAreaLayerShell(bgPixbuf) {
             window.connect("key-press-event", (widget, event) => {
                 if (event.get_keyval()[1] === Gdk.KEY_Escape) {
                     data.aborted = true;
+                    data.buttonPressed = false;
+                    if (tickId) window.remove_tick_callback(tickId);
                     cleanup();
                     resolve(null); // Resolve immediately on abort
                     return true;
@@ -196,13 +220,12 @@ export function selectAreaLayerShell(bgPixbuf) {
             if (data.aborted || data.rect.width < 5 || data.rect.height < 5) {
               resolve(null);
             } else {
-          		resolve(data.rect);
-                /*resolve({
-                    x: Math.round(data.rect.x),
-                    y: Math.round(data.rect.y),
-                    width: Math.round(data.rect.width),
-                    height: Math.round(data.rect.height),
-                });*/
+              resolve({
+                  x: Math.round(data.rect.x),
+                  y: Math.round(data.rect.y),
+                  width: Math.round(data.rect.width),
+                  height: Math.round(data.rect.height),
+              });
             }
             cleanup();
         };
@@ -214,26 +237,12 @@ export function selectAreaLayerShell(bgPixbuf) {
             const globalW = rect.width + 2 * pad;
             const globalH = rect.height + 2 * pad;
 
-            windows.forEach(({ window, geometry }) => {
+            for (const { window, geometry } of windows) {
                 const localX = globalX - geometry.x;
                 const localY = globalY - geometry.y;
                 window.queue_draw_area(localX, localY, globalW, globalH);
-            });
+            }
         };
 
-        // We do NOT do a global grab here. The windows are overlay, so they should catch input.
     });
-}
-
-/**
- * Check if gtk-layer-shell is available.
- * @returns {boolean}
- */
-export function hasLayerShell() {
-    try {
-        const GtkLayerShell = imports.gi.GtkLayerShell;
-        return GtkLayerShell !== undefined;
-    } catch (e) {
-        return false;
-    }
 }

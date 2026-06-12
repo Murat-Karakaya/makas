@@ -20,24 +20,32 @@ export function selectAreaX11(bgPixbuf) {
         let bgSurface = null;
         const drawer = new SelectionDrawer();
 
-        const data = {
+        let data = {
             rect: { x: 0, y: 0, width: 0, height: 0 },
             buttonPressed: false,
             startX: 0,
             startY: 0,
+            currentX: 0,
+            currentY: 0,
+            mouseMoved: false,
             aborted: false,
         };
 
-        const screen = Gdk.Screen.get_default();
-        const visual = screen.get_rgba_visual();
         const window = new Gtk.Window({
-            type: Gtk.WindowType.POPUP,
+            type: Gtk.WindowType.TOPLEVEL, // Switches to TopLevel to get VSync from compositor
             decorated: false,
             skip_taskbar_hint: true,
             skip_pager_hint: true,
         });
 
+        // This line skips window manager animations. Window animations are cool but distracting. (Especially Genie)
+        window.set_type_hint(Gdk.WindowTypeHint.UTILITY);
+
+        // Ensure window stays on top
+        window.set_keep_above(true);
+
         const display = Gdk.Display.get_default();
+        const seat = display.get_default_seat();
         let totalWidth = 0,
             totalHeight = 0;
         const nMonitors = display.get_n_monitors();
@@ -73,7 +81,7 @@ export function selectAreaX11(bgPixbuf) {
             return true;
         });
 
-        const queueDrawRect = (rect) => {
+        function queueDrawRect(rect) {
              // Invalidate slightly larger area to clear borders
              window.queue_draw_area(
                  rect.x - 10,
@@ -83,15 +91,40 @@ export function selectAreaX11(bgPixbuf) {
              );
         };
 
+        let tickId = window.add_tick_callback((widget, frameClock) => {
+            // Frame Clock Tick Callback fires perfectly synced with the monitor's refresh rate
+            if (!data.buttonPressed) return true;
+
+            if (data.mouseMoved) {
+                // 1. Invalidate the old bounding box position
+                queueDrawRect(data.rect);
+
+                // 2. Calculate the updated math
+                data.rect.width = Math.abs(data.currentX - data.startX);
+                data.rect.height = Math.abs(data.currentY - data.startY);
+                data.rect.x = Math.min(data.startX, data.currentX);
+                data.rect.y = Math.min(data.startY, data.currentY);
+
+                // 3. Invalidate the new bounding box position
+                queueDrawRect(data.rect);
+                data.mouseMoved = false;
+            }
+            return true;
+        });
+
         window.connect("button-press-event", (widget, event) => {
+        		//Starts once exactly when you pressed down and started dragging the mouse.
             if (data.buttonPressed) return true;
-            data.buttonPressed = true;
-            data.startX = event.get_root_coords()[1];
-            data.startY = event.get_root_coords()[2];
-            data.rect.x = data.startX;
-            data.rect.y = data.startY;
-            data.rect.width = 0;
-            data.rect.height = 0;
+            const [, startX, startY] = event.get_root_coords();
+            data = {
+                buttonPressed: true,
+                startX,
+                startY,
+                currentX: startX,
+                currentY: startY,
+                rect: { x: startX, y: startY, width: 0, height: 0 },
+                aborted: false,
+            };
 
             // Draw initial point
             queueDrawRect(data.rect);
@@ -101,27 +134,22 @@ export function selectAreaX11(bgPixbuf) {
         window.connect("motion-notify-event", (widget, event) => {
             if (!data.buttonPressed) return true;
 
-            // Invalidate old rect
-            queueDrawRect(data.rect);
-
             const [, currentX, currentY] = event.get_root_coords();
-            data.rect.width = Math.abs(currentX - data.startX);
-            data.rect.height = Math.abs(currentY - data.startY);
-            data.rect.x = Math.min(data.startX, currentX);
-            data.rect.y = Math.min(data.startY, currentY);
-
-            // Invalidate new rect
-            queueDrawRect(data.rect);
+            data.currentX = currentX;
+            data.currentY = currentY;
+            data.mouseMoved = true; // Let the tick callback handle the redraw request safely
             return true;
         });
 
-        const seat = display.get_default_seat();
 
         window.connect("button-release-event", (widget, event) => {
             if (!data.buttonPressed) return true;
+            data.buttonPressed = false;
 
-            // Invalidate old rect before finalizing
-            queueDrawRect(data.rect);
+            if (tickId) {
+                window.remove_tick_callback(tickId);
+                tickId = null;
+            }
 
             const [, currentX, currentY] = event.get_root_coords();
             data.rect.width = Math.abs(currentX - data.startX);
@@ -137,6 +165,8 @@ export function selectAreaX11(bgPixbuf) {
         window.connect("key-press-event", (widget, event) => {
             if (event.get_keyval()[1] === Gdk.KEY_Escape) {
                 data.aborted = true;
+                data.buttonPressed = false;
+                if (tickId) window.remove_tick_callback(tickId);
                 seat.ungrab();
                 window.destroy();
                 return true;
@@ -156,9 +186,16 @@ export function selectAreaX11(bgPixbuf) {
             });
         });
 
+        window.connect('map-event', () => {
+        		// Put this in map-event to make sure our window grabs
+          	// focus after it is mapped. Otherwise it would fail.
+           	// we don't want boring old window.present() because the
+            // power button press could cause the window to lose focus.
+            const gdkWindow = window.get_window();
+            const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
+            seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
+        });
+
         window.show();
-        const gdkWindow = window.get_window();
-        const cursor = Gdk.Cursor.new_for_display(display, Gdk.CursorType.CROSSHAIR);
-        seat.grab(gdkWindow, Gdk.SeatCapabilities.ALL, false, cursor, null, null);
     });
 }
